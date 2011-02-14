@@ -1,0 +1,102 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+    xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"  
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+      <groupId>org.liveSense</groupId>
+      <artifactId>org.liveSense.parent</artifactId>
+      <version>1-SNAPSHOT</version>
+  </parent>
+  <scm>
+      <connection>scm:git:git://github.com/liveSense/org.liveSense.datasource</connection>
+      <developerConnection>scm:git:git://github.com/liveSense/org.liveSense.datasource</developerConnection>
+      <url>https://github.com/liveSense/org.liveSense.datasource</url>
+  </scm>  
+  
+  <groupId>org.liveSense</groupId>
+  <artifactId>org.liveSense.service.DataSourceProvider</artifactId>
+  <version>1.0.0-SNAPSHOT</version>
+  <packaging>bundle</packaging>  
+  <name>liveSense DataSource pooler</name>  
+  <description>Simple DBCP pooled datasource provider.</description>
+
+  <properties>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+  </properties>
+
+    <build>  
+        <plugins>
+             <plugin>
+                <groupId>org.apache.felix</groupId>  
+                <artifactId>maven-bundle-plugin</artifactId>  
+                <extensions>true</extensions>  
+                <version>1.4.0</version>  
+                <configuration>  
+                    <instructions>
+                        <Import-Package>
+                        !org.jboss.resource.adapter.jdbc,!com.mchange.v2.c3p0,!org.jboss.resource.adapter.jdbc.vendor,*
+                        </Import-Package>
+                        <Export-Package>
+                            org.liveSense.service.DataSourceProvider.*;version=${project.version}
+                        </Export-Package>
+                        <Embed-Dependency>
+                            commons-dbcp,
+                            commons-pool,
+                            mysql-connector-java
+                        </Embed-Dependency>
+                        <Include-Resource>
+                           {maven-resources}
+                        </Include-Resource>  
+                    </instructions>  
+                </configuration>  
+            </plugin>  
+        </plugins>  
+    </build>  
+    <dependencies>  
+        <dependency>  
+            <groupId>junit</groupId>  
+            <artifactId>junit</artifactId>  
+        </dependency>  
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.commons.log</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.api</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.sling</groupId>
+            <artifactId>org.apache.sling.commons.osgi</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.osgi</groupId>
+            <artifactId>org.osgi.compendium</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.eventadmin</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.felix</groupId>
+            <artifactId>org.apache.felix.scr.annotations</artifactId>
+        </dependency>
+    
+        <dependency>
+            <groupId>commons-dbcp</groupId>
+            <artifactId>commons-dbcp</artifactId>
+            <version>1.4</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-pool</groupId>
+            <artifactId>commons-pool</artifactId>
+            <version>1.5.5</version>
+        </dependency>
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>5.1.14</version>
+        </dependency>
+    </dependencies>   
+</project>
