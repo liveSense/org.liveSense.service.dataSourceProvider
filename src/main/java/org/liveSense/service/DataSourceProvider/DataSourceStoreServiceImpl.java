@@ -10,7 +10,10 @@ import javax.sql.DataSource;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
 
-
+/**
+ * {@inherited}
+ *
+ */
 @Component(label="DataSourceStoreService",
 		metatype=false,
 		description="liveSense Data Source Store Service")

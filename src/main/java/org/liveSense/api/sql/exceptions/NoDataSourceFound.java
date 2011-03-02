@@ -1,4 +1,4 @@
-package org.liveSense.service.DataSourceProvider;
+package org.liveSense.api.sql.exceptions;
 
 public class NoDataSourceFound extends Exception {
 	

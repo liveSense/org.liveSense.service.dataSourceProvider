@@ -11,7 +11,7 @@
 	<scm>
 		<connection>scm:git:git://github.com/liveSense/org.liveSense.service.dataSourceProvider.git</connection>
 		<developerConnection>scm:git:git://github.com/liveSense/org.liveSense.service.dataSourceProvider.git</developerConnection>
-		<url>https://github.com/liveSense/org.liveSense.service.dataSourceProvider.git</url>
+		<url>https://github.com/liveSense/org.liveSense.service.dataSourceProvider</url>
 	</scm>
 
 	<groupId>org.liveSense</groupId>
