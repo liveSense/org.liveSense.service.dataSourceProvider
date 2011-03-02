@@ -1,1 +1,9 @@
+.svn
 /target
+/war
+.settings/**
+.settings
+/.project
+/.classpath
+/nbactions.xml
+/**/.DS_Store
