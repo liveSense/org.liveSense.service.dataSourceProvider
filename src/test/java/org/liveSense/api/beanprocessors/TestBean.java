@@ -13,19 +13,19 @@ import org.junit.Ignore;
 public class TestBean {
 	
 	@Id
-	@Column(name="ID")
+	@Column(name="ID", columnDefinition="INTEGER")
 	private Integer id;
 
-	@Column(name="ID_CUSTOMER")
+	@Column(name="ID_CUSTOMER", columnDefinition="INTEGER")
 	private Integer idCustomer;
 	
-	@Column(name="PASSWORD_ANNOTATED")
+	@Column(name="PASSWORD_ANNOTATED", columnDefinition="VARCHAR(20)")
 	private String confirmationPassword;
 	
-	@Column(name="FOUR_PART_COLUMN_NAME")
+	@Column(name="FOUR_PART_COLUMN_NAME", columnDefinition="INTEGER")
 	private Boolean fourPartColumnName;
 	
-	@Column(name="BLOB_FIELD")
+	@Column(name="BLOB_FIELD", columnDefinition="BLOB")
 	private String blob;
 	
 	private Date dateFieldWithoutAnnotation;

@@ -47,6 +47,8 @@
 						<Embed-Dependency>
 							commons-dbcp,
 							commons-pool,
+							commons-beanutils,
+							commons-dbutils
                         </Embed-Dependency>
 						<Include-Resource>
 							{maven-resources}

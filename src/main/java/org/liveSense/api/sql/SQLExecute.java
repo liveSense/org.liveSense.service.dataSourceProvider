@@ -1,12 +1,17 @@
 package org.liveSense.api.sql;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.util.List;
 import java.util.Map;
 
+import javax.persistence.Column;
+import javax.persistence.Id;
 import javax.sql.DataSource;
 
+import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.dbutils.BasicRowProcessor;
 import org.apache.commons.dbutils.QueryRunner;
@@ -268,5 +273,56 @@ public abstract class SQLExecute<T> {
 		}		
 	}
 	
+	/**
+	 * Create table. The given bean have to be annotated with javax.persistence.Entity, javax.presistence.Column and javax.persistence.Id
+	 * @param connection SQL Connection
+	 * @param class The entity bean class
+	 * @throws Exception
+	 */
+	public void createTable(Connection connection, Class<T> clazz) throws Exception {
+		
+		
+		String tableName = AnnotationHelper.getTableName(clazz);
+		if (tableName == null || "".equalsIgnoreCase(tableName)) {
+			throw new SQLException("Class does not contain javax.persistence.Entity annotation");
+		}
+		
+		List<Field> fields = AnnotationHelper.getAllFields(clazz);
+		StringBuffer sb = new StringBuffer();
+		sb.append("CREATE TABLE "+tableName+" (");
 
+		boolean firstField = true;
+    	for (Field fld : fields) {
+    		Annotation[] annotations = fld.getAnnotations();
+			Id id = null;
+			Column col = null;
+
+    		for (int i=0; i<annotations.length; i++) {
+    			if (annotations[i] instanceof Column) {
+    				col = (Column)annotations[i];
+    			} else if (annotations[i] instanceof Id) {
+    				id = (Id)annotations[i];
+    			}
+    		}
+			if (col != null) {
+				if (firstField) firstField = false; else sb.append(",");
+    			if (col.name() == null || col.name().equals("")) throw new SQLException("Column name is undefined");
+    			if (col.columnDefinition() == null || col.columnDefinition().equals("")) throw new SQLException("Column definition is undefined");
+    			sb.append(col.name());
+    			sb.append(" "+col.columnDefinition());
+    			if (!col.nullable()) {
+    				sb.append(" NOT NULL");
+    			}
+    			if (col.unique()) {
+    				sb.append(" UNIQUE");
+    			}
+    			if (id != null) {
+    				sb.append(" PRIMARY KEY");
+    			}
+			}
+    	}
+    	sb.append(")");
+		PreparedStatement stm = connection.prepareStatement(sb.toString());
+		stm.execute();
+	}
 }

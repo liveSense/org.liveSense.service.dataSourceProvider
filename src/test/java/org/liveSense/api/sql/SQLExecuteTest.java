@@ -10,6 +10,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
+import org.apache.commons.beanutils.BeanToPropertyValueTransformer;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.hsqldb.Server;
 import org.hsqldb.persist.HsqlProperties;
@@ -65,6 +66,14 @@ public class SQLExecuteTest {
 		dataSource.setPassword("masterkey");
 		connection = dataSource.getConnection();
 		dropTable(connection, "BeanTest1");
+		
+		// Create table from annotation
+		@SuppressWarnings("unchecked") SQLExecute<TestBean> x =
+			(SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource);
+		x.createTable(connection, TestBean.class);
+		
+		dropTable(connection, "BeanTest1");
+		
 		executeSql(connection, "create table BeanTest1 (" + "ID integer, " + "ID_CUSTOMER integer, "
 			+ "PASSWORD_ANNOTATED varchar(20), " + "FOUR_PART_COLUMN_NAME integer, "
 			+ "DATE_FIELD_WITHOUT_ANNOTATION date," + "BLOB_FIELD blob)");

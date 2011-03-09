@@ -85,9 +85,14 @@ public class AnnotationHelper {
     	}
     	return ret;
     }
-    
+
     public static String getTableName(Object bean) {
-    	Entity annotation = bean.getClass().getAnnotation(Entity.class);
+    	return getTableName(bean.getClass());
+    }
+
+    @SuppressWarnings({ "unchecked", "rawtypes" })
+    public static String getTableName(Class clazz) {
+		Entity annotation = (Entity) clazz.getAnnotation(Entity.class);
     	if (annotation != null) 
     		return annotation.name();
     	else
