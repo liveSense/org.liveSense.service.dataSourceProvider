@@ -27,7 +27,10 @@ public class TestBean {
 	
 	@Column(name="BLOB_FIELD", columnDefinition="BLOB")
 	private String blob;
-	
+
+	@Column(name="FLOAT_FIELD", columnDefinition="NUMERIC(15,2)")
+	private Double floatField;
+
 	private Date dateFieldWithoutAnnotation;
 	
 	public Date getDateFieldWithoutAnnotation() {
@@ -66,5 +69,10 @@ public class TestBean {
 	public void setBlob(String blob) {
 		this.blob = blob;
 	}
-	
+	public Double getFloatField() {
+		return floatField;
+	}	
+	public void setFloatField(Double floatField) {
+		this.floatField = floatField;
+	}
 }

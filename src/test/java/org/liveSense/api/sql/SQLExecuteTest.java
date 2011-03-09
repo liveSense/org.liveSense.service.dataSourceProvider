@@ -74,9 +74,14 @@ public class SQLExecuteTest {
 		
 		dropTable(connection, "BeanTest1");
 		
-		executeSql(connection, "create table BeanTest1 (" + "ID integer, " + "ID_CUSTOMER integer, "
-			+ "PASSWORD_ANNOTATED varchar(20), " + "FOUR_PART_COLUMN_NAME integer, "
-			+ "DATE_FIELD_WITHOUT_ANNOTATION date," + "BLOB_FIELD blob)");
+		executeSql(connection, "create table BeanTest1 (" + 
+			"ID integer, " + 
+			"ID_CUSTOMER integer, "+ 
+			"PASSWORD_ANNOTATED varchar(20), " + 
+			"FOUR_PART_COLUMN_NAME integer, "+ 
+			"DATE_FIELD_WITHOUT_ANNOTATION date," + 
+			"BLOB_FIELD blob, "+
+			"FLOAT_FIELD NUMERIC(15,2) )");
 		connection.commit();
 
 		testExecute();
@@ -92,7 +97,7 @@ public class SQLExecuteTest {
 		hsqlServer.setDatabaseName(0, "testDb");
 		hsqlServer.setAddress("127.0.0.1");
 		hsqlServer.setDatabasePath(0, "file:./target/test-classes/testDb");
-		HsqlProperties props = new HsqlProperties();
+		
 		hsqlServer.start();
 		dataSource = new BasicDataSource();
 		dataSource.setDriverClassName("org.hsqldb.jdbcDriver");
@@ -101,10 +106,17 @@ public class SQLExecuteTest {
 		dataSource.setPassword("");
 		dataSource.setDefaultAutoCommit(false);
 		connection = dataSource.getConnection();
+		executeSql(connection, "SET PROPERTY \"sql.enforce_strict_size\" true");
+
 		dropTable(connection, "BeanTest1");
-		executeSql(connection, "create table BeanTest1 (" + "ID integer, " + "ID_CUSTOMER integer, "
-			+ "PASSWORD_ANNOTATED varchar(20), " + "FOUR_PART_COLUMN_NAME integer, "
-			+ "DATE_FIELD_WITHOUT_ANNOTATION date," + "BLOB_FIELD longvarchar)");
+		executeSql(connection, "create table BeanTest1 (" + 
+			"ID integer, " + 
+			"ID_CUSTOMER integer, " +
+			"PASSWORD_ANNOTATED varchar(20), " + 
+			"FOUR_PART_COLUMN_NAME integer, " +
+			"DATE_FIELD_WITHOUT_ANNOTATION date," + 
+			"BLOB_FIELD longvarchar, " +
+			"FLOAT_FIELD numeric (15,2) )");
 		connection.commit();
 
 		testExecute();
@@ -127,8 +139,8 @@ public class SQLExecuteTest {
 		// Insert data with JDBC
 		executeSql(
 			connection,
-			"INSERT INTO BeanTest1(ID, ID_CUSTOMER, PASSWORD_ANNOTATED, FOUR_PART_COLUMN_NAME, DATE_FIELD_WITHOUT_ANNOTATION, BLOB_FIELD)" +
-				" values (1, 1, 'password', 1, '2011-01-03', '" + BLOBTEXT + "')");
+			"INSERT INTO BeanTest1(ID, ID_CUSTOMER, PASSWORD_ANNOTATED, FOUR_PART_COLUMN_NAME, DATE_FIELD_WITHOUT_ANNOTATION, BLOB_FIELD, FLOAT_FIELD)" +
+				" values (1, 1, 'password', 1, '2011-01-03', '" + BLOBTEXT + "', 0.3)");
 
 		// Insert data with bean
 		bean = new TestBean();
@@ -138,6 +150,7 @@ public class SQLExecuteTest {
 		bean.setFourPartColumnName(true);
 		bean.setDateFieldWithoutAnnotation(date);
 		bean.setBlob(blob.toString());
+		bean.setFloatField(new Double(1.0f/3.0f));
 		@SuppressWarnings("unchecked") SQLExecute<TestBean> x =
 			(SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource);
 		x.insertEntity(connection, bean);
@@ -156,13 +169,15 @@ public class SQLExecuteTest {
 		assertEquals("BLOB_FIELD", BLOBTEXT, res.get(0).getBlob());
 		assertNotNull("DATE_FIELD_WITHOUT_ANNOTATION", res.get(0).getDateFieldWithoutAnnotation());
 		assertEquals("DATE_FIELD_WITHOUT_ANNOTATION", dateWithoutTime, res.get(0).getDateFieldWithoutAnnotation());
-
+		assertEquals("FLOAT_FIELD", 0.3, res.get(0).getFloatField().doubleValue(), 0.0f);
+		
 		assertEquals("ID", new Integer(2), res.get(1).getId());
 		assertEquals("ID_CUSTOMER", new Integer(2), res.get(1).getId());
 		assertEquals("PASSWORD_ANNOTATED", "password", res.get(1).getConfirmationPassword());
 		assertEquals("FOUR_PART_COLUMN_NAME", new Boolean(true), res.get(1).getFourPartColumnName());
 		assertEquals("BLOB_FIELD", blob.toString(), res.get(1).getBlob());
 		assertEquals("DATE_FIELD_WITHOUT_ANNOTATION", (Date) null, res.get(1).getDateFieldWithoutAnnotation());
+		assertEquals("FLOAT_FIELD", 0.33, res.get(1).getFloatField().doubleValue(), 0.0f);
 
 		// Updating bean
 		res.get(1).setConfirmationPassword("testupdate");
