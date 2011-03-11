@@ -148,11 +148,10 @@ public class SQLExecuteTest {
 		@SuppressWarnings("unchecked") SQLExecute<TestBean> x =
 			(SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource);
 
-		//dropTable(connection, "T1");
-		x.executeScript(connection, new File("./target/test-classes/test.sql"), "Drop");
+		dropTable(connection, "T1");
 		x.executeScript(connection, new File("./target/test-classes/test.sql"), "Create");
-		
-		
+		x.executeScript(connection, new File("./target/test-classes/test.sql"), "Drop");
+
 		// Insert data with JDBC
 		executeSql(
 			connection,
