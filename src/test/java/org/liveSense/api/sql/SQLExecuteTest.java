@@ -3,6 +3,7 @@ package org.liveSense.api.sql;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.sql.Statement;
@@ -72,6 +73,14 @@ public class SQLExecuteTest {
 			(SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource);
 		x.createTable(connection, TestBean.class);
 		
+		if (!x.existsTable(connection, TestBean.class))
+				throw new SQLException("Table does not exists");
+		
+		x.dropTable(connection, TestBean.class);
+		
+		if (x.existsTable(connection, TestBean.class))
+			throw new SQLException("Table exists after drop");
+		
 		dropTable(connection, "BeanTest1");
 		
 		executeSql(connection, "create table BeanTest1 (" + 
@@ -107,7 +116,7 @@ public class SQLExecuteTest {
 		dataSource.setDefaultAutoCommit(false);
 		connection = dataSource.getConnection();
 		executeSql(connection, "SET PROPERTY \"sql.enforce_strict_size\" true");
-
+		
 		dropTable(connection, "BeanTest1");
 		executeSql(connection, "create table BeanTest1 (" + 
 			"ID integer, " + 
@@ -136,6 +145,14 @@ public class SQLExecuteTest {
 		}
 		dateWithoutTime = new SimpleDateFormat("yyyy.MM.dd").parse("2011.01.03");
 
+		@SuppressWarnings("unchecked") SQLExecute<TestBean> x =
+			(SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource);
+
+		//dropTable(connection, "T1");
+		x.executeScript(connection, new File("./target/test-classes/test.sql"), "Drop");
+		x.executeScript(connection, new File("./target/test-classes/test.sql"), "Create");
+		
+		
 		// Insert data with JDBC
 		executeSql(
 			connection,
@@ -151,8 +168,7 @@ public class SQLExecuteTest {
 		bean.setDateFieldWithoutAnnotation(date);
 		bean.setBlob(blob.toString());
 		bean.setFloatField(new Double(1.0f/3.0f));
-		@SuppressWarnings("unchecked") SQLExecute<TestBean> x =
-			(SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource);
+		
 		x.insertEntity(connection, bean);
 
 		// Query all record
