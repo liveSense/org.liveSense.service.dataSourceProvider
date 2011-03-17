@@ -1,11 +1,14 @@
 @Drop
 DROP TABLE t1;
+commit;
 
 @Create
 CREATE TABLE t1 (
   t1s VARCHAR(20)
 );
+commit;
 
+@Insert
 -- Simple comment
 INSERT INTO t1(t1s) VALUES ('TEST');
 

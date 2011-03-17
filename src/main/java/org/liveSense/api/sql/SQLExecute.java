@@ -472,7 +472,7 @@ public abstract class SQLExecute<T> {
 
         // Removes BEGIN and END with
         for (int i=0; i<stmts.length; i++)
-        	stmts[i] = stmts[i].replaceAll("BEGIN", "").replaceAll("END", "").replaceAll("\n", "");
+        	stmts[i] = stmts[i].replaceAll("BEGIN", "").replaceAll("END", "COMMIT").replaceAll("\n", "");
 
 
         //end sql file parsers  
@@ -490,11 +490,13 @@ public abstract class SQLExecute<T> {
 		            // in order to not execute empty statements  
 		            if(!inst[i].trim().equals(""))  
 		            {  
-		                st.executeUpdate(inst[i]);  
-		                System.out.println(">>"+inst[i]);  
+		                if (inst[i].trim().toUpperCase().startsWith("COMMIT")) {
+		                	connection.commit();
+		                } else {
+		                	st.executeUpdate(inst[i]);  
+		                }
 		            }  
 		        }
-		        connection.commit();	
 			}
 			catch (java.sql.SQLException e) {
 				throw new SQLException(e);

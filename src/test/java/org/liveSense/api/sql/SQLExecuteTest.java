@@ -66,6 +66,7 @@ public class SQLExecuteTest {
 		dataSource.setUsername("sysdba");
 		dataSource.setPassword("masterkey");
 		connection = dataSource.getConnection();
+		connection.setAutoCommit(false);
 		dropTable(connection, "BeanTest1");
 		
 		// Create table from annotation
@@ -115,6 +116,7 @@ public class SQLExecuteTest {
 		dataSource.setPassword("");
 		dataSource.setDefaultAutoCommit(false);
 		connection = dataSource.getConnection();
+		connection.setAutoCommit(false);
 		executeSql(connection, "SET PROPERTY \"sql.enforce_strict_size\" true");
 		
 		dropTable(connection, "BeanTest1");
@@ -150,6 +152,12 @@ public class SQLExecuteTest {
 
 		dropTable(connection, "T1");
 		x.executeScript(connection, new File("./target/test-classes/test.sql"), "Create");
+		x.executeScript(connection, new File("./target/test-classes/test.sql"), "Insert");
+		connection.commit();
+		connection.close();
+		connection = dataSource.getConnection();
+		connection.setAutoCommit(false);
+		
 		x.executeScript(connection, new File("./target/test-classes/test.sql"), "Drop");
 
 		// Insert data with JDBC
@@ -171,7 +179,7 @@ public class SQLExecuteTest {
 		x.insertEntity(connection, bean);
 
 		// Query all record
-		QueryBuilder builder = new SimpleSQLQueryBuilder("SELECT * FROM BeanTest1");
+		QueryBuilder builder = new SimpleBeanSQLQueryBuilder(TestBean.class);
 		List<TestBean> res = x.queryEntities(connection, TestBean.class, builder);
 
 		assertEquals("Entity name", "BeanTest1", AnnotationHelper.getTableName(res.get(0)));
