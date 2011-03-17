@@ -224,15 +224,19 @@ public abstract class SQLExecute<T> {
 		sb2.append("(");
 		boolean first = true;
 		for (String key : objs.keySet()) {
-			if (!first) {sb.append(","); sb2.append(",");} else first = false;
-			sb.append(key);
-			sb2.append("?");
+			if (objs.get(key) != null) {
+				if (!first) {sb.append(","); sb2.append(",");} else first = false;
+				sb.append(key);
+				sb2.append("?");
+			}
 		}
 		PreparedStatement stm = connection.prepareStatement(sb.toString()+") VALUES "+sb2.toString()+")");
 		int idx = 1;
 		for (Object param : objs.values()) {
-			stm.setObject(idx, param);
-			idx++;
+			if (param != null) {
+				stm.setObject(idx, param);
+				idx++;
+			}
 		}
 		stm.execute();
 		if (stm.getUpdateCount() != 1) {
