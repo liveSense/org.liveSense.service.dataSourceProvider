@@ -234,6 +234,10 @@ public abstract class SQLExecute<T> {
 		int idx = 1;
 		for (Object param : objs.values()) {
 			if (param != null) {
+				if (param instanceof java.util.Date) {
+					java.sql.Date paramD = new java.sql.Date(((java.util.Date)param).getTime());
+					param = paramD;
+				}
 				stm.setObject(idx, param);
 				idx++;
 			}
@@ -274,7 +278,12 @@ public abstract class SQLExecute<T> {
 		int idx = 1;
 		for (String key : objs.keySet()) {
 			if (!key.equals(idColumn)) {
-				stm.setObject(idx, objs.get(key));
+				if (objs.get(key) instanceof java.util.Date) {
+					java.sql.Date paramD = new java.sql.Date(((java.util.Date)objs.get(key)).getTime());
+					stm.setObject(idx, paramD);
+				} else {
+					stm.setObject(idx, objs.get(key));
+				}
 				idx++;
 			}
 		}

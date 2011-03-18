@@ -31,6 +31,9 @@ public class TestBean {
 	@Column(name="FLOAT_FIELD", columnDefinition="NUMERIC(15,2)")
 	private Double floatField;
 
+	@Column(name="DATE_FIELD_WITH_ANNOTATION", columnDefinition="DATE")
+	private Date dateFieldWithAnnotation;
+
 	private Date dateFieldWithoutAnnotation;
 	
 	public Date getDateFieldWithoutAnnotation() {
@@ -74,5 +77,12 @@ public class TestBean {
 	}	
 	public void setFloatField(Double floatField) {
 		this.floatField = floatField;
+	}
+	public Date getDateFieldWithAnnotation() {	
+		return dateFieldWithAnnotation;
+	}
+	public void setDateFieldWithAnnotation(
+		Date dateFieldWithAnnotation) {
+		this.dateFieldWithAnnotation = dateFieldWithAnnotation;
 	}
 }
