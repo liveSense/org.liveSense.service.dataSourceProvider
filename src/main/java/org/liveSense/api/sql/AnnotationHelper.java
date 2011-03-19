@@ -6,8 +6,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -86,6 +88,23 @@ public class AnnotationHelper {
     	return ret;
     }
 
+    public static Set<String> getClassColumnNames(Class<?> clazz) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+    	Set<String> ret = new HashSet<String>();
+    	
+    	List<Field> fields = getAllFields(clazz);
+  	
+    	for (Field fld : fields) {
+    		Annotation[] annotations = fld.getAnnotations();
+    		for (int i=0; i<annotations.length; i++) {
+    			if (annotations[i] instanceof Column) {
+    				Column col = (Column)annotations[i];
+    				ret.add(col.name());
+    			}
+    		}
+    	}
+    	return ret;
+    }
+
     public static String getTableName(Object bean) {
     	return getTableName(bean.getClass());
     }
@@ -100,7 +119,11 @@ public class AnnotationHelper {
     }
 
     public static String getIdColumnName(Object bean) {
-    	List<Field> fields = getAllFields(bean.getClass());
+    	return getIdColumnName(bean.getClass());
+    }
+
+    public static String getIdColumnName(Class<?> clazz) {
+    	List<Field> fields = getAllFields(clazz);
     	for (Field fld : fields) {
     		Annotation[] annotations = fld.getAnnotations();
     		Column clm = null;

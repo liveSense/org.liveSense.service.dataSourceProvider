@@ -14,6 +14,7 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Id;
@@ -39,6 +40,16 @@ import org.liveSense.misc.queryBuilder.exceptions.QueryBuilderException;
  */
 public abstract class SQLExecute<T> {
 	protected QueryBuilder builder;
+	
+	private enum StatementType {
+		INSERT, UPDATE
+	}
+	
+	private PreparedStatement preparedStatement = null;
+	private StatementType preparedType = null;
+	private Class<?> preparedStatementClass = null;
+	private Connection connection = null;
+
 
 	public enum JdbcDrivers {
 		MYSQL ("com.mysql.jdbc.Driver"),
@@ -293,6 +304,127 @@ public abstract class SQLExecute<T> {
 			throw new java.sql.SQLException("UPDATE was unsuccessfull");
 		}		
 	}
+	
+	/**
+	 * Prepare an insert statement to execute the statement several times with different objects.
+	 * @param connection
+	 * @param entity
+	 * @throws Exception
+	 */		
+	public void prepareInsertStatement(Connection connection, Class<T> targetClass) throws Exception {
+		preparedType = StatementType.INSERT;
+		preparedStatementClass = targetClass;
+		Set<String> columns = AnnotationHelper.getClassColumnNames(targetClass);
+		String tableName = AnnotationHelper.getTableName(targetClass);
+		if (tableName == null || "".equalsIgnoreCase(tableName)) {
+			throw new SQLException("Entity does not contain javax.persistence.Entity annotation");
+		}
+		StringBuffer sb = new StringBuffer();
+		StringBuffer sb2 = new StringBuffer();
+		sb.append("INSERT INTO "+AnnotationHelper.getTableName(targetClass)+" (");
+		sb2.append("(");
+		boolean first = true;
+		for (String columnName : columns) {
+			if (!first) {sb.append(","); sb2.append(",");} else first = false;
+			sb.append(columnName);
+			sb2.append("?");
+		}
+		preparedStatement = connection.prepareStatement(sb.toString()+") VALUES "+sb2.toString()+")");
+		this.connection = connection;
+	}
+
+	/**
+	 * Prepare an update statement to execute the statement several times with different objects.
+	 * @param connection
+	 * @param entity
+	 * @throws Exception
+	 */		
+	public void prepareUpdateStatement(Connection connection, Class<T> targetClass) throws Exception {
+		preparedType = StatementType.UPDATE;
+		preparedStatementClass = targetClass;
+		Set<String> columns = AnnotationHelper.getClassColumnNames(targetClass);
+		String idColumn = AnnotationHelper.getIdColumnName(targetClass);
+		String tableName = AnnotationHelper.getTableName(targetClass);
+		if (tableName == null || "".equalsIgnoreCase(tableName)) {
+			throw new SQLException("Entity does not contain javax.persistence.Entity annotation");
+		}
+		if (idColumn == null || "".equalsIgnoreCase(idColumn)) {
+			throw new SQLException("Entity does not contain javax.persistence.Id annotation");
+		}
+		StringBuffer sb = new StringBuffer();
+		sb.append("UPDATE "+tableName+" SET ");
+		boolean first = true;
+		for (String columnName : columns) {
+			if (!columnName.equals(idColumn)) {
+				if (!first) {sb.append(",");} else first = false;
+				sb.append(columnName+" = ?");
+			}
+		}	
+		sb.append(" WHERE "+idColumn+" = ?");
+		preparedStatement = connection.prepareStatement(sb.toString());
+		this.connection = connection;
+	}
+
+	
+	/**
+	 * Insert one entity with prepared statement. The given bean have to be annotated with javax.persistence.Entity and javax.persistence.Id
+	 * @param entity The bean
+	 * @throws Exception
+	 */
+	public void insertEntityWithPreparedStatement(T entity) throws Exception {
+		if (preparedType == null || preparedStatementClass == null || preparedStatement == null || this.connection == null) throw new SQLException("The statement is not prepared");
+		if (preparedType != StatementType.INSERT) throw new SQLException("The statement type does not match with INSERT");
+		if (entity.getClass() != preparedStatementClass) throw new SQLException("Entity class type mismatch");
+		
+		Map<String, Object> objs = AnnotationHelper.getObjectAsMap(entity);
+		int idx = 1;
+		for (Object param : objs.values()) {
+			if (param != null) {
+				if (param instanceof java.util.Date) {
+					java.sql.Date paramD = new java.sql.Date(((java.util.Date)param).getTime());
+					param = paramD;
+				}
+				preparedStatement.setObject(idx, param);
+				idx++;
+			}
+		}
+		preparedStatement.execute();
+		if (preparedStatement.getUpdateCount() != 1) {
+			throw new java.sql.SQLException("INSERT was unsuccessfull");
+		}
+	}
+	
+	/**
+	 * Update one entity with prepared statement. The given bean have to be annotated with javax.persistence.Entity and javax.persistence.Id
+	 * @param entity The bean
+	 * @throws Exception
+	 */
+	public void updateEntityWithPreparedStatement(T entity) throws Exception {
+		if (preparedType == null || preparedStatementClass == null || preparedStatement == null || this.connection == null) throw new SQLException("The statement is not prepared");
+		if (preparedType != StatementType.INSERT) throw new SQLException("The statement type does not match with INSERT");
+		if (entity.getClass() != preparedStatementClass) throw new SQLException("Entity class type mismatch");
+
+		Map<String, Object> objs = AnnotationHelper.getObjectAsMap(entity);
+		String idColumn = AnnotationHelper.getIdColumnName(entity);
+		int idx = 1;
+		for (String key : objs.keySet()) {
+			if (!key.equals(idColumn)) {
+				if (objs.get(key) instanceof java.util.Date) {
+					java.sql.Date paramD = new java.sql.Date(((java.util.Date)objs.get(key)).getTime());
+					preparedStatement.setObject(idx, paramD);
+				} else {
+					preparedStatement.setObject(idx, objs.get(key));
+				}
+				idx++;
+			}
+		}
+		preparedStatement.setObject(idx, objs.get(idColumn));
+		preparedStatement.execute();
+		if (preparedStatement.getUpdateCount() != 1) {
+			throw new java.sql.SQLException("UPDATE was unsuccessfull");
+		}		
+	}
+
 	
 	/**
 	 * Create table. The given bean have to be annotated with javax.persistence.Entity, javax.presistence.Column and javax.persistence.Id

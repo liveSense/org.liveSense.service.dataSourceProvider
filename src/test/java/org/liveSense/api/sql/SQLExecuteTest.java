@@ -221,6 +221,16 @@ public class SQLExecuteTest {
 		// Query all records
 		res = x.queryEntities(connection, TestBean.class, builder);
 		assertEquals("Resultset size", 1, res.size());
+		
+		// Generate beans several times
+		x.prepareInsertStatement(connection, TestBean.class);
+		x.insertEntityWithPreparedStatement(bean);
+		x.insertEntityWithPreparedStatement(bean);
+		x.insertEntityWithPreparedStatement(bean);
+		x.insertEntityWithPreparedStatement(bean);
+		// Query all records
+		res = x.queryEntities(connection, TestBean.class, builder);
+		assertEquals("Resultset size", 5, res.size());
 
 		connection.commit();
 		connection.close();
