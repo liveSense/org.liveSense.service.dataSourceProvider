@@ -162,6 +162,9 @@ public class SQLExecuteTest {
 		
 		x.executeScript(connection, new File("./target/test-classes/test.sql"), "Drop");
 
+		// Execute script with different separator
+		x.executeScript(connection, new File("./target/test-classes/test2.sql"), "Test", "[\\\\]");
+
 		// Insert data with JDBC
 		executeSql(
 			connection,

@@ -500,6 +500,8 @@ public abstract class SQLExecute<T> {
 		stm.execute();
 	}
 
+	
+
 
 	/**
 	 * Check if the given table exists. The given bean have to be annotated with javax.persistence.Entity
@@ -527,9 +529,28 @@ public abstract class SQLExecute<T> {
 			return false;
 		}
 	}
-	
 
+	
+	/**
+	 * Execute an SQL Script. The statements are separated with ;
+	 * @param connection
+	 * @param sql
+	 * @param section
+	 * @throws SQLException
+	 */
 	public void executeScript(Connection connection, File sql, String section) throws SQLException {
+		executeScript(connection, sql, section, ";");
+	}
+	
+	/**
+	 * Execute an SQL Script. The statements are separated with the given string.
+	 * @param connection
+	 * @param sql
+	 * @param section
+	 * @param separator
+	 * @throws SQLException
+	 */
+	public void executeScript(Connection connection, File sql, String section, String separator) throws SQLException {
 		String s            = new String();  
 		StringBuffer sb = new StringBuffer();
 		
@@ -570,7 +591,7 @@ public abstract class SQLExecute<T> {
         //convention of the author.  
 		
 		//Step 1: Assume that every SQL statement ends with a semi colon  
-        String[] stmts = sb.toString().split(";");  
+        String[] stmts = sb.toString().split(separator);  
 
         //Step 2: Put Transactions back into a single statement.  
         for(int i=0;i<stmts.length;i++){  
@@ -586,13 +607,13 @@ public abstract class SQLExecute<T> {
                 //add a semicolon to the first sql entry in the transaction  
                 //which will be in the same array entry as the BEGIN  
                 //statement  
-                stmts[i] += ";";  
+                stmts[i] += separator;  
 
                 //loop through the remaining transaction and place them  
                 //into the transaction start entry appending semicolons  
                 //at the end of each statement  
                 for(int j = (i+1); j< tInt; j++) {  
-                    stmts[i] += "\n" + stmts[j] + ";";  
+                    stmts[i] += "\n" + stmts[j] + separator;  
                     //blank out the current transaction entry so that the  
                     //executer skips it  
                     stmts[j] = " ";  
@@ -624,7 +645,7 @@ public abstract class SQLExecute<T> {
 
         // Executing commands
         for (int si = 0; si<stmts.length; si++) {
-		    String[] inst = stmts[si].split(";");  
+		    String[] inst = stmts[si].split(separator);  
 		    
 		    Statement st;
 			try {
