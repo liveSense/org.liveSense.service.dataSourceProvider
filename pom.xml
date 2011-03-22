@@ -130,6 +130,11 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.liveSense</groupId>
+			<artifactId>org.liveSense.core</artifactId>
+		</dependency>
+		
+		<dependency>
 			<groupId>hsqldb</groupId>
 			<artifactId>hsqldb</artifactId>
 			<version>1.8.0.10</version>
