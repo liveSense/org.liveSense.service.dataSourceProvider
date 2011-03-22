@@ -575,7 +575,7 @@ public abstract class SQLExecute<T> {
 	    			if (section != null) use = false;
 	    			if (section != null && actSection != null && actSection.equalsIgnoreCase(section)) 
 	    				use = true;
-	    			if (use) sb.append(s);
+	    			if (use) sb.append(s+"\n");
 	    		}
 	    			
 	    	
@@ -600,11 +600,11 @@ public abstract class SQLExecute<T> {
         //Step 2: Put Transactions back into a single statement.  
         for(int i=0;i<stmts.length;i++){  
             //if the current statement starts a transaction  
-            if(stmts[i].contains("BEGIN")){  
+            if(stmts[i].contains("BEGIN TRANSACTION")){  
                 int tInt = i;  
                 //find the end of the transaction or the end of the file  
                 //whichever comes first  
-                while(tInt<stmts.length && !stmts[tInt].contains("END")) {  
+                while(tInt<stmts.length && !stmts[tInt].contains("END TRANSACTION")) {  
                     tInt++;  
                 } //end while  
 
@@ -624,11 +624,11 @@ public abstract class SQLExecute<T> {
                 } //end for  
 
                 //and the end statement to the end of the transaction  
-                stmts[i] += "\nEND";  
+                stmts[i] += "\nEND TRANSACTION";  
 
                 //remove the END transaction from the statement it is  
                 //currently embedded in  
-                String tStr[] = stmts[tInt].split("END"); 
+                String tStr[] = stmts[tInt].split("END TRANSACTION"); 
                 if (tStr.length>0)
                 	stmts[tInt] = tStr[1];
                 else
@@ -642,7 +642,7 @@ public abstract class SQLExecute<T> {
 
         // Removes BEGIN and END with
         for (int i=0; i<stmts.length; i++)
-        	stmts[i] = stmts[i].replaceAll("BEGIN", "").replaceAll("END", "COMMIT").replaceAll("\n", "");
+        	stmts[i] = stmts[i].replaceAll("BEGIN TRANSACTION", "").replaceAll("END TRANSACTION", "COMMIT");
 
 
         //end sql file parsers  
