@@ -49,6 +49,7 @@ public abstract class SQLExecute<T> {
 	private StatementType preparedType = null;
 	private Class<?> preparedStatementClass = null;
 	private Connection connection = null;
+	private ArrayList<String> prepareStatementElements = null;
 
 
 	public enum JdbcDrivers {
@@ -324,7 +325,9 @@ public abstract class SQLExecute<T> {
 		sb.append("INSERT INTO "+AnnotationHelper.getTableName(targetClass)+" (");
 		sb2.append("(");
 		boolean first = true;
+		prepareStatementElements = new ArrayList<String>();
 		for (String columnName : columns) {
+			prepareStatementElements.add(columnName);
 			if (!first) {sb.append(","); sb2.append(",");} else first = false;
 			sb.append(columnName);
 			sb2.append("?");
@@ -354,9 +357,11 @@ public abstract class SQLExecute<T> {
 		StringBuffer sb = new StringBuffer();
 		sb.append("UPDATE "+tableName+" SET ");
 		boolean first = true;
+		prepareStatementElements = new ArrayList<String>();
 		for (String columnName : columns) {
 			if (!columnName.equals(idColumn)) {
 				if (!first) {sb.append(",");} else first = false;
+				prepareStatementElements.add(columnName);
 				sb.append(columnName+" = ?");
 			}
 		}	
@@ -378,15 +383,14 @@ public abstract class SQLExecute<T> {
 		
 		Map<String, Object> objs = AnnotationHelper.getObjectAsMap(entity);
 		int idx = 1;
-		for (Object param : objs.values()) {
-			if (param != null) {
-				if (param instanceof java.util.Date) {
-					java.sql.Date paramD = new java.sql.Date(((java.util.Date)param).getTime());
-					param = paramD;
-				}
-				preparedStatement.setObject(idx, param);
-				idx++;
+		for (String field : prepareStatementElements) {
+			Object param = objs.get(field);
+			if (param instanceof java.util.Date) {
+				java.sql.Date paramD = new java.sql.Date(((java.util.Date)param).getTime());
+				param = paramD;
 			}
+			preparedStatement.setObject(idx, param);
+			idx++;
 		}
 		preparedStatement.execute();
 		if (preparedStatement.getUpdateCount() != 1) {
@@ -407,7 +411,7 @@ public abstract class SQLExecute<T> {
 		Map<String, Object> objs = AnnotationHelper.getObjectAsMap(entity);
 		String idColumn = AnnotationHelper.getIdColumnName(entity);
 		int idx = 1;
-		for (String key : objs.keySet()) {
+		for (String key : prepareStatementElements) {
 			if (!key.equals(idColumn)) {
 				if (objs.get(key) instanceof java.util.Date) {
 					java.sql.Date paramD = new java.sql.Date(((java.util.Date)objs.get(key)).getTime());
