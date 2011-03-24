@@ -570,7 +570,7 @@ public abstract class SQLExecute<T> {
 			{  
 	    		if (s.trim().startsWith("@")) {
 	    			actSection = s.trim().substring(1);
-	    		} else if (!s.trim().startsWith("--")) {
+	    		} else {
 	    			boolean use = true;
 	    			if (section != null) use = false;
 	    			if (section != null && actSection != null && actSection.equalsIgnoreCase(section)) 
