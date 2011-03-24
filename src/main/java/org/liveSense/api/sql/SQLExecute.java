@@ -267,15 +267,45 @@ public abstract class SQLExecute<T> {
 	 * @throws Exception
 	 */
 	public void updateEntity(Connection connection, T entity) throws Exception {
-		Map<String, Object> objs = AnnotationHelper.getObjectAsMap(entity);
+		updateEntity(connection, entity, (List<String>)null);
+	}
+	
+	/**
+	 * Update one entity. The given bean have to be annotated with javax.persistence.Entity and javax.persistence.Id
+	 * @param connection SQL Connection
+	 * @param entity The bean
+	 * @throws Exception
+	 */
+	public void updateEntity(Connection connection, T entity, String[] fields) throws Exception {
+		List<String> fieldList = new ArrayList<String>();
+		for (String field : fields) {
+			fieldList.add(field);
+		}
+		updateEntity(connection, entity, fieldList);
+	}	
+	
+	
+	/**
+	 * Update one entity. The given bean have to be annotated with javax.persistence.Entity and javax.persistence.Id
+	 * @param connection SQL Connection
+	 * @param entity The bean
+	 * @param fields 
+	 * @throws Exception
+	 */
+	public void updateEntity(Connection connection, T entity, List<String> fields) throws Exception {
 		String idColumn = AnnotationHelper.getIdColumnName(entity);
-		String tableName = AnnotationHelper.getTableName(entity);
+		String tableName = AnnotationHelper.getTableName(entity);		
 		if (tableName == null || "".equalsIgnoreCase(tableName)) {
 			throw new SQLException("Entity does not contain javax.persistence.Entity annotation");
 		}
 		if (idColumn == null || "".equalsIgnoreCase(idColumn)) {
 			throw new SQLException("Entity does not contain javax.persistence.Id annotation");
 		}
+		if ((fields != null) && (fields.size() > 0)) {
+			String idFieldName = AnnotationHelper.findFieldByAnnotationClass(entity.getClass(),Column.class).getName();
+			fields.add(idFieldName);	
+		}
+		Map<String, Object> objs = AnnotationHelper.getObjectAsMap(entity, fields);
 		StringBuffer sb = new StringBuffer();
 		sb.append("UPDATE "+tableName+" SET ");
 		boolean first = true;
