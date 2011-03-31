@@ -1,0 +1,4 @@
+CREATE TABLE t1 (
+  t1s VARCHAR(20),
+  t2s VARCHAR(20)  
+) 
