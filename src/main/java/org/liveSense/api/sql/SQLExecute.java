@@ -579,6 +579,15 @@ public abstract class SQLExecute<T> {
 		}
 	}
 
+	/**
+	 * Execute an SQL Script. The script contains only a single statement. 
+	 * @param connection
+	 * @param sql
+	 * @throws SQLException
+	 */
+	public void executeScript(Connection connection, File sql) throws SQLException {
+		executeScript(connection, sql, null, null);
+	}
 	
 	/**
 	 * Execute an SQL Script. The statements are separated with ;
@@ -606,9 +615,7 @@ public abstract class SQLExecute<T> {
 		String actSection = null;
 	
 	    try {
-			FileReader fr = new FileReader(sql);  
-		    // be sure to not have line starting with "--" or "/*" or any other non aplhabetical character  
-		
+			FileReader fr = new FileReader(sql);   		
 		    BufferedReader br = new BufferedReader(fr);  
 
 	    	while((s = br.readLine()) != null)  
@@ -639,8 +646,14 @@ public abstract class SQLExecute<T> {
         //sql statements be typed in uppercase because that is the   
         //convention of the author.  
 		
-		//Step 1: Assume that every SQL statement ends with a semi colon  
-        String[] stmts = sb.toString().split(separator);  
+		//Step 1: Split script to commands when needed
+		String[] stmts = null;
+		if (separator != null) {
+			stmts = sb.toString().split(separator);
+		} else {
+			stmts = new String[] { sb.toString() }; 
+		}
+		
 
         //Step 2: Put Transactions back into a single statement.  
         for(int i=0;i<stmts.length;i++){  
@@ -694,7 +707,12 @@ public abstract class SQLExecute<T> {
 
         // Executing commands
         for (int si = 0; si<stmts.length; si++) {
-		    String[] inst = stmts[si].split(separator);  
+        	String[] inst = null;
+        	if (separator != null) {
+        		inst = stmts[si].split(separator);
+        	} else {
+        		inst = new String[] { stmts[si] };
+        	}
 		    
 		    Statement st;
 			try {

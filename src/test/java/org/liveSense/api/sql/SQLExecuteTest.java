@@ -164,6 +164,9 @@ public class SQLExecuteTest {
 
 		// Execute script with different separator
 		x.executeScript(connection, new File("./target/test-classes/test2.sql"), "Test", "[\\\\]");
+		
+		// Execute script with no separator and no section (single statement)
+		x.executeScript(connection, new File("./target/test-classes/test3.sql"));		
 
 		// Insert data with JDBC
 		executeSql(
