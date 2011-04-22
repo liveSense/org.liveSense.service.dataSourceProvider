@@ -39,8 +39,22 @@ import org.liveSense.misc.queryBuilder.exceptions.QueryBuilderException;
  * @param <T> - The Bean class is used for
  */
 public abstract class SQLExecute<T> {
+
+	private static final String CLASS_DOES_NOT_HAVE_ENTITY_ANNOTATION = "Class does not contain javax.persistence.Entity or javax.persistence.Entity.Table annotation";
+	private static final String CLASS_DOES_NOT_HAVE_ID_ANNOTATION = "Entity does not contain javax.persistence.Id annotation";
+	private static final String CONNECTION_IS_NULL = "Connection is null";
+	private static final String ENTITY_IS_NULL = "Entity is null";
+	private static final String NO_DATASOURCE = "No datasource is defined";
+	private static final String DELETE_UNSUCCESSFULL = "DELETE was unsuccessfull";
+	private static final String INSERT_UNSUCCESSFULL = "INSERT was unsuccessfull";	
+	private static final String UPDATE_UNSUCCESSFULL = "UPDATE was unsuccessfull";
+	private static final String STATEMENT_TYPE_IS_NOT_INSERT = "The statement type does not match with INSERT";
+	private static final String STATEMENT_TYPE_IS_NOT_UPDATE = "The statement type does not match with UPDATE";
+	private static final String ENTITY_TYPE_MISMATCH = "Entity class type mismatch";
+	private static final String COLUMN_NAME_IS_UNDEFINED = "Column name is undefined";
+	private static final String COLUMN_DEFINITION_IS_UNDEFINED = "Column definition is undefined";
 	protected QueryBuilder builder;
-	
+
 	private enum StatementType {
 		INSERT, UPDATE
 	}
@@ -142,7 +156,7 @@ public abstract class SQLExecute<T> {
 	 */
 	@SuppressWarnings("rawtypes")
 	public static SQLExecute<?> getExecuterByDataSource(BasicDataSource ds) throws SQLException {
-		if (ds == null) throw new SQLException("No datasource");
+		if (ds == null) throw new SQLException(NO_DATASOURCE);
 		String driverClass = ds.getDriverClassName();
 		
 		if (driverClass.equals(JdbcDrivers.MYSQL.driverClass)) return new MySqlExecute(-1);
@@ -195,16 +209,16 @@ public abstract class SQLExecute<T> {
 	 * @throws Exception
 	 */
 	public void deleteEntity(Connection connection, T entity) throws Exception {
-		if (connection == null) throw new SQLException("Connection is null");
-		if (entity == null) throw new SQLException("Entity is null");
+		if (connection == null) throw new SQLException(CONNECTION_IS_NULL);
+		if (entity == null) throw new SQLException(ENTITY_IS_NULL);
 		Map<String, Object> objs = AnnotationHelper.getObjectAsMap(entity);
 		String idColumn = AnnotationHelper.getIdColumnName(entity);
 		String tableName = AnnotationHelper.getTableName(entity);
 		if (tableName == null || "".equalsIgnoreCase(tableName)) {
-			throw new SQLException("Entity does not contain javax.persistence.Entity annotation");
+			throw new SQLException(CLASS_DOES_NOT_HAVE_ENTITY_ANNOTATION);
 		}
 		if (idColumn == null || "".equalsIgnoreCase(idColumn)) {
-			throw new SQLException("Entity does not contain javax.persistence.Id annotation");
+			throw new SQLException(CLASS_DOES_NOT_HAVE_ID_ANNOTATION);
 		}
 		StringBuffer sb = new StringBuffer();
 		sb.append("DELETE FROM "+tableName+" ");
@@ -214,7 +228,7 @@ public abstract class SQLExecute<T> {
 		stm.setObject(idx, objs.get(idColumn));
 		stm.execute();
 		if (stm.getUpdateCount() != 1) {
-			throw new java.sql.SQLException("DELETE was unsuccessfull");
+			throw new java.sql.SQLException(DELETE_UNSUCCESSFULL);
 		}
 	}
 
@@ -228,7 +242,7 @@ public abstract class SQLExecute<T> {
 		Map<String, Object> objs = AnnotationHelper.getObjectAsMap(entity);
 		String tableName = AnnotationHelper.getTableName(entity);
 		if (tableName == null || "".equalsIgnoreCase(tableName)) {
-			throw new SQLException("Entity does not contain javax.persistence.Entity annotation");
+			throw new SQLException(CLASS_DOES_NOT_HAVE_ENTITY_ANNOTATION);
 		}
 		StringBuffer sb = new StringBuffer();
 		StringBuffer sb2 = new StringBuffer();
@@ -256,7 +270,7 @@ public abstract class SQLExecute<T> {
 		}
 		stm.execute();
 		if (stm.getUpdateCount() != 1) {
-			throw new java.sql.SQLException("INSERT was unsuccessfull");
+			throw new java.sql.SQLException(INSERT_UNSUCCESSFULL);
 		}
 	}
 	
@@ -296,10 +310,10 @@ public abstract class SQLExecute<T> {
 		String idColumn = AnnotationHelper.getIdColumnName(entity);
 		String tableName = AnnotationHelper.getTableName(entity);		
 		if (tableName == null || "".equalsIgnoreCase(tableName)) {
-			throw new SQLException("Entity does not contain javax.persistence.Entity annotation");
+			throw new SQLException(CLASS_DOES_NOT_HAVE_ENTITY_ANNOTATION);
 		}
 		if (idColumn == null || "".equalsIgnoreCase(idColumn)) {
-			throw new SQLException("Entity does not contain javax.persistence.Id annotation");
+			throw new SQLException(CLASS_DOES_NOT_HAVE_ID_ANNOTATION);
 		}
 		if ((fields != null) && (fields.size() > 0)) {
 			String idFieldName = AnnotationHelper.findFieldByAnnotationClass(entity.getClass(),Column.class).getName();
@@ -332,7 +346,7 @@ public abstract class SQLExecute<T> {
 		stm.setObject(idx, objs.get(idColumn));
 		stm.execute();
 		if (stm.getUpdateCount() != 1) {
-			throw new java.sql.SQLException("UPDATE was unsuccessfull");
+			throw new java.sql.SQLException(UPDATE_UNSUCCESSFULL);
 		}		
 	}
 	
@@ -348,7 +362,7 @@ public abstract class SQLExecute<T> {
 		Set<String> columns = AnnotationHelper.getClassColumnNames(targetClass);
 		String tableName = AnnotationHelper.getTableName(targetClass);
 		if (tableName == null || "".equalsIgnoreCase(tableName)) {
-			throw new SQLException("Entity does not contain javax.persistence.Entity annotation");
+			throw new SQLException(CLASS_DOES_NOT_HAVE_ENTITY_ANNOTATION);
 		}
 		StringBuffer sb = new StringBuffer();
 		StringBuffer sb2 = new StringBuffer();
@@ -379,10 +393,10 @@ public abstract class SQLExecute<T> {
 		String idColumn = AnnotationHelper.getIdColumnName(targetClass);
 		String tableName = AnnotationHelper.getTableName(targetClass);
 		if (tableName == null || "".equalsIgnoreCase(tableName)) {
-			throw new SQLException("Entity does not contain javax.persistence.Entity annotation");
+			throw new SQLException(CLASS_DOES_NOT_HAVE_ENTITY_ANNOTATION);
 		}
 		if (idColumn == null || "".equalsIgnoreCase(idColumn)) {
-			throw new SQLException("Entity does not contain javax.persistence.Id annotation");
+			throw new SQLException(CLASS_DOES_NOT_HAVE_ID_ANNOTATION);
 		}
 		StringBuffer sb = new StringBuffer();
 		sb.append("UPDATE "+tableName+" SET ");
@@ -408,8 +422,8 @@ public abstract class SQLExecute<T> {
 	 */
 	public void insertEntityWithPreparedStatement(T entity) throws Exception {
 		if (preparedType == null || preparedStatementClass == null || preparedStatement == null || this.connection == null) throw new SQLException("The statement is not prepared");
-		if (preparedType != StatementType.INSERT) throw new SQLException("The statement type does not match with INSERT");
-		if (entity.getClass() != preparedStatementClass) throw new SQLException("Entity class type mismatch");
+		if (preparedType != StatementType.INSERT) throw new SQLException(STATEMENT_TYPE_IS_NOT_INSERT);
+		if (entity.getClass() != preparedStatementClass) throw new SQLException(ENTITY_TYPE_MISMATCH);
 		
 		Map<String, Object> objs = AnnotationHelper.getObjectAsMap(entity);
 		int idx = 1;
@@ -424,7 +438,7 @@ public abstract class SQLExecute<T> {
 		}
 		preparedStatement.execute();
 		if (preparedStatement.getUpdateCount() != 1) {
-			throw new java.sql.SQLException("INSERT was unsuccessfull");
+			throw new java.sql.SQLException(INSERT_UNSUCCESSFULL);
 		}
 	}
 	
@@ -435,8 +449,8 @@ public abstract class SQLExecute<T> {
 	 */
 	public void updateEntityWithPreparedStatement(T entity) throws Exception {
 		if (preparedType == null || preparedStatementClass == null || preparedStatement == null || this.connection == null) throw new SQLException("The statement is not prepared");
-		if (preparedType != StatementType.INSERT) throw new SQLException("The statement type does not match with INSERT");
-		if (entity.getClass() != preparedStatementClass) throw new SQLException("Entity class type mismatch");
+		if (preparedType != StatementType.UPDATE) throw new SQLException(STATEMENT_TYPE_IS_NOT_UPDATE);
+		if (entity.getClass() != preparedStatementClass) throw new SQLException(ENTITY_TYPE_MISMATCH);
 
 		Map<String, Object> objs = AnnotationHelper.getObjectAsMap(entity);
 		String idColumn = AnnotationHelper.getIdColumnName(entity);
@@ -455,7 +469,7 @@ public abstract class SQLExecute<T> {
 		preparedStatement.setObject(idx, objs.get(idColumn));
 		preparedStatement.execute();
 		if (preparedStatement.getUpdateCount() != 1) {
-			throw new java.sql.SQLException("UPDATE was unsuccessfull");
+			throw new java.sql.SQLException(UPDATE_UNSUCCESSFULL);
 		}		
 	}
 
@@ -471,7 +485,7 @@ public abstract class SQLExecute<T> {
 		
 		String tableName = AnnotationHelper.getTableName(clazz);
 		if (tableName == null || "".equalsIgnoreCase(tableName)) {
-			throw new SQLException("Class does not contain javax.persistence.Entity annotation");
+			throw new SQLException(CLASS_DOES_NOT_HAVE_ENTITY_ANNOTATION);
 		}
 		
 		List<Field> fields = AnnotationHelper.getAllFields(clazz);
@@ -493,8 +507,8 @@ public abstract class SQLExecute<T> {
     		}
 			if (col != null) {
 				if (firstField) firstField = false; else sb.append(",");
-    			if (col.name() == null || col.name().equals("")) throw new SQLException("Column name is undefined");
-    			if (col.columnDefinition() == null || col.columnDefinition().equals("")) throw new SQLException("Column definition is undefined");
+    			if (col.name() == null || col.name().equals("")) throw new SQLException(COLUMN_NAME_IS_UNDEFINED);
+    			if (col.columnDefinition() == null || col.columnDefinition().equals("")) throw new SQLException(COLUMN_DEFINITION_IS_UNDEFINED);
     			sb.append(col.name());
     			sb.append(" "+col.columnDefinition());
     			if (!col.nullable()) {
@@ -512,10 +526,11 @@ public abstract class SQLExecute<T> {
 		PreparedStatement stm = connection.prepareStatement(sb.toString());
 		stm.execute();
 		connection.commit();
+		
 	}
 	
 	/**
-	 * Drop table. The given bean have to be annotated with javax.persistence.Entity
+	 * Drop table. The given bean have to be annotated with javax.persistence.Entity or javax.persistence.Table
 	 * @param connection SQL Connection
 	 * @param class The entity bean class
 	 * @throws Exception
@@ -525,7 +540,7 @@ public abstract class SQLExecute<T> {
 		
 		String tableName = AnnotationHelper.getTableName(clazz);
 		if (tableName == null || "".equalsIgnoreCase(tableName)) {
-			throw new SQLException("Class does not contain javax.persistence.Entity annotation");
+			throw new SQLException(CLASS_DOES_NOT_HAVE_ENTITY_ANNOTATION);
 		}
 		
 		StringBuffer sb = new StringBuffer();
@@ -548,7 +563,7 @@ public abstract class SQLExecute<T> {
 		
 		String tableName = AnnotationHelper.getTableName(clazz);
 		if (tableName == null || "".equalsIgnoreCase(tableName)) {
-			throw new SQLException("Class does not contain javax.persistence.Entity annotation");
+			throw new SQLException(CLASS_DOES_NOT_HAVE_ENTITY_ANNOTATION);
 		}
 		
 		DatabaseMetaData dbm = connection.getMetaData();

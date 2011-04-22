@@ -2,14 +2,22 @@ package org.liveSense.api.beanprocessors;
 
 import java.util.Date;
 
+import javax.jdo.annotations.Index;
+import javax.jdo.annotations.Indices;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.JoinTable;
+import javax.persistence.Table;
+import javax.persistence.UniqueConstraint;
 
 import org.junit.Ignore;
 
 @Ignore
 @Entity(name="BeanTest1")
+@Table(uniqueConstraints={@UniqueConstraint(columnNames={"ID_CUSTOMER"})})
+@Indices(value={@Index(members={"ID_CUSTOMER"})})
 public class TestBean {
 	
 	@Id
@@ -17,6 +25,7 @@ public class TestBean {
 	private Integer id;
 
 	@Column(name="ID_CUSTOMER", columnDefinition="INTEGER")
+	@JoinTable(name="CUSTOMER", joinColumns={@JoinColumn(referencedColumnName="ID")})
 	private Integer idCustomer;
 	
 	@Column(name="PASSWORD_ANNOTATED", columnDefinition="VARCHAR(20)")

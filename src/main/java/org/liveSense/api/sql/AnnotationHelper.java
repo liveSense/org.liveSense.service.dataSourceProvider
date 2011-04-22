@@ -14,6 +14,7 @@ import org.liveSense.core.BaseAnnotationHelper;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.Id;
+import javax.persistence.Table;
 
 import org.apache.commons.beanutils.BeanUtilsBean;
 
@@ -73,11 +74,13 @@ public class AnnotationHelper extends BaseAnnotationHelper {
 
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static String getTableName(Class clazz) {
-		Entity annotation = (Entity) clazz.getAnnotation(Entity.class);
-    	if (annotation != null) 
-    		return annotation.name();
-    	else
-    		return null;
+		Entity entityAnnotation = (Entity) clazz.getAnnotation(Entity.class);
+		Table tableAnnotation = (Table) clazz.getAnnotation(Table.class);
+		
+		String tableName = null;
+    	if (entityAnnotation != null && entityAnnotation.name() != null && !"".equals(entityAnnotation.name())) tableName = entityAnnotation.name();
+    	if (tableAnnotation != null && tableAnnotation.name() != null && !"".equals(tableAnnotation.name())) tableName = tableAnnotation.name();
+   		return tableName;
     }
 
     public static String getIdColumnName(Object bean) {
