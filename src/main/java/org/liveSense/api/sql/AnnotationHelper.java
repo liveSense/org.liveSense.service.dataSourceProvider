@@ -4,6 +4,7 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -24,10 +25,7 @@ public class AnnotationHelper extends BaseAnnotationHelper {
     }
 
     public static Map<String, Object> getObjectAsMap(Object bean, String[] fieldList) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
-    	List<String> list =  new ArrayList<String>();
-    	for (String field : fieldList) {
-			list.add(field);
-		}
+    	List<String> list =  new ArrayList<String>(Arrays.asList(fieldList));
     	return getObjectAsMap(bean, list);
     }    
 	
@@ -49,20 +47,49 @@ public class AnnotationHelper extends BaseAnnotationHelper {
     	}
     	return ret;
     }
-
+    
     public static Set<String> getClassColumnNames(Class<?> clazz) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+    	return getClassColumnNames(clazz,(List<String>)null);
+    }
+    
+    public static Set<String> getClassColumnNames(Class<?> clazz, String[] fieldList) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+    	List<String> list = new ArrayList<String>(Arrays.asList(fieldList));
+    	return getClassColumnNames(clazz, list);
+    }
+    
+    public static Set<String> getClassColumnNames(Class<?> clazz, List<String> fieldList) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
     	Set<String> ret = new HashSet<String>();
-    	
+    	ret.addAll(getClassColumnNames(clazz, fieldList, false));
+    	return ret;
+    }
+
+    public static ArrayList<String> getClassColumnNames(Class<?> clazz, List<String> fieldList, boolean keepFieldOrder) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
+    	ArrayList<String> ret = new ArrayList<String>();
+    
+    	String[] retArray = null;
+    	if (keepFieldOrder) {
+    		retArray = new String[fieldList.size()];    		
+    	}
     	List<Field> fields = getAllFields(clazz);
   	
     	for (Field fld : fields) {
-    		Annotation[] annotations = fld.getAnnotations();
-    		for (int i=0; i<annotations.length; i++) {
-    			if (annotations[i] instanceof Column) {
-    				Column col = (Column)annotations[i];
-    				ret.add(col.name());
+    		if ((fieldList ==  null) || (fieldList.size() == 0) || (fieldList.indexOf(fld.getName()) != -1)) {
+    			Annotation[] annotations = fld.getAnnotations();
+    			for (int i=0; i<annotations.length; i++) {
+    				if (annotations[i] instanceof Column) {
+    					Column col = (Column)annotations[i];
+    					if (keepFieldOrder) {
+    						retArray[fieldList.indexOf(fld.getName())] = col.name();
+    					}
+    					else {
+    						ret.add(col.name());
+    					}
+    				}
     			}
     		}
+    	}
+    	if (keepFieldOrder) {
+    		ret.addAll(Arrays.asList(retArray));
     	}
     	return ret;
     }
