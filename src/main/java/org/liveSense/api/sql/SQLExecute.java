@@ -70,12 +70,6 @@ public abstract class SQLExecute<T> {
 	private Class<?> preparedStatementClass = null;
 	private Connection connection = null;
 	private ArrayList<String> prepareStatementElements = null;
-	private String jdbcDriverClass;
-
-		
-	public String getJdbcDriverClass() {	
-		return jdbcDriverClass;
-	}
 	
 	
 	/**
@@ -163,16 +157,13 @@ public abstract class SQLExecute<T> {
 	@SuppressWarnings("rawtypes")
 	public static SQLExecute<?> getExecuterByDataSource(BasicDataSource ds) throws SQLException {
 		if (ds == null) throw new SQLException(NO_DATASOURCE);
-		String driverClass = ds.getDriverClassName();
-		
-		String driver = ds.getDriverClassName();
+		String jdbcDriverClass = ds.getDriverClassName();
 		
 		SQLExecute<?> executer;
-		if (driver.equals(JdbcDrivers.MYSQL.getDriverClass())) executer = new MySqlExecute(-1);
-		else if (driver.equals(JdbcDrivers.HSQLDB.getDriverClass())) executer = new HSqlDbExecute(-1);
-		else if (driver.equals(JdbcDrivers.FIREBIRD.getDriverClass())) executer = new FirebirdExecute(-1);
-		else throw new SQLException("This type of JDBC dialect is not implemented: "+driver);
-		executer.jdbcDriverClass = driver;
+		if (jdbcDriverClass.equals(JdbcDrivers.MYSQL.getDriverClass())) executer = new MySqlExecute(-1);
+		else if (jdbcDriverClass.equals(JdbcDrivers.HSQLDB.getDriverClass())) executer = new HSqlDbExecute(-1);
+		else if (jdbcDriverClass.equals(JdbcDrivers.FIREBIRD.getDriverClass())) executer = new FirebirdExecute(-1);
+		else throw new SQLException("This type of JDBC dialect is not implemented: "+jdbcDriverClass);
 		return executer;
 	}
 	
@@ -501,11 +492,7 @@ public abstract class SQLExecute<T> {
 				idx++;
 			}
 		}
-		stm.setObject(idx, objs.get(idColumn));
-		stm.execute();
-		if (stm.getUpdateCount() != 1) {
-			throw new java.sql.SQLException(UPDATE_UNSUCCESSFULL);
-		}		
+		stm.execute();		
 	}
 	
 	/**

@@ -294,7 +294,7 @@ public class SQLExecuteTest {
 			assertEquals("Resultset size", 2, res.size());
 		}
 		catch (QueryBuilderException e) {
-			if (x.getJdbcDriverClass().equals(JdbcDrivers.HSQLDB.getDriverClass())) {
+			if (x instanceof HSqlDbExecute) {
 				assertTrue(true);
 			} else {
 				assertTrue(false);
@@ -309,21 +309,19 @@ public class SQLExecuteTest {
 			assertTrue(false);
 		}
 		catch (QueryBuilderException e) {
-			if (xa.getJdbcDriverClass().equals(JdbcDrivers.HSQLDB.getDriverClass())) {
+			if (xa instanceof HSqlDbExecute) {
 				assertTrue(true);
 			} else {
 				assertTrue(false);
 			}			
 		}		
 		catch (SQLException e) {
-			if (xa.getJdbcDriverClass().equals(JdbcDrivers.FIREBIRD.getDriverClass())) {
+			if (xa instanceof HSqlDbExecute) {
 				if (e.getErrorCode() == 335544345) {
 					assertTrue(true);				
 				} else {
 					assertTrue(false);
 				}
-			} else {
-				assertTrue(false);				
 			}
 		}
 				
@@ -369,7 +367,7 @@ public class SQLExecuteTest {
 			x2.lockEntity(connection, res2.get(0));
 		}
 		catch (QueryBuilderException e) {
-			if (x2.getJdbcDriverClass().equals(JdbcDrivers.HSQLDB.getDriverClass())) {
+			if (x2 instanceof HSqlDbExecute) {
 				assertTrue(true);
 			} else {
 				assertTrue(false);
@@ -382,21 +380,19 @@ public class SQLExecuteTest {
 			assertTrue(false);
 		}
 		catch (QueryBuilderException e) {
-			if (xb.getJdbcDriverClass().equals(JdbcDrivers.HSQLDB.getDriverClass())) {
+			if (xb instanceof HSqlDbExecute) {
 				assertTrue(true);
 			} else {
 				assertTrue(false);
 			}			
 		}		
 		catch (SQLException e) {
-			if (xb.getJdbcDriverClass().equals(JdbcDrivers.FIREBIRD.getDriverClass())) {
+			if (xb instanceof HSqlDbExecute) {
 				if (e.getErrorCode() == 335544345) {
 					assertTrue(true);				
 				} else {
 					assertTrue(false);
 				}
-			} else {
-				assertTrue(false);				
 			}
 		}		
 						
