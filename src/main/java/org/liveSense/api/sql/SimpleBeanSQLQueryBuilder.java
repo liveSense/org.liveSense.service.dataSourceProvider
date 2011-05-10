@@ -27,7 +27,7 @@ public class SimpleBeanSQLQueryBuilder  extends QueryBuilder {
 	public SimpleBeanSQLQueryBuilder(Class<?> clazz, Object parameters, LimitClause limit) throws SQLException {
 		this(clazz, parameters, limit, null);
 	}
-
+		
 	public SimpleBeanSQLQueryBuilder(Class<?> clazz, Object parameters, LimitClause limit, List<OrderByClause> orderBy) throws SQLException {
 		// Search for entity annotation
 		String tableName = AnnotationHelper.getTableName(clazz);
@@ -40,7 +40,12 @@ public class SimpleBeanSQLQueryBuilder  extends QueryBuilder {
 
 	@Override
 	public String getQuery() {
-		return this.statement;
+		return getQuery("");
 	}
+	
+	@Override
+	public String getQuery(String tableAlias) {
+		return this.statement+" "+tableAlias;
+	}	
 
 }
