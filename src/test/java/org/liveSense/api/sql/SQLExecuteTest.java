@@ -1,6 +1,7 @@
 package org.liveSense.api.sql;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
@@ -10,20 +11,26 @@ import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-
-import org.apache.commons.beanutils.BeanToPropertyValueTransformer;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.hsqldb.Server;
-import org.hsqldb.persist.HsqlProperties;
 import org.junit.Test;
 import org.liveSense.api.beanprocessors.TestBean;
+import org.liveSense.api.beanprocessors.TestBean2;
 import org.liveSense.misc.queryBuilder.QueryBuilder;
-import org.liveSense.misc.queryBuilder.SimpleSQLQueryBuilder;
+import org.liveSense.misc.queryBuilder.clauses.OrderByClause;
+import org.liveSense.misc.queryBuilder.criterias.BetweenCriteria;
+import org.liveSense.misc.queryBuilder.criterias.EqualCriteria;
+import org.liveSense.misc.queryBuilder.criterias.GreaterCriteria;
+import org.liveSense.misc.queryBuilder.criterias.LessCriteria;
+import org.liveSense.misc.queryBuilder.exceptions.QueryBuilderException;
+import org.liveSense.misc.queryBuilder.jdbcDriver.JdbcDrivers;
+import org.liveSense.misc.queryBuilder.operators.AndOperator;
 
 public class SQLExecuteTest {
 
 	private BasicDataSource dataSource;
 	private Connection connection;
+	private Connection connection2;
 	private StringBuffer blob = new StringBuffer();
 	private Date date = new Date();
 	private Date dateWithoutTime = null;
@@ -60,14 +67,17 @@ public class SQLExecuteTest {
 
 		dataSource = new BasicDataSource();
 		dataSource.setDriverClassName("org.firebirdsql.jdbc.FBDriver");
+		dataSource.setDefaultTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
 		dataSource.setDefaultAutoCommit(false);
+		dataSource.addConnectionProperty("TRANSACTION_READ_COMMITTED", "read_committed,rec_version,nowait");		
 		String path = new java.io.File(".").getCanonicalPath() + "/target/test-classes/EMPTYDATABASE.FDB";
 		dataSource.setUrl("jdbc:firebirdsql:localhost/3050:" + path + "?charSet=UTF-8");
 		dataSource.setUsername("sysdba");
 		dataSource.setPassword("masterkey");
 		connection = dataSource.getConnection();
-		connection.setAutoCommit(false);
+				
 		dropTable(connection, "BeanTest1");
+		dropTable(connection, "BeanTest2");
 		
 		// Create table from annotation
 		@SuppressWarnings("unchecked") SQLExecute<TestBean> x =
@@ -83,6 +93,11 @@ public class SQLExecuteTest {
 			throw new SQLException("Table exists after drop");
 		
 		dropTable(connection, "BeanTest1");
+		
+		// Create table from annotation
+		@SuppressWarnings("unchecked") SQLExecute<TestBean2> x2 =
+			(SQLExecute<TestBean2>) SQLExecute.getExecuterByDataSource(dataSource);		
+		x2.createTable(connection, TestBean2.class);
 		
 		executeSql(connection, "create table BeanTest1 (" + 
 			"ID integer, " + 
@@ -118,9 +133,12 @@ public class SQLExecuteTest {
 		dataSource.setDefaultAutoCommit(false);
 		connection = dataSource.getConnection();
 		connection.setAutoCommit(false);
+		connection2 = dataSource.getConnection();
+		connection2.setAutoCommit(false);		
 		executeSql(connection, "SET PROPERTY \"sql.enforce_strict_size\" true");
 		
 		dropTable(connection, "BeanTest1");
+		dropTable(connection, "BeanTest2");
 		executeSql(connection, "create table BeanTest1 (" + 
 			"ID integer, " + 
 			"ID_CUSTOMER integer, " +
@@ -130,6 +148,15 @@ public class SQLExecuteTest {
 			"DATE_FIELD_WITHOUT_ANNOTATION date," + 
 			"BLOB_FIELD longvarchar, " +
 			"FLOAT_FIELD numeric (15,2) )");
+		executeSql(connection, "create table BeanTest2 (" + 
+			"ID integer, " + 
+			"ID_CUSTOMER integer, " +
+			"PASSWORD_ANNOTATED varchar(20), " + 
+			"FOUR_PART_COLUMN_NAME integer, " +
+			"DATE_FIELD_WITH_ANNOTATION date," + 			
+			"DATE_FIELD_WITHOUT_ANNOTATION date," + 
+			"BLOB_FIELD longvarchar, " +
+			"FLOAT_FIELD numeric (15,2) )");		
 		connection.commit();
 
 		testExecute();
@@ -151,6 +178,15 @@ public class SQLExecuteTest {
 
 		@SuppressWarnings("unchecked") SQLExecute<TestBean> x =
 			(SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource);
+		@SuppressWarnings("unchecked") SQLExecute<TestBean2> x2 =
+			(SQLExecute<TestBean2>) SQLExecute.getExecuterByDataSource(dataSource);
+		@SuppressWarnings("unchecked") SQLExecute<TestBean> xa =
+			(SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource);		
+		@SuppressWarnings("unchecked") SQLExecute<TestBean2> xb =
+			(SQLExecute<TestBean2>) SQLExecute.getExecuterByDataSource(dataSource);		
+		
+		List<TestBean> res = null; 
+		List<TestBean2> res2 = null;
 
 		dropTable(connection, "T1");
 		x.executeScript(connection, new File("./target/test-classes/test.sql"), "Create");
@@ -159,7 +195,9 @@ public class SQLExecuteTest {
 		connection.close();
 		connection = dataSource.getConnection();
 		connection.setAutoCommit(false);
-		
+		connection2 = dataSource.getConnection();
+		connection2.setAutoCommit(false);
+				
 		x.executeScript(connection, new File("./target/test-classes/test.sql"), "Drop");
 
 		// Execute script with different separator
@@ -189,7 +227,7 @@ public class SQLExecuteTest {
 
 		// Query all record
 		QueryBuilder builder = new SimpleBeanSQLQueryBuilder(TestBean.class);
-		List<TestBean> res = x.queryEntities(connection, TestBean.class, builder);
+		res = x.queryEntities(connection, TestBean.class, builder);
 
 		assertEquals("Entity name", "BeanTest1", AnnotationHelper.getTableName(res.get(0)));
 		assertEquals("Resultset size", 2, res.size());
@@ -229,16 +267,151 @@ public class SQLExecuteTest {
 		assertEquals("Resultset size", 1, res.size());
 		
 		// Generate beans several times
-		x.prepareInsertStatement(connection, TestBean.class);
+		x.prepareInsertStatement(connection, TestBean.class, new String[] {"id", "idCustomer", "floatField"});
+		bean.setId(2);
 		x.insertEntityWithPreparedStatement(bean);
+		bean.setId(3);
 		x.insertEntityWithPreparedStatement(bean);
+		bean.setId(4);
+		bean.setFloatField(-1.0);
 		x.insertEntityWithPreparedStatement(bean);
+		bean.setId(5);
+		bean.setFloatField(-2.0);
 		x.insertEntityWithPreparedStatement(bean);
-		// Query all records
+		
+		builder = new SimpleBeanSQLQueryBuilder(TestBean.class);
+		builder.setParams(new AndOperator(new GreaterCriteria<Integer>("a.id", 1)));		
+		res = x.queryEntities(connection, TestBean.class, "a", builder);
+		assertEquals("Resultset size", 4, res.size());
+		
+		connection.commit();
+		
+		// Lock two record before update 
+		builder = new SimpleBeanSQLQueryBuilder(TestBean.class);
+		builder.setParams(new AndOperator(new LessCriteria<Double>("c.float_field", 0.0)));		
+		try {
+			res = x.lockEntities(connection, TestBean.class, "c", builder);
+			assertEquals("Resultset size", 2, res.size());
+		}
+		catch (QueryBuilderException e) {
+			if (x.getJdbcDriverClass().equals(JdbcDrivers.HSQLDB.getDriverClass())) {
+				assertTrue(true);
+			} else {
+				assertTrue(false);
+			}			
+		}
+		
+		// Test lock conflict
+		builder = new SimpleBeanSQLQueryBuilder(TestBean.class);
+		builder.setParams(new AndOperator(new LessCriteria<Double>("c.float_field", 0.0)));		
+		try {
+			res = xa.lockEntities(connection2, TestBean.class, "c", builder);
+			assertTrue(false);
+		}
+		catch (QueryBuilderException e) {
+			if (xa.getJdbcDriverClass().equals(JdbcDrivers.HSQLDB.getDriverClass())) {
+				assertTrue(true);
+			} else {
+				assertTrue(false);
+			}			
+		}		
+		catch (SQLException e) {
+			if (xa.getJdbcDriverClass().equals(JdbcDrivers.FIREBIRD.getDriverClass())) {
+				if (e.getErrorCode() == 335544345) {
+					assertTrue(true);				
+				} else {
+					assertTrue(false);
+				}
+			} else {
+				assertTrue(false);				
+			}
+		}
+				
+		// Update two records (with tabel alias and condition)
+		TestBean bean2 = new TestBean();
+		bean2.setIdCustomer(-10);
+		x.updateEntities(connection, bean2, "c", new String[] {"idCustomer"}, new AndOperator(new LessCriteria<Double>("c.float_field", 0.0)));
+		
+		builder = new SimpleBeanSQLQueryBuilder(TestBean.class);
+		builder.setParams(new AndOperator(new EqualCriteria<Integer>("id_customer", -10)));
+		res = x.queryEntities(connection, TestBean.class, builder);		
+		assertEquals("Resultset size", 2, res.size());	
+		
+		// Delete 2 records (with table alias and condition)
+		x.deleteEntities(connection, TestBean.class, "b", new AndOperator(new BetweenCriteria<Integer>("b.id", 1, 2)));
+		
+		builder = new SimpleBeanSQLQueryBuilder(TestBean.class);
+		builder.setOrderBy(new OrderByClause[] {new OrderByClause("id",false), new OrderByClause("id_customer",true)});
 		res = x.queryEntities(connection, TestBean.class, builder);
-		assertEquals("Resultset size", 5, res.size());
+		assertEquals("Resultset size", 3, res.size());
+		
+		// InsertSelect 2 record (with table alias and condition)
+		builder = new SimpleBeanSQLQueryBuilder(TestBean2.class);
+		res2 = x2.queryEntities(connection, TestBean2.class, builder);
+		assertEquals("Resultset size", 0, res2.size());
+		
+		x2.insertSelect(connection, 
+			TestBean2.class, new String[] {"id", "idCustomer"}, 
+			TestBean.class, "", new String[] {"id", "idCustomer"}, new AndOperator(new BetweenCriteria<Integer>("id", 3, 4)));		
+		
+		builder = new SimpleBeanSQLQueryBuilder(TestBean2.class);
+		res2 = x2.queryEntities(connection, TestBean2.class, builder);
+		assertEquals("Resultset size", 2, res2.size());
+		
+		
+		
+		connection.commit();
+		
+		
+		
+		// Lock one record	
+		try {
+			x2.lockEntity(connection, res2.get(0));
+		}
+		catch (QueryBuilderException e) {
+			if (x2.getJdbcDriverClass().equals(JdbcDrivers.HSQLDB.getDriverClass())) {
+				assertTrue(true);
+			} else {
+				assertTrue(false);
+			}			
+		}
+		
+		// Test one conflict
+		try {
+			xb.lockEntity(connection2, res2.get(0));
+			assertTrue(false);
+		}
+		catch (QueryBuilderException e) {
+			if (xb.getJdbcDriverClass().equals(JdbcDrivers.HSQLDB.getDriverClass())) {
+				assertTrue(true);
+			} else {
+				assertTrue(false);
+			}			
+		}		
+		catch (SQLException e) {
+			if (xb.getJdbcDriverClass().equals(JdbcDrivers.FIREBIRD.getDriverClass())) {
+				if (e.getErrorCode() == 335544345) {
+					assertTrue(true);				
+				} else {
+					assertTrue(false);
+				}
+			} else {
+				assertTrue(false);				
+			}
+		}		
+						
+		// Delete all
+		x.deleteEntities(connection, TestBean.class, null);
+		builder = new SimpleBeanSQLQueryBuilder(TestBean.class);
+		
+		res = x.queryEntities(connection, TestBean.class, builder);
+		assertEquals("Resultset size", 0, res.size());
+
 
 		connection.commit();
 		connection.close();
+		
+		connection2.commit();
+		connection2.close();		
 	}
 }
