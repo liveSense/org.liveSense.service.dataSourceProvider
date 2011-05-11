@@ -16,13 +16,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Id;
 import javax.sql.DataSource;
 
-import org.apache.commons.beanutils.BeanUtilsBean;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.dbutils.BasicRowProcessor;
 import org.apache.commons.dbutils.QueryRunner;
@@ -59,19 +59,32 @@ public abstract class SQLExecute<T> {
 	private static final String ENTITY_TYPE_MISMATCH = "Entity class type mismatch";
 	private static final String COLUMN_NAME_IS_UNDEFINED = "Column name is undefined";
 	private static final String COLUMN_DEFINITION_IS_UNDEFINED = "Column definition is undefined";
-	protected QueryBuilder builder;
+	
 
 	private enum StatementType {
 		INSERT, UPDATE
 	}
+	
 	
 	private PreparedStatement preparedStatement = null;
 	private StatementType preparedType = null;
 	private Class<?> preparedStatementClass = null;
 	private Connection connection = null;
 	private ArrayList<String> prepareStatementElements = null;
+	private String lastSQLStatement;
+	private ArrayList<Object> lastSQLStatementParameters = new ArrayList<Object>();	
+	protected QueryBuilder builder;
 	
 	
+	public String getLastSQLStatement() {	
+		return lastSQLStatement;
+	}
+
+	
+	public ArrayList<Object> getLastSQLStatementParameters() {
+		return lastSQLStatementParameters;
+	}
+
 	/**
 	 * This class is a transport class which contains and builds the query. 
 	 *
@@ -219,8 +232,12 @@ public abstract class SQLExecute<T> {
 		this.builder = builder;
 		// TODO Templateket kezelni
 		QueryRunner run = new QueryRunner();
-		ResultSetHandler<List<T>> rh = new BeanListHandler<T>(targetClass, new BasicRowProcessor(new DbStandardBeanProcessor()));		
-		return run.query(connection, getSelectQuery(tableAlias), rh);
+		ResultSetHandler<List<T>> rh = new BeanListHandler<T>(targetClass, new BasicRowProcessor(new DbStandardBeanProcessor()));
+		
+		lastSQLStatement = getSelectQuery(tableAlias);
+		lastSQLStatementParameters.clear();
+		
+		return run.query(connection, lastSQLStatement, rh);
 	}
 	
 	/**
@@ -251,7 +268,10 @@ public abstract class SQLExecute<T> {
 		QueryRunner run = new QueryRunner();
 		ResultSetHandler<List<T>> rh = new BeanListHandler<T>(targetClass, new BasicRowProcessor(new DbStandardBeanProcessor()));
 		
-		return run.query(connection, getLockQuery(tableAlias), rh);
+		lastSQLStatement = getLockQuery(tableAlias);
+		lastSQLStatementParameters.clear();		
+		
+		return run.query(connection, lastSQLStatement, rh);
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -270,6 +290,7 @@ public abstract class SQLExecute<T> {
 		
 		QueryBuilder builder = new SimpleBeanSQLQueryBuilder(entity.getClass()); 
 		builder.setParams(new AndOperator(new EqualCriteria<Integer>("id", (Integer) objs.get(idColumn))));
+		
 		lockEntities(connection, (Class<T>) entity.getClass(), builder);		
 	}	
 	
@@ -291,13 +312,20 @@ public abstract class SQLExecute<T> {
 		if (idColumn == null || "".equalsIgnoreCase(idColumn)) {
 			throw new SQLException(CLASS_DOES_NOT_HAVE_ID_ANNOTATION);
 		}
+		
 		StringBuffer sb = new StringBuffer();
 		sb.append("DELETE FROM "+tableName+" ");
 		sb.append(" WHERE "+idColumn+" = ?");
-		PreparedStatement stm = connection.prepareStatement(sb.toString());
-		int idx = 1;
-		stm.setObject(idx, objs.get(idColumn));
+		
+		lastSQLStatement = sb.toString();
+		PreparedStatement stm = connection.prepareStatement(lastSQLStatement);
+		
+		stm.setObject(1, objs.get(idColumn));
+		lastSQLStatementParameters.clear();		
+		lastSQLStatementParameters.add(objs.get(idColumn));
+		
 		stm.execute();
+		
 		if (stm.getUpdateCount() != 1) {
 			throw new java.sql.SQLException(DELETE_UNSUCCESSFULL);
 		}
@@ -325,6 +353,7 @@ public abstract class SQLExecute<T> {
 		if (tableName == null || "".equalsIgnoreCase(tableName)) {
 			throw new SQLException("Entity does not contain javax.persistence.Entity annotation");
 		}
+		
 		StringBuffer sb = new StringBuffer();
 		sb.append("DELETE FROM "+tableName+" "+tableAlias);
 		if (condition != null) {
@@ -332,7 +361,12 @@ public abstract class SQLExecute<T> {
 			builder.setParams(condition);
 			sb.append(" WHERE "+builder.buildParameters());
 		}
-		PreparedStatement stm = connection.prepareStatement(sb.toString());
+		
+		lastSQLStatement = sb.toString();
+		PreparedStatement stm = connection.prepareStatement(lastSQLStatement);
+				
+		lastSQLStatementParameters.clear();		
+		
 		stm.execute();
 	}	
 
@@ -348,6 +382,7 @@ public abstract class SQLExecute<T> {
 		if (tableName == null || "".equalsIgnoreCase(tableName)) {
 			throw new SQLException(CLASS_DOES_NOT_HAVE_ENTITY_ANNOTATION);
 		}
+		
 		StringBuffer sb = new StringBuffer();
 		StringBuffer sb2 = new StringBuffer();
 		sb.append("INSERT INTO "+AnnotationHelper.getTableName(entity)+" (");
@@ -360,19 +395,27 @@ public abstract class SQLExecute<T> {
 				sb2.append("?");
 			}
 		}
-		PreparedStatement stm = connection.prepareStatement(sb.toString()+") VALUES "+sb2.toString()+")");
+		
+		lastSQLStatement = sb.toString()+") VALUES "+sb2.toString()+")";
+		PreparedStatement stm = connection.prepareStatement(lastSQLStatement);
+		
+		lastSQLStatementParameters.clear();
 		int idx = 1;
-		for (Object param : objs.values()) {
+		for (Entry<String, Object> item : objs.entrySet()) {
+			Object param = item.getValue();
 			if (param != null) {
 				if (param instanceof java.util.Date) {
 					java.sql.Date paramD = new java.sql.Date(((java.util.Date)param).getTime());
 					param = paramD;
 				}
 				stm.setObject(idx, param);
+				lastSQLStatementParameters.add(param);
 				idx++;
 			}
 		}
+	
 		stm.execute();
+		
 		if (stm.getUpdateCount() != 1) {
 			throw new java.sql.SQLException(INSERT_UNSUCCESSFULL);
 		}
@@ -460,6 +503,7 @@ public abstract class SQLExecute<T> {
 			fields.add(idFieldName);	
 		}
 		Map<String, Object> objs = AnnotationHelper.getObjectAsMap(entity, fields);
+		
 		StringBuffer sb = new StringBuffer();
 		sb.append("UPDATE "+tableName+" "+tableAlias+" SET ");
 		boolean first = true;
@@ -479,19 +523,26 @@ public abstract class SQLExecute<T> {
 			builder.setParams(condition);
 			sb.append(" WHERE "+builder.buildParameters());
 		}
-		PreparedStatement stm = connection.prepareStatement(sb.toString());
+		
+		lastSQLStatement = sb.toString();
+		PreparedStatement stm = connection.prepareStatement(lastSQLStatement);
+		
+		lastSQLStatementParameters.clear();
 		int idx = 1;
-		for (String key : objs.keySet()) {
+		for (Entry<String, Object> item : objs.entrySet()) {
+			String key = item.getKey();
 			if (!key.equals(idColumn)) {
-				if (objs.get(key) instanceof java.util.Date) {
-					java.sql.Date paramD = new java.sql.Date(((java.util.Date)objs.get(key)).getTime());
-					stm.setObject(idx, paramD);
-				} else {
-					stm.setObject(idx, objs.get(key));
-				}
+				Object param = objs.get(key);
+				if (param instanceof java.util.Date) {
+					java.sql.Date paramD = new java.sql.Date(((java.util.Date)param).getTime());
+					param = paramD;					
+				} 
+				stm.setObject(idx, param);
+				lastSQLStatementParameters.add(param);
 				idx++;
 			}
 		}
+		
 		stm.execute();		
 	}
 	
@@ -528,6 +579,7 @@ public abstract class SQLExecute<T> {
 		if (tableName == null || "".equalsIgnoreCase(tableName)) {
 			throw new SQLException(CLASS_DOES_NOT_HAVE_ENTITY_ANNOTATION);
 		}
+		
 		StringBuffer sb = new StringBuffer();
 		StringBuffer sb2 = new StringBuffer();
 		sb.append("INSERT INTO "+AnnotationHelper.getTableName(targetClass)+" (");
@@ -540,7 +592,12 @@ public abstract class SQLExecute<T> {
 			sb.append(columnName);
 			sb2.append("?");
 		}
-		preparedStatement = connection.prepareStatement(sb.toString()+") VALUES "+sb2.toString()+")");
+		
+		lastSQLStatement = sb.toString()+") VALUES "+sb2.toString()+")";
+		preparedStatement = connection.prepareStatement(lastSQLStatement);
+		
+		lastSQLStatementParameters.clear();
+		
 		this.connection = connection;
 	}
 
@@ -581,6 +638,7 @@ public abstract class SQLExecute<T> {
 		if (idColumn == null || "".equalsIgnoreCase(idColumn)) {
 			throw new SQLException(CLASS_DOES_NOT_HAVE_ID_ANNOTATION);
 		}
+		
 		StringBuffer sb = new StringBuffer();
 		sb.append("UPDATE "+tableName+" SET ");
 		boolean first = true;
@@ -593,7 +651,12 @@ public abstract class SQLExecute<T> {
 			}
 		}	
 		sb.append(" WHERE "+idColumn+" = ?");
-		preparedStatement = connection.prepareStatement(sb.toString());
+		
+		lastSQLStatement = sb.toString();
+		preparedStatement = connection.prepareStatement(lastSQLStatement);
+		
+		lastSQLStatementParameters.clear();
+		
 		this.connection = connection;
 	}
 	
@@ -608,6 +671,8 @@ public abstract class SQLExecute<T> {
 		if (entity.getClass() != preparedStatementClass) throw new SQLException(ENTITY_TYPE_MISMATCH);
 		
 		Map<String, Object> objs = AnnotationHelper.getObjectAsMap(entity);
+		
+		lastSQLStatementParameters.clear();
 		int idx = 1;
 		for (String field : prepareStatementElements) {
 			Object param = objs.get(field);
@@ -616,9 +681,12 @@ public abstract class SQLExecute<T> {
 				param = paramD;
 			}
 			preparedStatement.setObject(idx, param);
+			lastSQLStatementParameters.add(param);
 			idx++;
 		}
+		
 		preparedStatement.execute();
+		
 		if (preparedStatement.getUpdateCount() != 1) {
 			throw new java.sql.SQLException(INSERT_UNSUCCESSFULL);
 		}
@@ -635,21 +703,29 @@ public abstract class SQLExecute<T> {
 		if (entity.getClass() != preparedStatementClass) throw new SQLException(ENTITY_TYPE_MISMATCH);
 
 		Map<String, Object> objs = AnnotationHelper.getObjectAsMap(entity);
+		
+		lastSQLStatementParameters.clear();
 		String idColumn = AnnotationHelper.getIdColumnName(entity);
 		int idx = 1;
 		for (String key : prepareStatementElements) {
 			if (!key.equals(idColumn)) {
-				if (objs.get(key) instanceof java.util.Date) {
-					java.sql.Date paramD = new java.sql.Date(((java.util.Date)objs.get(key)).getTime());
-					preparedStatement.setObject(idx, paramD);
+				Object param = objs.get(key);
+				if (param instanceof java.util.Date) {
+					java.sql.Date paramD = new java.sql.Date(((java.util.Date)param).getTime());
+					param = paramD;
 				} else {
-					preparedStatement.setObject(idx, objs.get(key));
+					
 				}
+				preparedStatement.setObject(idx, param);
+				lastSQLStatementParameters.add(param);
 				idx++;
 			}
 		}
 		preparedStatement.setObject(idx, objs.get(idColumn));
+		lastSQLStatementParameters.add(objs.get(idColumn));
+		
 		preparedStatement.execute();
+		
 		if (preparedStatement.getUpdateCount() != 1) {
 			throw new java.sql.SQLException(UPDATE_UNSUCCESSFULL);
 		}		
@@ -664,6 +740,7 @@ public abstract class SQLExecute<T> {
 				
 		List<String> list1 = new ArrayList<String>(Arrays.asList(insertFields));
 		List<String> list2 = new ArrayList<String>(Arrays.asList(selectFields));
+		
 		insertSelect(connection, insertClass, list1, selectClass, tableAlias, list2, selectCondition);
 	}
 	
@@ -683,6 +760,7 @@ public abstract class SQLExecute<T> {
 		if (selectTableName == null || "".equalsIgnoreCase(selectTableName)) {
 			throw new SQLException("Entity does not contain javax.persistence.Entity annotation");
 		}		
+		
 		//insert
 		ArrayList<String> insertColumns = AnnotationHelper.getClassColumnNames(insertClass, insertFields, true);
 		StringBuffer sb = new StringBuffer();
@@ -697,6 +775,7 @@ public abstract class SQLExecute<T> {
 		}
 		sb.append(")");
 		String insert = sb.toString();
+		
 		//select
 		ArrayList<String> selectColumns = AnnotationHelper.getClassColumnNames(selectClass, insertFields, true);
 		sb = new StringBuffer();
@@ -717,8 +796,12 @@ public abstract class SQLExecute<T> {
 			this.builder.setParams(selectCondition);
 		}
 		String select = getSelectQuery(tableAlias).replace("*", sb.toString());
-		//
-		PreparedStatement stm = connection.prepareStatement(insert +"\n"+ select);
+		
+		lastSQLStatement = insert +"\n"+ select;
+		PreparedStatement stm = connection.prepareStatement(lastSQLStatement);
+		
+		lastSQLStatementParameters.clear();
+		
 		stm.execute();		
 	}
 			
@@ -771,7 +854,12 @@ public abstract class SQLExecute<T> {
 			}
     	}
     	sb.append(")");
-		PreparedStatement stm = connection.prepareStatement(sb.toString());
+    	
+    	lastSQLStatement = sb.toString();
+		PreparedStatement stm = connection.prepareStatement(lastSQLStatement);
+		
+		lastSQLStatementParameters.clear();
+		
 		stm.execute();
 		connection.commit();
 		
@@ -793,7 +881,12 @@ public abstract class SQLExecute<T> {
 		
 		StringBuffer sb = new StringBuffer();
 		sb.append("DROP TABLE "+tableName);		
-		PreparedStatement stm = connection.prepareStatement(sb.toString());
+
+    	lastSQLStatement = sb.toString();
+		PreparedStatement stm = connection.prepareStatement(lastSQLStatement);
+		
+		lastSQLStatementParameters.clear();
+		
 		stm.execute();
 	}
 
