@@ -61,7 +61,7 @@ public abstract class SQLExecute<T> {
 	private static final String COLUMN_DEFINITION_IS_UNDEFINED = "Column definition is undefined";
 	
 
-	private enum StatementType {
+	public enum StatementType {
 		INSERT, UPDATE
 	}
 	
@@ -76,10 +76,13 @@ public abstract class SQLExecute<T> {
 	protected QueryBuilder builder;
 	
 	
+	public StatementType getPreparedType() {	
+		return preparedType;
+	}
+
 	public String getLastSQLStatement() {	
 		return lastSQLStatement;
 	}
-
 	
 	public ArrayList<Object> getLastSQLStatementParameters() {
 		return lastSQLStatementParameters;
