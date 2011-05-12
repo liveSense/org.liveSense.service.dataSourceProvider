@@ -2,7 +2,6 @@ package org.liveSense.api.sql;
 
 import java.util.List;
 
-import org.liveSense.api.sql.SQLExecute.ClauseHelper;
 import org.liveSense.api.sql.exceptions.SQLException;
 import org.liveSense.misc.queryBuilder.clauses.LimitClause;
 import org.liveSense.misc.queryBuilder.clauses.OrderByClause;
