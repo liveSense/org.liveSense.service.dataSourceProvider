@@ -23,7 +23,6 @@ import org.liveSense.misc.queryBuilder.criterias.EqualCriteria;
 import org.liveSense.misc.queryBuilder.criterias.GreaterCriteria;
 import org.liveSense.misc.queryBuilder.criterias.LessCriteria;
 import org.liveSense.misc.queryBuilder.exceptions.QueryBuilderException;
-import org.liveSense.misc.queryBuilder.jdbcDriver.JdbcDrivers;
 import org.liveSense.misc.queryBuilder.operators.AndOperator;
 
 public class SQLExecuteTest {
