@@ -42,7 +42,7 @@ public class FirebirdExecute<T> extends SQLExecute<T> {
 	 * @see {@link SQLExecute#addWhereClause(SQLExecute.ClauseHelper)}
 	 */
 	public ClauseHelper addWhereClause(ClauseHelper helper, String tableAlias) throws SQLException, QueryBuilderException {
-		String whereClause = builder.buildParameters();
+		String whereClause = builder.buildWhere();
 		if (!"".equals(whereClause)) {			
 			if (!helper.getSubSelect()) {
 				 makeSubSelective(helper, tableAlias);

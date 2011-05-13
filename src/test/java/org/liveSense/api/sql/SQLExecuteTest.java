@@ -10,7 +10,10 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+
 import org.apache.commons.dbcp.BasicDataSource;
 import org.hsqldb.Server;
 import org.junit.Test;
@@ -23,6 +26,7 @@ import org.liveSense.misc.queryBuilder.criterias.EqualCriteria;
 import org.liveSense.misc.queryBuilder.criterias.GreaterCriteria;
 import org.liveSense.misc.queryBuilder.criterias.LessCriteria;
 import org.liveSense.misc.queryBuilder.exceptions.QueryBuilderException;
+import org.liveSense.misc.queryBuilder.operands.OperandSource;
 import org.liveSense.misc.queryBuilder.operators.AndOperator;
 
 public class SQLExecuteTest {
@@ -279,15 +283,25 @@ public class SQLExecuteTest {
 		x.insertEntityWithPreparedStatement(bean);
 		
 		builder = new SimpleBeanSQLQueryBuilder(TestBean.class);
-		builder.setParams(new AndOperator(new GreaterCriteria<Integer>("a.id", 1)));		
+		builder.setWhere(new AndOperator(new GreaterCriteria<Integer>("a", "id", 1)));		
 		res = x.queryEntities(connection, TestBean.class, "a", builder);
 		assertEquals("Resultset size", 4, res.size());
 		
 		connection.commit();
 		
+		// select two record with parameters
+		builder = new SimpleBeanSQLQueryBuilder(TestBean.class);
+		builder.setWhere(new AndOperator(new LessCriteria<OperandSource>("c", "float_field", new OperandSource("", ":param11", false))));
+		Map<String, Object> params = new HashMap<String, Object>();
+		params.put("param1", 0.01);
+		params.put("param11", 0.02);//--just for ordering test
+		builder.setParameters(params);
+		res = x.queryEntities(connection, TestBean.class, "c", builder, params);
+		assertEquals("Resultset size", 2, res.size());		
+		
 		// Lock two record before update 
 		builder = new SimpleBeanSQLQueryBuilder(TestBean.class);
-		builder.setParams(new AndOperator(new LessCriteria<Double>("c.float_field", 0.0)));		
+		builder.setWhere(new AndOperator(new LessCriteria<Double>("c", "float_field", 0.0)));		
 		try {
 			res = x.lockEntities(connection, TestBean.class, "c", builder);
 			assertEquals("Resultset size", 2, res.size());
@@ -302,7 +316,7 @@ public class SQLExecuteTest {
 		
 		// Test lock conflict
 		builder = new SimpleBeanSQLQueryBuilder(TestBean.class);
-		builder.setParams(new AndOperator(new LessCriteria<Double>("c.float_field", 0.0)));		
+		builder.setWhere(new AndOperator(new LessCriteria<Double>("c", "float_field", 0.0)));		
 		try {
 			res = xa.lockEntities(connection2, TestBean.class, "c", builder);
 			assertTrue(false);
@@ -327,33 +341,47 @@ public class SQLExecuteTest {
 		// Update two records (with tabel alias and condition)
 		TestBean bean2 = new TestBean();
 		bean2.setIdCustomer(-10);
-		x.updateEntities(connection, bean2, "c", new String[] {"idCustomer"}, new AndOperator(new LessCriteria<Double>("c.float_field", 0.0)));
+		x.updateEntities(connection, bean2, "c", new String[] {"idCustomer"}, new AndOperator(new LessCriteria<Double>("c", "float_field", 0.0)));
 		
 		builder = new SimpleBeanSQLQueryBuilder(TestBean.class);
-		builder.setParams(new AndOperator(new EqualCriteria<Integer>("id_customer", -10)));
+		builder.setWhere(new AndOperator(new EqualCriteria<Integer>("id_customer", -10)));
 		res = x.queryEntities(connection, TestBean.class, builder);		
 		assertEquals("Resultset size", 2, res.size());	
 		
 		// Delete 2 records (with table alias and condition)
-		x.deleteEntities(connection, TestBean.class, "b", new AndOperator(new BetweenCriteria<Integer>("b.id", 1, 2)));
+		x.deleteEntities(connection, TestBean.class, "b", new AndOperator(new BetweenCriteria<Integer>("b", "id", 1, 2)));
 		
 		builder = new SimpleBeanSQLQueryBuilder(TestBean.class);
 		builder.setOrderBy(new OrderByClause[] {new OrderByClause("id",false), new OrderByClause("id_customer",true)});
 		res = x.queryEntities(connection, TestBean.class, builder);
 		assertEquals("Resultset size", 3, res.size());
 		
-		// InsertSelect 2 record (with table alias and condition)
+		// InsertSelect 1 record (with table alias and condition)
 		builder = new SimpleBeanSQLQueryBuilder(TestBean2.class);
 		res2 = x2.queryEntities(connection, TestBean2.class, builder);
 		assertEquals("Resultset size", 0, res2.size());
 		
 		x2.insertSelect(connection, 
 			TestBean2.class, new String[] {"id", "idCustomer"}, 
-			TestBean.class, "", new String[] {"id", "idCustomer"}, new AndOperator(new BetweenCriteria<Integer>("id", 3, 4)));		
+			TestBean.class, "", new String[] {"id", "idCustomer"}, new AndOperator(new BetweenCriteria<Integer>("id", 3, 3)), null);		
 		
 		builder = new SimpleBeanSQLQueryBuilder(TestBean2.class);
 		res2 = x2.queryEntities(connection, TestBean2.class, builder);
-		assertEquals("Resultset size", 2, res2.size());
+		assertEquals("Resultset size", 1, res2.size());
+		
+		// InsertSelect 2 record (with table alias and condition and parameters)
+		Map<String, Object> params2 = new HashMap<String, Object>();
+		params2.put("id", 3);
+		
+		x2.insertSelect(connection, 
+			TestBean2.class, new String[] {"id", "idCustomer"}, 
+			TestBean.class, "", new String[] {"id", "idCustomer"},
+			new AndOperator(new GreaterCriteria<OperandSource>("id", new OperandSource("", ":id", false))),
+			params2);		
+		
+		builder = new SimpleBeanSQLQueryBuilder(TestBean2.class);
+		res2 = x2.queryEntities(connection, TestBean2.class, builder);
+		assertEquals("Resultset size", 3, res2.size());		
 		
 		
 		

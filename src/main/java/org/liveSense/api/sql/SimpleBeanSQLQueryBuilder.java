@@ -35,7 +35,7 @@ public class SimpleBeanSQLQueryBuilder  extends QueryBuilder {
 		this.statement = "SELECT * FROM "+tableName;
 		setLimit(limit);
 		setOrderBy(orderBy);
-		setParams(parameters);
+		setWhere(parameters);
 	}
 
 	@Override

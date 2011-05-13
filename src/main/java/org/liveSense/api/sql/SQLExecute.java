@@ -21,8 +21,6 @@ import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Id;
-import javax.sql.DataSource;
-
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.dbutils.BasicRowProcessor;
 import org.apache.commons.dbutils.QueryRunner;
@@ -30,6 +28,7 @@ import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.dbutils.handlers.BeanListHandler;
 import org.liveSense.api.beanprocessors.DbStandardBeanProcessor;
 import org.liveSense.api.sql.exceptions.SQLException;
+import org.liveSense.misc.queryBuilder.ObjectToSQLLiteral;
 import org.liveSense.misc.queryBuilder.QueryBuilder;
 import org.liveSense.misc.queryBuilder.SimpleSQLQueryBuilder;
 import org.liveSense.misc.queryBuilder.criterias.EqualCriteria;
@@ -40,18 +39,19 @@ import org.liveSense.misc.queryBuilder.operators.AndOperator;
 
 /**
  * This class provides basic functionalities of SQL for javax.persistence annotated beans.
- * It's a simple CRUD based persistance layer.
  * 
  * @param <T> - The Bean class is used for
  */
 public abstract class SQLExecute<T> {
 
+	
+	private static final String THIS_TYPE_OF_JDBC_DIALECT_IS_NOT_IMPLEMENTED = "This type of JDBC dialect is not implemented";
+	private static final String PARAMERER_NAME_ERROR = "Paramerer name contains ':'.";
 	private static final String CLASS_DOES_NOT_HAVE_ENTITY_ANNOTATION = "Class does not contain javax.persistence.Entity or javax.persistence.Entity.Table annotation";
 	private static final String CLASS_DOES_NOT_HAVE_ID_ANNOTATION = "Entity does not contain javax.persistence.Id annotation";
 	private static final String CONNECTION_IS_NULL = "Connection is null";
 	private static final String ENTITY_IS_NULL = "Entity is null";
 	private static final String NO_DATASOURCE = "No datasource is defined";
-	private static final String DELETE_UNSUCCESSFULL = "DELETE was unsuccessfull";
 	private static final String INSERT_UNSUCCESSFULL = "INSERT was unsuccessfull";	
 	private static final String UPDATE_UNSUCCESSFULL = "UPDATE was unsuccessfull";
 	private static final String STATEMENT_TYPE_IS_NOT_INSERT = "The statement type does not match with INSERT";
@@ -64,16 +64,18 @@ public abstract class SQLExecute<T> {
 	public enum StatementType {
 		INSERT, UPDATE
 	}
-	
-	
+		
+	private String jdbcDriverClass;
 	private PreparedStatement preparedStatement = null;
 	private StatementType preparedType = null;
-	private Class<?> preparedStatementClass = null;
+	@SuppressWarnings("rawtypes")
+	private Class preparedStatementClass = null;
 	private Connection connection = null;
 	private ArrayList<String> prepareStatementElements = null;
 	private String lastSQLStatement;
 	private ArrayList<Object> lastSQLStatementParameters = new ArrayList<Object>();	
 	protected QueryBuilder builder;
+	
 	
 	
 	public StatementType getPreparedType() {	
@@ -115,6 +117,36 @@ public abstract class SQLExecute<T> {
 		}
 		
 	}
+		
+	private String replaceParameters(String sql, Map<String, Object> params) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException, SQLException {
+		if (params == null)
+			return sql;
+		
+		String[] keys = new String[params.size()];
+		
+		int idx = -1;
+		for (String key : params.keySet()) {
+			idx++;
+			keys[idx] = key;			
+		}
+		
+		Arrays.sort(keys);
+		
+		//it's important to go backward (descending order). This way we can avoid to replace wrong (e.g.: :param1, :param11)
+		while (idx != -1) {
+			String key = keys[idx];
+			if (key.contains(":")) throw new SQLException(PARAMERER_NAME_ERROR); 
+				
+			String value = new ObjectToSQLLiteral(params.get(key)).getLiteral(jdbcDriverClass);
+			
+			//WARNING : this will replace in String literals too, choose your parameter names carefully 
+			sql = sql.replace(":" + key, value);
+			idx--;
+		}		
+
+		return sql;
+	}
+	
 
 	/**
 	 * Add where clause for select. The method depends on the type of SQL dialect
@@ -144,7 +176,7 @@ public abstract class SQLExecute<T> {
 	public abstract ClauseHelper addOrderByClause(ClauseHelper helper) throws SQLException, QueryBuilderException;
 
 	/**
-	 * It's build the statement from the base query by added the clauses.
+	 * It builds the select statement from the base query.
 	 * @return The final SQL statement
 	 * @throws SQLException
 	 * @throws QueryBuilderException
@@ -158,14 +190,25 @@ public abstract class SQLExecute<T> {
 	 */
 	public abstract String getSelectQuery(String tableAlias) throws SQLException, QueryBuilderException;
 	
-	
+	/**
+	 * It builds the lock (select) statement from the base query.
+	 * @return The final SQL statement
+	 * @throws SQLException
+	 * @throws QueryBuilderException
+	 */	
 	public abstract String getLockQuery() throws SQLException, QueryBuilderException;
 		
+	/**
+	 * {@inheritDoc}
+	 * @param tableAlias SQL alias of the table 
+	 * @see {@link SQLExecute#getLockQuery()}
+	 */	
 	public abstract String getLockQuery(String tableAlias) throws SQLException, QueryBuilderException;	
 		
 	/**
-	 * Get the related SQL dialect by the DataSource (Apache DBCP required).
-	 * The supported engines are: MYSQL, HSQLDB, FIREBIRD
+	 * Returns RDMS dependent SQLExecuter. (Apache DBCP required).
+	 * The currently supported engines are: MYSQL, HSQLDB, FIREBIRD
+	 * 
 	 * @param ds The dataSource object
 	 * @return SQL Execute Object (optimized for dialect)
 	 * @throws SQLException
@@ -173,46 +216,20 @@ public abstract class SQLExecute<T> {
 	@SuppressWarnings("rawtypes")
 	public static SQLExecute<?> getExecuterByDataSource(BasicDataSource ds) throws SQLException {
 		if (ds == null) throw new SQLException(NO_DATASOURCE);
-		String jdbcDriverClass = ds.getDriverClassName();
+		String driverClass = ds.getDriverClassName();
 		
 		SQLExecute<?> executer;
-		if (jdbcDriverClass.equals(JdbcDrivers.MYSQL.getDriverClass())) executer = new MySqlExecute(-1);
-		else if (jdbcDriverClass.equals(JdbcDrivers.HSQLDB.getDriverClass())) executer = new HSqlDbExecute(-1);
-		else if (jdbcDriverClass.equals(JdbcDrivers.FIREBIRD.getDriverClass())) executer = new FirebirdExecute(-1);
-		else throw new SQLException("This type of JDBC dialect is not implemented: "+jdbcDriverClass);
+		if (driverClass.equals(JdbcDrivers.MYSQL.getDriverClass())) executer = new MySqlExecute(-1);
+		else if (driverClass.equals(JdbcDrivers.HSQLDB.getDriverClass())) executer = new HSqlDbExecute(-1);
+		else if (driverClass.equals(JdbcDrivers.FIREBIRD.getDriverClass())) executer = new FirebirdExecute(-1);
+		else throw new SQLException(THIS_TYPE_OF_JDBC_DIALECT_IS_NOT_IMPLEMENTED+": "+driverClass);
+		executer.jdbcDriverClass = driverClass;
 		return executer;
 	}
 	
 	/**
-	 * Query entites from database. The query builded by the given QueryBuilder. The resulset mapped by
-	 * defult with the Bean javax.persistence.Column annotation, if annotation is not found the field names
-	 * is the resultset column name. (The _ character are deleted)
-	 * 
-	 * @param dataSource The datasource
-	 * @param targetClass
-	 * @param builder Query builder
-	 * @return List of bean objects
-	 * @throws Exception
-	 */
-	public List<T> queryEntities(DataSource dataSource, 
-			Class<T> targetClass, QueryBuilder builder) throws Exception {
-		return queryEntities(dataSource.getConnection(), targetClass, builder);
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 * @param tableAlias SQL alias of the table 
-	 * @see {@link SQLExecute#queryEntities(DataSource dataSource, Class<T> targetClass, QueryBuilder builder)}
-	 */	
-	public List<T> queryEntities(DataSource dataSource, 
-		Class<T> targetClass, String tableAlias, QueryBuilder builder) throws Exception {
-	return queryEntities(dataSource.getConnection(), targetClass, tableAlias, builder);
-}
-	
-	/**
-	 * Query entites from database. The query builded by the given QueryBuilder. The resulset mapped by
-	 * defult with the Bean javax.persistence.Column annotation, if annotation is not found the field names
-	 * is the resultset column name. (The _ character are deleted)
+	 * Query entites from database. The resulset mapped by defult with bean's javax.persistence.Column annotations. 
+	 * If an annotation is not found then the field name is the resultset column name (The _ character are deleted).
 	 * 
 	 * @param Connection SQL Connection
 	 * @param targetClass
@@ -220,33 +237,51 @@ public abstract class SQLExecute<T> {
 	 * @return List of bean objects
 	 * @throws Exception
 	 */
+	@SuppressWarnings({ "rawtypes" })
 	public List<T> queryEntities(Connection connection, 
-			Class<T> targetClass, QueryBuilder builder) throws Exception {
+			Class targetClass, QueryBuilder builder) throws Exception {
 		return queryEntities(connection, targetClass, "", builder);
 	}
-
+	
 	/**
 	 * {@inheritDoc}
 	 * @param tableAlias SQL alias of the table 
 	 * @see {@link SQLExecute#queryEntities(Connection connection, Class<T> targetClass, QueryBuilder builder)}
 	 */
+	@SuppressWarnings({ "rawtypes" })
 	public List<T> queryEntities(Connection connection, 
-			Class<T> targetClass, String tableAlias, QueryBuilder builder) throws Exception {		
+			Class targetClass, String tableAlias, QueryBuilder builder) throws Exception {
+		return queryEntities(connection, targetClass, tableAlias, builder, null);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * @param params parameter-value pair map 
+	 * @see {@link SQLExecute#queryEntities(Connection connection, Class<T> targetClass, String tableAlias, QueryBuilder builder)}
+	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public List<T> queryEntities(Connection connection, 
+			Class targetClass, String tableAlias, QueryBuilder builder, Map<String, Object> params) throws Exception {
+		
+		if (connection == null) throw new SQLException(CONNECTION_IS_NULL);
+		
 		this.builder = builder;
+		
 		// TODO Templateket kezelni
 		QueryRunner run = new QueryRunner();
 		ResultSetHandler<List<T>> rh = new BeanListHandler<T>(targetClass, new BasicRowProcessor(new DbStandardBeanProcessor()));
 		
 		lastSQLStatement = getSelectQuery(tableAlias);
 		lastSQLStatementParameters.clear();
+
+		lastSQLStatement = replaceParameters(lastSQLStatement, params);
 		
 		return run.query(connection, lastSQLStatement, rh);
 	}
 	
 	/**
-	 * locks entites in database. The query builded by the given QueryBuilder. The resulset mapped by
-	 * defult with the Bean javax.persistence.Column annotation, if annotation is not found the field names
-	 * is the resultset column name. (The _ character are deleted)
+	 * Lock entities in database. The resulset mapped by defult with bean's javax.persistence.Column annotations. 
+	 * If an annotation is not found then the field name is the resultset column name (The _ character are deleted).
 	 * 
 	 * @param Connection SQL Connection
 	 * @param targetClass
@@ -254,127 +289,142 @@ public abstract class SQLExecute<T> {
 	 * @return List of bean objects
 	 * @throws Exception
 	 */
+	@SuppressWarnings("rawtypes")
 	public List<T> lockEntities(Connection connection, 
-			Class<T> targetClass, QueryBuilder builder) throws Exception {
+			Class targetClass, QueryBuilder builder) throws Exception {
 		return lockEntities(connection, targetClass, "", builder);
 	}
-
+	
 	/**
 	 * {@inheritDoc}
 	 * @param tableAlias SQL alias of the table 
 	 * @see {@link SQLExecute#lockEntities(Connection connection, Class<T> targetClass, QueryBuilder builder)}
 	 */
+	@SuppressWarnings({ "rawtypes" })
 	public List<T> lockEntities(Connection connection, 
-			Class<T> targetClass, String tableAlias, QueryBuilder builder) throws Exception {		
+			Class targetClass, String tableAlias, QueryBuilder builder) throws Exception {		
+		return lockEntities(connection, targetClass, tableAlias, builder, null);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * @param params parameter-value pair map 
+	 * @see {@link SQLExecute#lockEntities(Connection connection, Class<T> targetClass, String tableAlias, QueryBuilder builder)}
+	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public List<T> lockEntities(Connection connection, 
+			Class targetClass, String tableAlias, QueryBuilder builder, Map<String, Object> params) throws Exception {		
+		if (connection == null) throw new SQLException(CONNECTION_IS_NULL);		
+		
 		this.builder = builder;
+		
 		// TODO Templateket kezelni
 		QueryRunner run = new QueryRunner();
 		ResultSetHandler<List<T>> rh = new BeanListHandler<T>(targetClass, new BasicRowProcessor(new DbStandardBeanProcessor()));
 		
 		lastSQLStatement = getLockQuery(tableAlias);
-		lastSQLStatementParameters.clear();		
+		lastSQLStatementParameters.clear();
+		
+		lastSQLStatement = replaceParameters(lastSQLStatement, params);
 		
 		return run.query(connection, lastSQLStatement, rh);
 	}
 	
-	@SuppressWarnings("unchecked")
-	public void lockEntity(Connection connection, T entity) throws Exception {
-		if (connection == null) throw new SQLException("Connection is null");
-		if (entity == null) throw new SQLException("Entity is null");
-		Map<String, Object> objs = AnnotationHelper.getObjectAsMap(entity);
-		String idColumn = AnnotationHelper.getIdColumnName(entity);
-		String tableName = AnnotationHelper.getTableName(entity);
-		if (tableName == null || "".equalsIgnoreCase(tableName)) {
-			throw new SQLException("Entity does not contain javax.persistence.Entity annotation");
-		}
-		if (idColumn == null || "".equalsIgnoreCase(idColumn)) {
-			throw new SQLException("Entity does not contain javax.persistence.Id annotation");
-		}
-		
-		QueryBuilder builder = new SimpleBeanSQLQueryBuilder(entity.getClass()); 
-		builder.setParams(new AndOperator(new EqualCriteria<Integer>("id", (Integer) objs.get(idColumn))));
-		
-		lockEntities(connection, (Class<T>) entity.getClass(), builder);		
-	}	
-	
 	/**
-	 * Delete one entity. The given bean have to be annotated with javax.persistence.Entity and javax.persistence.Id
-	 * @param connection SQL Connection
-	 * @param entity The bean
+	 * Locks one entity in database. The given bean have to be annotated with javax.persistence.Entity and javax.persistence.Id
+	 * 
+	 * @param Connection SQL Connection
+	 * @param entity
 	 * @throws Exception
-	 */
-	public void deleteEntity(Connection connection, T entity) throws Exception {
-		if (connection == null) throw new SQLException(CONNECTION_IS_NULL);
-		if (entity == null) throw new SQLException(ENTITY_IS_NULL);
-		Map<String, Object> objs = AnnotationHelper.getObjectAsMap(entity);
+	 */	
+	public void lockEntity(Connection connection, T entity) throws Exception {		
+		if (entity == null) throw new SQLException(ENTITY_IS_NULL);		
 		String idColumn = AnnotationHelper.getIdColumnName(entity);
-		String tableName = AnnotationHelper.getTableName(entity);
-		if (tableName == null || "".equalsIgnoreCase(tableName)) {
-			throw new SQLException(CLASS_DOES_NOT_HAVE_ENTITY_ANNOTATION);
-		}
 		if (idColumn == null || "".equalsIgnoreCase(idColumn)) {
 			throw new SQLException(CLASS_DOES_NOT_HAVE_ID_ANNOTATION);
 		}
+		Map<String, Object> objs = AnnotationHelper.getObjectAsMap(entity);
 		
-		StringBuffer sb = new StringBuffer();
-		sb.append("DELETE FROM "+tableName+" ");
-		sb.append(" WHERE "+idColumn+" = ?");
+		QueryBuilder builder = new SimpleBeanSQLQueryBuilder(entity.getClass()); 
+		builder.setWhere(new AndOperator(new EqualCriteria<Integer>(idColumn, (Integer) objs.get(idColumn))));
 		
-		lastSQLStatement = sb.toString();
-		PreparedStatement stm = connection.prepareStatement(lastSQLStatement);
-		
-		stm.setObject(1, objs.get(idColumn));
-		lastSQLStatementParameters.clear();		
-		lastSQLStatementParameters.add(objs.get(idColumn));
-		
-		stm.execute();
-		
-		if (stm.getUpdateCount() != 1) {
-			throw new java.sql.SQLException(DELETE_UNSUCCESSFULL);
-		}
-	}
+		lockEntities(connection, entity.getClass(), builder); 
+	}	
 	
 	/**
-	 * Delete entities 
+	 * Delete entities from database.
+	 *  
 	 * @param connection SQL Connection
 	 * @param clazz
 	 * @param Object condition SQL condition for QueryBuilder.setParams  
 	 * @throws Exception
 	 */	
-	public void deleteEntities(Connection connection, Class<T> clazz, Object condition) throws Exception {
+	@SuppressWarnings("rawtypes")
+	public void deleteEntities(Connection connection, Class clazz, Object condition) throws Exception {
 		deleteEntities(connection, clazz, "", condition);
 	}
-
+	
 	/**
 	 * {@inheritDoc}
 	 * @param tableAlias SQL alias of the table 
 	 * @see {@link SQLExecute#deleteEntities(Connection connection, Class<T> clazz, Object condition)}
 	 */	
-	public void deleteEntities(Connection connection, Class<T> clazz, String tableAlias, Object condition) throws Exception {
-		if (connection == null) throw new SQLException("Connection is null");
+	@SuppressWarnings("rawtypes")
+	public void deleteEntities(Connection connection, Class clazz, String tableAlias, Object condition) throws Exception {
+		deleteEntities(connection, clazz, tableAlias, condition, null);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * @param params parameter-value pair map 
+	 * @see {@link SQLExecute#deleteEntities(Connection connection, String tableAlias, Class<T> clazz, Object condition)}
+	 */	
+	@SuppressWarnings("rawtypes")
+	public void deleteEntities(Connection connection, Class clazz, String tableAlias, Object condition, Map<String, Object> params) throws Exception {
+		if (connection == null) throw new SQLException(CONNECTION_IS_NULL);
 		String tableName = AnnotationHelper.getTableName(clazz);
 		if (tableName == null || "".equalsIgnoreCase(tableName)) {
-			throw new SQLException("Entity does not contain javax.persistence.Entity annotation");
+			throw new SQLException(CLASS_DOES_NOT_HAVE_ENTITY_ANNOTATION);
 		}
 		
 		StringBuffer sb = new StringBuffer();
 		sb.append("DELETE FROM "+tableName+" "+tableAlias);
 		if (condition != null) {
 			QueryBuilder builder = new SimpleSQLQueryBuilder("");
-			builder.setParams(condition);
-			sb.append(" WHERE "+builder.buildParameters());
+			builder.setWhere(condition);
+			sb.append(" WHERE "+builder.buildWhere());
 		}
 		
 		lastSQLStatement = sb.toString();
+		lastSQLStatement = replaceParameters(lastSQLStatement, params);
 		PreparedStatement stm = connection.prepareStatement(lastSQLStatement);
 				
 		lastSQLStatementParameters.clear();		
 		
 		stm.execute();
+	}
+	
+	/**
+	 * Delete one entity from database. The given bean have to be annotated with javax.persistence.Entity and javax.persistence.Id
+	 * 
+	 * @param connection SQL Connection
+	 * @param entity The bean
+	 * @throws Exception
+	 */
+	public void deleteEntity(Connection connection, T entity) throws Exception {
+		if (entity == null) throw new SQLException(ENTITY_IS_NULL);		
+		String idColumn = AnnotationHelper.getIdColumnName(entity);
+		if (idColumn == null || "".equalsIgnoreCase(idColumn)) {
+			throw new SQLException(CLASS_DOES_NOT_HAVE_ID_ANNOTATION);
+		}
+		Map<String, Object> objs = AnnotationHelper.getObjectAsMap(entity);
+				
+		deleteEntities(connection, entity.getClass(), new AndOperator(new EqualCriteria<Integer>(idColumn, (Integer) objs.get(idColumn))));		
 	}	
 
 	/**
-	 * Insert one entity. The given bean have to be annotated with javax.persistence.Entity and javax.persistence.Id
+	 * Insert one entity into database. The given bean have to be annotated with javax.persistence.Entity and javax.persistence.Id
+	 * 
 	 * @param connection SQL Connection
 	 * @param entity The bean
 	 * @throws Exception
@@ -418,46 +468,11 @@ public abstract class SQLExecute<T> {
 		}
 	
 		stm.execute();
+	}
 		
-		if (stm.getUpdateCount() != 1) {
-			throw new java.sql.SQLException(INSERT_UNSUCCESSFULL);
-		}
-	}
-	
 	/**
-	 * Update one entity. The given bean have to be annotated with javax.persistence.Entity and javax.persistence.Id
-	 * @param connection SQL Connection
-	 * @param entity The bean
-	 * @throws Exception
-	 */
-	public void updateEntity(Connection connection, T entity) throws Exception {
-		updateEntity(connection, entity, (List<String>)null);
-	}
-	
-	/**
-	 * {@inheritDoc}
-	 * @param fields list of the updateabe fields
-	 * @see {@link SQLExecute#updateEntity(Connection connection, T entity)}
-	 */	
-	public void updateEntity(Connection connection, T entity, String[] fields) throws Exception {
-		List<String> list = new ArrayList<String>(Arrays.asList(fields));		
-		updateEntity(connection, entity, list);
-	}	
-	
-	/**
-	 * {@inheritDoc}
-	 * @param fields list of the updateabe fields
-	 * @see {@link SQLExecute#updateEntity(Connection connection, T entity)}
-	 */	
-	public void updateEntity(Connection connection, T entity, List<String> fields) throws Exception {
-		String idColumn = AnnotationHelper.getIdColumnName(entity);
-		Map<String, Object> objs = AnnotationHelper.getObjectAsMap(entity, fields);
-		
-		updateEntities(connection, entity, "", fields, new AndOperator(new EqualCriteria<Integer>("id", new Integer((Integer) objs.get(idColumn)))));	
-	}
-	
-	/**
-	 * Update entities.
+	 * Update entities in database. The given bean have to be annotated with javax.persistence.Entity.
+	 * 
 	 * @param connection SQL Connection
 	 * @param entity The bean
 	 * @param fields list of the updateabe fields
@@ -486,13 +501,23 @@ public abstract class SQLExecute<T> {
 		List<String> list = new ArrayList<String>(Arrays.asList(fields));
 		updateEntities(connection, entity, tableAlias, list, condition);
 	}
-
+	
 	/**
 	 * {@inheritDoc}
 	 * @param tableAlias SQL alias of the table 
 	 * @see {@link updateEntities#updateEntity(Connection connection, T entity, List<String> fields, Object condition)}
 	 */	 
 	public void updateEntities(Connection connection,T entity, String tableAlias, List<String> fields, Object condition) throws Exception {
+		updateEntities(connection, entity, tableAlias, fields, condition, null);
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * @param params parameter-value pair map 
+	 * @see {@link updateEntities#updateEntity(Connection connection, T entity, List<String> fields, Object condition)}
+	 */	 
+	public void updateEntities(Connection connection,T entity, String tableAlias, List<String> fields, Object condition, Map<String, Object> params) throws Exception {
+		if (entity == null) throw new SQLException(ENTITY_IS_NULL);		
 		String idColumn = AnnotationHelper.getIdColumnName(entity);
 		String tableName = AnnotationHelper.getTableName(entity);		
 		if (tableName == null || "".equalsIgnoreCase(tableName)) {
@@ -523,11 +548,12 @@ public abstract class SQLExecute<T> {
 		}	
 		if (condition != null) {
 			QueryBuilder builder = new SimpleSQLQueryBuilder("");
-			builder.setParams(condition);
-			sb.append(" WHERE "+builder.buildParameters());
+			builder.setWhere(condition);
+			sb.append(" WHERE "+builder.buildWhere());
 		}
 		
 		lastSQLStatement = sb.toString();
+		lastSQLStatement = replaceParameters(lastSQLStatement, params);
 		PreparedStatement stm = connection.prepareStatement(lastSQLStatement);
 		
 		lastSQLStatementParameters.clear();
@@ -550,12 +576,51 @@ public abstract class SQLExecute<T> {
 	}
 	
 	/**
-	 * Prepare an insert statement to execute the statement several times with different objects.
+	 * Update one entity in database. The given bean have to be annotated with javax.persistence.Entity and javax.persistence.Id
+	 * 
+	 * @param connection SQL Connection
+	 * @param entity The bean
+	 * @throws Exception
+	 */
+	public void updateEntity(Connection connection, T entity) throws Exception {
+		updateEntity(connection, entity, (List<String>)null);
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 * @param fields list of the updateabe fields
+	 * @see {@link SQLExecute#updateEntity(Connection connection, T entity)}
+	 */	
+	public void updateEntity(Connection connection, T entity, String[] fields) throws Exception {
+		List<String> list = new ArrayList<String>(Arrays.asList(fields));		
+		updateEntity(connection, entity, list);
+	}	
+	
+	/**
+	 * {@inheritDoc}
+	 * @param fields list of the updateabe fields
+	 * @see {@link SQLExecute#updateEntity(Connection connection, T entity)}
+	 */	
+	public void updateEntity(Connection connection, T entity, List<String> fields) throws Exception {
+		if (entity == null) throw new SQLException(ENTITY_IS_NULL);
+		String idColumn = AnnotationHelper.getIdColumnName(entity);
+		if (idColumn == null || "".equalsIgnoreCase(idColumn)) {
+			throw new SQLException(CLASS_DOES_NOT_HAVE_ID_ANNOTATION);
+		}		
+		Map<String, Object> objs = AnnotationHelper.getObjectAsMap(entity, fields);
+		
+		updateEntities(connection, entity, "", fields, new AndOperator(new EqualCriteria<Integer>(idColumn, new Integer((Integer) objs.get(idColumn)))));	
+	}	
+	
+	/**
+	 * Prepare an insert statement.
+	 * 
 	 * @param connection
 	 * @param targetClass 
 	 * @throws Exception
 	 */
-	public void prepareInsertStatement(Connection connection, Class<T> targetClass) throws Exception {
+	@SuppressWarnings("rawtypes")
+	public void prepareInsertStatement(Connection connection, Class targetClass) throws Exception {
 		prepareInsertStatement(connection,targetClass,(List<String>)null);
 	}	
 	
@@ -564,7 +629,8 @@ public abstract class SQLExecute<T> {
 	 * @param fields list of fields  
 	 * @see {@link updateEntities#prepareInsertStatement(Connection connection, Class<T> targetClass)}
 	 */		
-	public void prepareInsertStatement(Connection connection, Class<T> targetClass, String[] fields) throws Exception {
+	@SuppressWarnings("rawtypes")
+	public void prepareInsertStatement(Connection connection, Class targetClass, String[] fields) throws Exception {
 		List<String> list = new ArrayList<String>(Arrays.asList(fields));
 		prepareInsertStatement(connection,targetClass,list);
 	}
@@ -574,7 +640,8 @@ public abstract class SQLExecute<T> {
 	 * @param fields list of fields  
 	 * @see {@link updateEntities#prepareInsertStatement(Connection connection, Class<T> targetClass)}
 	 */	
-	public void prepareInsertStatement(Connection connection, Class<T> targetClass, List<String> fields) throws Exception {
+	@SuppressWarnings("rawtypes")
+	public void prepareInsertStatement(Connection connection, Class targetClass, List<String> fields) throws Exception {
 		preparedType = StatementType.INSERT;
 		preparedStatementClass = targetClass;
 		Set<String> columns = AnnotationHelper.getClassColumnNames(targetClass, fields);
@@ -605,12 +672,14 @@ public abstract class SQLExecute<T> {
 	}
 
 	/**
-	 * Prepare an update statement to execute the statement several times with different objects.
+	 * Prepare an update statement.
+	 * 
 	 * @param connection
 	 * @param targetClass
 	 * @throws Exception
 	 */
-	public void prepareUpdateStatement(Connection connection, Class<T> targetClass) throws Exception {
+	@SuppressWarnings("rawtypes")
+	public void prepareUpdateStatement(Connection connection, Class targetClass) throws Exception {
 		prepareUpdateStatement(connection, targetClass, (List<String>)null);
 	}
 	
@@ -619,7 +688,8 @@ public abstract class SQLExecute<T> {
 	 * @param fields list of fields  
 	 * @see {@link updateEntities#prepareUpdateStatement(Connection connection, Class<T> targetClass)}
 	 */	
-	public void prepareUpdateStatement(Connection connection, Class<T> targetClass, String[] fields) throws Exception {
+	@SuppressWarnings("rawtypes")
+	public void prepareUpdateStatement(Connection connection, Class targetClass, String[] fields) throws Exception {
 		List<String> list =  new ArrayList<String>(Arrays.asList(fields));
 		prepareUpdateStatement(connection, targetClass, list);
 	}
@@ -629,7 +699,8 @@ public abstract class SQLExecute<T> {
 	 * @param fields list of fields  
 	 * @see {@link updateEntities#prepareUpdateStatement(Connection connection, Class<T> targetClass)}
 	 */	
-	public void prepareUpdateStatement(Connection connection, Class<T> targetClass, List<String> fields) throws Exception {
+	@SuppressWarnings("rawtypes")
+	public void prepareUpdateStatement(Connection connection, Class targetClass, List<String> fields) throws Exception {
 		preparedType = StatementType.UPDATE;
 		preparedStatementClass = targetClass;
 		Set<String> columns = AnnotationHelper.getClassColumnNames(targetClass, fields);
@@ -664,7 +735,8 @@ public abstract class SQLExecute<T> {
 	}
 	
 	/**
-	 * Insert one entity with prepared statement. The given bean have to be annotated with javax.persistence.Entity and javax.persistence.Id
+	 * Insert one entity with prepared statement.
+	 * 
 	 * @param entity The bean
 	 * @throws Exception
 	 */
@@ -696,7 +768,8 @@ public abstract class SQLExecute<T> {
 	}
 	
 	/**
-	 * Update one entity with prepared statement. The given bean have to be annotated with javax.persistence.Entity and javax.persistence.Id
+	 * Update one entity with prepared statement.
+	 * 
 	 * @param entity The bean
 	 * @throws Exception
 	 */
@@ -738,30 +811,29 @@ public abstract class SQLExecute<T> {
 	public void insertSelect(
 		Connection connection, 
 		Class<T> insertClass, String[] insertFields, 
-		Class selectClass, String tableAlias, String[] selectFields, Object selectCondition) 
+		Class selectClass, String tableAlias, String[] selectFields, Object selectCondition, Map<String, Object> params) 
 		throws java.sql.SQLException, SQLException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, QueryBuilderException{
 				
 		List<String> list1 = new ArrayList<String>(Arrays.asList(insertFields));
 		List<String> list2 = new ArrayList<String>(Arrays.asList(selectFields));
 		
-		insertSelect(connection, insertClass, list1, selectClass, tableAlias, list2, selectCondition);
+		insertSelect(connection, insertClass, list1, selectClass, tableAlias, list2, selectCondition, params);
 	}
-	
-	
+		
 	@SuppressWarnings("rawtypes")
 	public void insertSelect(
 		Connection connection, 
-		Class<T> insertClass, List<String> insertFields, 
-		Class selectClass, String tableAlias, List<String> selectFields, Object selectCondition) 
+		Class insertClass, List<String> insertFields, 
+		Class selectClass, String tableAlias, List<String> selectFields, Object selectCondition, Map<String, Object> params) 
 		throws java.sql.SQLException, SQLException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, QueryBuilderException{
 		
 		String insertTableName = AnnotationHelper.getTableName(insertClass);		
 		if (insertTableName == null || "".equalsIgnoreCase(insertTableName)) {
-			throw new SQLException("Entity does not contain javax.persistence.Entity annotation");
+			throw new SQLException(CLASS_DOES_NOT_HAVE_ENTITY_ANNOTATION);
 		}		
 		String selectTableName = AnnotationHelper.getTableName(selectClass);		
 		if (selectTableName == null || "".equalsIgnoreCase(selectTableName)) {
-			throw new SQLException("Entity does not contain javax.persistence.Entity annotation");
+			throw new SQLException(CLASS_DOES_NOT_HAVE_ENTITY_ANNOTATION);
 		}		
 		
 		//insert
@@ -796,11 +868,12 @@ public abstract class SQLExecute<T> {
 		}	
 		this.builder = new SimpleSQLQueryBuilder("SELECT " + sb.toString() +" FROM "+selectTableName);
 		if (selectCondition != null) {
-			this.builder.setParams(selectCondition);
+			this.builder.setWhere(selectCondition);
 		}
 		String select = getSelectQuery(tableAlias).replace("*", sb.toString());
 		
 		lastSQLStatement = insert +"\n"+ select;
+		lastSQLStatement = replaceParameters(lastSQLStatement, params);
 		PreparedStatement stm = connection.prepareStatement(lastSQLStatement);
 		
 		lastSQLStatementParameters.clear();
@@ -809,12 +882,14 @@ public abstract class SQLExecute<T> {
 	}
 			
 	/**
-	 * Create table. The given bean have to be annotated with javax.persistence.Entity, javax.presistence.Column and javax.persistence.Id
+	 * Create a table in database. The given bean have to be annotated with javax.persistence.Entity, javax.presistence.Column and javax.persistence.Id
+	 * 
 	 * @param connection SQL Connection
 	 * @param class The entity bean class
 	 * @throws Exception
 	 */
-	public void createTable(Connection connection, Class<T> clazz) throws Exception {
+	@SuppressWarnings("rawtypes")
+	public void createTable(Connection connection, Class clazz) throws Exception {
 		
 		
 		String tableName = AnnotationHelper.getTableName(clazz);
@@ -869,12 +944,14 @@ public abstract class SQLExecute<T> {
 	}
 	
 	/**
-	 * Drop table. The given bean have to be annotated with javax.persistence.Entity or javax.persistence.Table
+	 * Drop a table from database. The given bean have to be annotated with javax.persistence.Entity or javax.persistence.Table
+	 * 
 	 * @param connection SQL Connection
 	 * @param class The entity bean class
 	 * @throws Exception
 	 */
-	public void dropTable(Connection connection, Class<T> clazz) throws Exception {
+	@SuppressWarnings("rawtypes")
+	public void dropTable(Connection connection, Class clazz) throws Exception {
 		
 		
 		String tableName = AnnotationHelper.getTableName(clazz);
@@ -897,12 +974,14 @@ public abstract class SQLExecute<T> {
 
 
 	/**
-	 * Check if the given table exists. The given bean have to be annotated with javax.persistence.Entity
+	 * Check tabe existence. The given bean have to be annotated with javax.persistence.Entity
+	 * 
 	 * @param connection SQL Connection
 	 * @param class The entity bean class
 	 * @throws Exception
 	 */
-	public boolean existsTable(Connection connection, Class<T> clazz) throws Exception {
+	@SuppressWarnings("rawtypes")
+	public boolean existsTable(Connection connection, Class clazz) throws Exception {
 		
 		
 		String tableName = AnnotationHelper.getTableName(clazz);
@@ -935,6 +1014,7 @@ public abstract class SQLExecute<T> {
 	
 	/**
 	 * Execute an SQL Script. The statements are separated with ;
+	 * 
 	 * @param connection
 	 * @param sql
 	 * @param section
@@ -946,6 +1026,7 @@ public abstract class SQLExecute<T> {
 	
 	/**
 	 * Execute an SQL Script. The statements are separated with the given string.
+	 * 
 	 * @param connection
 	 * @param sql
 	 * @param section
