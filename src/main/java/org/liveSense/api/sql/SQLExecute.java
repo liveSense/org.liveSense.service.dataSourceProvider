@@ -118,7 +118,7 @@ public abstract class SQLExecute<T> {
 		
 	}
 		
-	private String replaceParameters(String sql, Map<String, Object> params) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException, SQLException {
+	private String replaceParameters(String sql, Map<String, Object> params) throws SQLException {
 		if (params == null)
 			return sql;
 		
@@ -137,7 +137,13 @@ public abstract class SQLExecute<T> {
 			String key = keys[idx];
 			if (key.contains(":")) throw new SQLException(PARAMERER_NAME_ERROR); 
 				
-			String value = new ObjectToSQLLiteral(params.get(key)).getLiteral(jdbcDriverClass);
+			String value;
+			try {
+				value = new ObjectToSQLLiteral(params.get(key)).getLiteral(jdbcDriverClass);
+			}
+			catch (Exception e) {
+				throw new SQLException(e);
+			}
 			
 			//WARNING : this will replace in String literals too, choose your parameter names carefully 
 			sql = sql.replace(":" + key, value);
