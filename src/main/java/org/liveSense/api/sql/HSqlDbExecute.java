@@ -41,7 +41,7 @@ public class HSqlDbExecute<T> extends SQLExecute<T> {
 	 * @see {@link SQLExecute#addWhereClause(SQLExecute.ClauseHelper)}
 	 */
 	public ClauseHelper addWhereClause(ClauseHelper helper, String tableAlias) throws SQLException, QueryBuilderException {
-		String whereClause = builder.buildWhere();
+		String whereClause = builder.buildWhere(helper.getClazz(), builder.getWhere());
 		if (!"".equals(whereClause)) {			
 			if (!helper.getSubSelect()) {
 				 makeSubSelective(helper, tableAlias);
@@ -130,26 +130,30 @@ public class HSqlDbExecute<T> extends SQLExecute<T> {
 		return helper;
 	}
 	
+	@SuppressWarnings("rawtypes")
 	@Override
-	public String getSelectQuery() throws SQLException, QueryBuilderException {
-		return getSelectQuery("");
+	public String getSelectQuery(Class clazz) throws SQLException, QueryBuilderException {
+		return getSelectQuery(clazz, "");
 	}
 	
+	@SuppressWarnings("rawtypes")
 	@Override
-	public String getSelectQuery(String tableAlias) throws SQLException, QueryBuilderException {
-		ClauseHelper helper = new ClauseHelper(builder.getQuery(tableAlias), false);
+	public String getSelectQuery(Class clazz, String tableAlias) throws SQLException, QueryBuilderException {
+		ClauseHelper helper = new ClauseHelper(clazz, builder.getQuery(tableAlias), false);
 		ClauseHelper cls = 
 			addLimitClause(addOrderByClause(addWhereClause(helper,tableAlias),tableAlias),tableAlias);
 		return cls.getQuery();
 	}	
 	
+	@SuppressWarnings("rawtypes")
 	@Override
-	public String getLockQuery() throws SQLException, QueryBuilderException {
-		return getLockQuery("");
+	public String getLockQuery(Class clazz) throws SQLException, QueryBuilderException {
+		return getLockQuery(clazz, "");
 	}
 	
+	@SuppressWarnings("rawtypes")
 	@Override
-	public String getLockQuery(String tableAlias) throws SQLException, QueryBuilderException {
+	public String getLockQuery(Class clazz, String tableAlias) throws SQLException, QueryBuilderException {
 		throw new QueryBuilderException("Record level lock is unsupported by HSQLDB");
 	}		
 	

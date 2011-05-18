@@ -95,14 +95,27 @@ public abstract class SQLExecute<T> {
 	 *
 	 */
 	public class ClauseHelper {
+		@SuppressWarnings("rawtypes")
+		private Class clazz;
 		private String query;
 		private Boolean subSelect;
 		
-		public ClauseHelper(String query, Boolean subSelect) {
+		@SuppressWarnings("rawtypes")
+		public ClauseHelper(Class clazz, String query, Boolean subSelect) {
+			this.clazz = clazz;
 			this.query = query;
 			this.subSelect = subSelect;
 		}
-		
+				
+		@SuppressWarnings("rawtypes")
+		public Class getClazz() {
+			return clazz;
+		}		
+		@SuppressWarnings("rawtypes")
+		public void setClazz(
+			Class clazz) {
+			this.clazz = clazz;
+		}
 		public String getQuery() {
 			return query;
 		}
@@ -183,33 +196,39 @@ public abstract class SQLExecute<T> {
 
 	/**
 	 * It builds the select statement from the base query.
+	 * @param clazz Class of the bean 
 	 * @return The final SQL statement
 	 * @throws SQLException
 	 * @throws QueryBuilderException
 	 */
-	public abstract String getSelectQuery() throws SQLException, QueryBuilderException;
+	@SuppressWarnings("rawtypes")
+	public abstract String getSelectQuery(Class clazz) throws SQLException, QueryBuilderException;
 		
 	/**
 	 * {@inheritDoc}
 	 * @param tableAlias SQL alias of the table 
 	 * @see {@link SQLExecute#getSelectQuery()}
 	 */
-	public abstract String getSelectQuery(String tableAlias) throws SQLException, QueryBuilderException;
+	@SuppressWarnings("rawtypes")
+	public abstract String getSelectQuery(Class clazz, String tableAlias) throws SQLException, QueryBuilderException;
 	
 	/**
 	 * It builds the lock (select) statement from the base query.
+	 * @param clazz Class of the bean 
 	 * @return The final SQL statement
 	 * @throws SQLException
 	 * @throws QueryBuilderException
 	 */	
-	public abstract String getLockQuery() throws SQLException, QueryBuilderException;
+	@SuppressWarnings("rawtypes")
+	public abstract String getLockQuery(Class clazz) throws SQLException, QueryBuilderException;
 		
 	/**
 	 * {@inheritDoc}
 	 * @param tableAlias SQL alias of the table 
 	 * @see {@link SQLExecute#getLockQuery()}
 	 */	
-	public abstract String getLockQuery(String tableAlias) throws SQLException, QueryBuilderException;	
+	@SuppressWarnings("rawtypes")
+	public abstract String getLockQuery(Class clazz, String tableAlias) throws SQLException, QueryBuilderException;	
 		
 	/**
 	 * Returns RDMS dependent SQLExecuter. (Apache DBCP required).
@@ -277,7 +296,7 @@ public abstract class SQLExecute<T> {
 		QueryRunner run = new QueryRunner();
 		ResultSetHandler<List<T>> rh = new BeanListHandler<T>(targetClass, new BasicRowProcessor(new DbStandardBeanProcessor()));
 		
-		lastSQLStatement = getSelectQuery(tableAlias);
+		lastSQLStatement = getSelectQuery(targetClass, tableAlias);
 		lastSQLStatementParameters.clear();
 
 		lastSQLStatement = replaceParameters(lastSQLStatement, params);
@@ -328,7 +347,7 @@ public abstract class SQLExecute<T> {
 		QueryRunner run = new QueryRunner();
 		ResultSetHandler<List<T>> rh = new BeanListHandler<T>(targetClass, new BasicRowProcessor(new DbStandardBeanProcessor()));
 		
-		lastSQLStatement = getLockQuery(tableAlias);
+		lastSQLStatement = getLockQuery(targetClass, tableAlias);
 		lastSQLStatementParameters.clear();
 		
 		lastSQLStatement = replaceParameters(lastSQLStatement, params);
@@ -876,7 +895,7 @@ public abstract class SQLExecute<T> {
 		if (selectCondition != null) {
 			this.builder.setWhere(selectCondition);
 		}
-		String select = getSelectQuery(tableAlias).replace("*", sb.toString());
+		String select = getSelectQuery(selectClass, tableAlias).replace("*", sb.toString());
 		
 		lastSQLStatement = insert +"\n"+ select;
 		lastSQLStatement = replaceParameters(lastSQLStatement, params);
