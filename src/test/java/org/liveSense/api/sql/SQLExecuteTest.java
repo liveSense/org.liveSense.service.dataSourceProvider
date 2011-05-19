@@ -6,6 +6,7 @@ import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
 import java.sql.Connection;
+import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
@@ -16,6 +17,7 @@ import java.util.Map;
 
 import org.apache.commons.dbcp.BasicDataSource;
 import org.hsqldb.Server;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.liveSense.api.beanprocessors.TestBean;
 import org.liveSense.api.beanprocessors.TestBean2;
@@ -39,6 +41,8 @@ public class SQLExecuteTest {
 	private Date dateWithoutTime = null;
 	private TestBean bean;
 	private static final String BLOBTEXT = "dfsdfsdf";
+	private String dateValue = "'2011-01-03'";
+	private String blobValue = "ÁRVÍZTŰRŐTÜKÖRFÚRÓGÉPárvíztűrőtükörfúrógépཤེལ་སྒོ་ཟ་ནས་ང་ན་གི་མ་རེདஇனிதாவதுהאקדמיה ללשון העבריь私はガラスを食べられます";
 
 	public static void dropTable(
 		Connection connection,
@@ -118,6 +122,116 @@ public class SQLExecuteTest {
 	}
 
 	@Test
+	@Ignore
+	public void testMysql()
+		throws Exception {
+
+		dataSource = new BasicDataSource();
+		dataSource.setDriverClassName("com.mysql.jdbc.Driver");
+		dataSource.setDefaultTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+		dataSource.setDefaultAutoCommit(false);
+		dataSource.setUrl("jdbc:mysql://localhost:3306/test?useUnicode=yes&characterEncoding=UTF-8");
+		dataSource.setUsername("test");
+		dataSource.setPassword("test");
+		connection = dataSource.getConnection();
+				
+		dropTable(connection, "BeanTest1");
+		dropTable(connection, "BeanTest2");
+		connection.commit();
+		connection.close();
+		connection = dataSource.getConnection();
+		
+		// Create table from annotation
+		@SuppressWarnings("unchecked") SQLExecute<TestBean> x =
+			(SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource);
+		x.createTable(connection, TestBean.class);
+		
+		if (!x.existsTable(connection, TestBean.class))
+				throw new SQLException("Table does not exists");
+		
+		x.dropTable(connection, TestBean.class);
+		
+		if (x.existsTable(connection, TestBean.class))
+			throw new SQLException("Table exists after drop");
+		
+		dropTable(connection, "BeanTest1");
+		
+		// Create table from annotation
+		@SuppressWarnings("unchecked") SQLExecute<TestBean2> x2 =
+			(SQLExecute<TestBean2>) SQLExecute.getExecuterByDataSource(dataSource);		
+		x2.createTable(connection, TestBean2.class);
+		
+		executeSql(connection, "create table BeanTest1 (" + 
+			"ID integer, " + 
+			"ID_CUSTOMER integer, "+ 
+			"PASSWORD_ANNOTATED varchar(20), " + 
+			"FOUR_PART_COLUMN_NAME integer, "+ 
+			"DATE_FIELD_WITHOUT_ANNOTATION date," + 
+			"DATE_FIELD_WITH_ANNOTATION date," + 
+			"BLOB_FIELD LONGTEXT, "+
+			"FLOAT_FIELD NUMERIC(15,2) )");
+		connection.commit();
+
+		testExecute();
+		dataSource.close();
+	}
+
+	@Test
+	@Ignore
+	public void testOracle()
+		throws Exception {
+
+		dataSource = new BasicDataSource();
+		dataSource.setDriverClassName("oracle.jdbc.driver.OracleDriver");
+		dataSource.setDefaultTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+		dataSource.setDefaultAutoCommit(false);
+		dataSource.setUrl("jdbc:oracle:thin:@localhost:1521:apollo" );
+		dataSource.setUsername("design");
+		dataSource.setPassword("mve");
+		connection = dataSource.getConnection();
+				
+		dropTable(connection, "BeanTest1");
+		dropTable(connection, "BeanTest2");
+		
+		// Create table from annotation
+		@SuppressWarnings("unchecked") SQLExecute<TestBean> x =
+			(SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource);
+		x.createTable(connection, TestBean.class);
+		connection.commit();
+		
+		if (!x.existsTable(connection, TestBean.class))
+				throw new SQLException("Table does not exists");
+		
+		x.dropTable(connection, TestBean.class);
+		
+		if (x.existsTable(connection, TestBean.class))
+			throw new SQLException("Table exists after drop");
+		
+		dropTable(connection, "BeanTest1");
+		
+		// Create table from annotation
+		@SuppressWarnings("unchecked") SQLExecute<TestBean2> x2 =
+			(SQLExecute<TestBean2>) SQLExecute.getExecuterByDataSource(dataSource);		
+		x2.createTable(connection, TestBean2.class);
+		
+		executeSql(connection, "create table BeanTest1 (" + 
+			"ID integer, " + 
+			"ID_CUSTOMER integer, "+ 
+			"PASSWORD_ANNOTATED varchar(20), " + 
+			"FOUR_PART_COLUMN_NAME integer, "+ 
+			"DATE_FIELD_WITHOUT_ANNOTATION date," + 
+			"DATE_FIELD_WITH_ANNOTATION date," + 
+			"BLOB_FIELD clob, "+
+			"FLOAT_FIELD NUMERIC(15,2) )");
+		connection.commit();
+
+		dateValue = "to_date('2011-01-03','yyyy-mm-dd')";
+		blobValue = "ÁRVÍZTŰRŐTÜKÖRFÚRÓGÉPárvíztűrőtükörfúrógép";
+		testExecute();
+		dataSource.close();
+	}
+
+	@Test
 	public void testHsqlDb()
 		throws Exception {
 
@@ -169,13 +283,9 @@ public class SQLExecuteTest {
 
 	public void testExecute()
 		throws Exception {
-
+		
 		for (int i = 0; i < 1000; i++) {
-			// blob.append("ÁRVÍZTŰRŐTÜKÖRFÚRÓGÉPárvíztűrőtükörfúrógépНаཤེལ་སྒོ་ཟ་ནས་ང་ན་གི་མ་རེད།"
-			// האקדמיה ללשון העבריберегу пустынных волнயாமறிந்த மொழிகளிலே
-			// தமிழ்மொழி போல் இனிதாவது எங்கும் காணோம்Я можу їсти шкло, й воно
-			// мені не пошкодить私はガラスを食べられます。それは私を傷つけません");
-			blob.append("ÁRVÍZTŰRŐTÜKÖRFÚRÓGÉPárvíztűrőtükörfúrógépཤེལ་སྒོ་ཟ་ནས་ང་ན་གི་མ་རེདஇனிதாவதுהאקדמיה ללשון העבריь私はガラスを食べられます");
+			blob.append(blobValue);
 		}
 		dateWithoutTime = new SimpleDateFormat("yyyy.MM.dd").parse("2011.01.03");
 
@@ -211,9 +321,9 @@ public class SQLExecuteTest {
 
 		// Insert data with JDBC
 		executeSql(
-			connection,
-			"INSERT INTO BeanTest1(ID, ID_CUSTOMER, PASSWORD_ANNOTATED, FOUR_PART_COLUMN_NAME, DATE_FIELD_WITH_ANNOTATION, DATE_FIELD_WITHOUT_ANNOTATION, BLOB_FIELD, FLOAT_FIELD)" +
-				" values (1, 1, 'password', 1, '2011-01-03', '2011-01-03', '" + BLOBTEXT + "', 0.3)");
+				connection,
+				"INSERT INTO BeanTest1(ID, ID_CUSTOMER, PASSWORD_ANNOTATED, FOUR_PART_COLUMN_NAME, DATE_FIELD_WITH_ANNOTATION, DATE_FIELD_WITHOUT_ANNOTATION, BLOB_FIELD, FLOAT_FIELD)" +
+					" values (1, 1, 'password', 1, "+dateValue+", "+dateValue+", '"+BLOBTEXT+"', 0.3)");
 
 		// Insert data with bean
 		bean = new TestBean();
@@ -349,7 +459,12 @@ public class SQLExecuteTest {
 		assertEquals("Resultset size", 2, res.size());	
 		
 		// Delete 2 records (with table alias and condition)
-		x.deleteEntities(connection, TestBean.class, "b", new AndOperator(new BetweenCriteria<Integer>("b", "id", 1, 2)));
+		if (x instanceof MySqlExecute || x instanceof OracleExecute) {
+			// Alies dooes not supported on alias
+			x.deleteEntities(connection, TestBean.class, new AndOperator(new BetweenCriteria<Integer>("id", 1, 2)));	
+		} else {
+			x.deleteEntities(connection, TestBean.class, "b", new AndOperator(new BetweenCriteria<Integer>("b", "id", 1, 2)));
+		}
 		
 		builder = new SimpleBeanSQLQueryBuilder(TestBean.class);
 		builder.setOrderBy(new OrderByClause[] {new OrderByClause("id",false), new OrderByClause("id_customer",true)});

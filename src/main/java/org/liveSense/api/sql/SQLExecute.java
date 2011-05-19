@@ -21,6 +21,7 @@ import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Id;
+
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.dbutils.BasicRowProcessor;
 import org.apache.commons.dbutils.QueryRunner;
@@ -247,6 +248,8 @@ public abstract class SQLExecute<T> {
 		if (driverClass.equals(JdbcDrivers.MYSQL.getDriverClass())) executer = new MySqlExecute(-1);
 		else if (driverClass.equals(JdbcDrivers.HSQLDB.getDriverClass())) executer = new HSqlDbExecute(-1);
 		else if (driverClass.equals(JdbcDrivers.FIREBIRD.getDriverClass())) executer = new FirebirdExecute(-1);
+		else if (driverClass.equals(JdbcDrivers.ORACLE.getDriverClass())) executer = new OracleExecute(-1);
+
 		else throw new SQLException(THIS_TYPE_OF_JDBC_DIALECT_IS_NOT_IMPLEMENTED+": "+driverClass);
 		executer.jdbcDriverClass = driverClass;
 		return executer;
@@ -413,7 +416,8 @@ public abstract class SQLExecute<T> {
 		}
 		
 		StringBuffer sb = new StringBuffer();
-		sb.append("DELETE FROM "+tableName+" "+tableAlias);
+		sb.append("DELETE FROM "+tableName);
+		if (tableAlias != null && !"".equals(tableAlias)) sb.append(" AS "+tableAlias);
 		if (condition != null) {
 			QueryBuilder builder = new SimpleSQLQueryBuilder("");
 			builder.setWhere(condition);
@@ -1015,8 +1019,9 @@ public abstract class SQLExecute<T> {
 		}
 		
 		DatabaseMetaData dbm = connection.getMetaData();
-		ResultSet tables = dbm.getTables((String)null, (String)null, tableName, (String[])null);
-
+		ResultSet tables = dbm.getTables((String)null, (String)null, tableName.toUpperCase(), (String[])null);
+		if (tables == null) 
+			return false;
 		if (tables.next()) {
 			// Table exists
 			return true;

@@ -9,19 +9,19 @@ import org.liveSense.misc.queryBuilder.exceptions.QueryBuilderException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class MySqlExecute<T> extends SQLExecute<T> {
+public class OracleExecute<T> extends SQLExecute<T> {
 
 	@SuppressWarnings("unused")
-	private static final Logger log = LoggerFactory.getLogger(MySqlExecute.class);
+	private static final Logger log = LoggerFactory.getLogger(OracleExecute.class);
 	private int maxSize = -1;
 	
-	public MySqlExecute(int maxSize) {
+	public OracleExecute(int maxSize) {
 		this.maxSize = maxSize;
 	}
 	
+	
 	private ClauseHelper makeSubSelective(ClauseHelper helper, String tableAlias) {
-		if (tableAlias == null || "".equals(tableAlias)) tableAlias = "__ALIAS1__";
-		helper.setQuery("SELECT * FROM ("+helper.getQuery()+") "+tableAlias+" ");
+		helper.setQuery("SELECT * FROM ("+helper.getQuery()+") "+tableAlias);
 		helper.setSubSelect(true);
 		return helper;
 	}
@@ -43,10 +43,10 @@ public class MySqlExecute<T> extends SQLExecute<T> {
 	 */
 	public ClauseHelper addWhereClause(ClauseHelper helper, String tableAlias) throws SQLException, QueryBuilderException {
 		String whereClause = builder.buildWhere(helper.getClazz(), builder.getWhere());
-		if (!"".equals(whereClause)) {		
+		if (!"".equals(whereClause)) {			
 			if (!helper.getSubSelect()) {
 				 makeSubSelective(helper, tableAlias);
-			}
+			}			
 			helper.setQuery(helper.getQuery()+ " WHERE "+whereClause);
 		}
 		return helper;
@@ -59,12 +59,12 @@ public class MySqlExecute<T> extends SQLExecute<T> {
 	 */
 	public ClauseHelper addLimitClause(ClauseHelper helper) throws SQLException {
 		return addLimitClause(helper, "");
-	}		
+	}
 	
 	/**
 	 * {@inheritDoc}
-	 * @throws SQLException 
-	 * @param String tableAlias
+	 * @throws SQLException
+	 * @param String tableAlias 
 	 * @see {@link SQLExecute#addLimitClause(SQLExecute.ClauseHelper)}
 	 */
 	public ClauseHelper addLimitClause(ClauseHelper helper, String tableAlias) throws SQLException {
@@ -85,11 +85,12 @@ public class MySqlExecute<T> extends SQLExecute<T> {
 			makeSubSelective(helper, tableAlias);
 		}
 		
-		if (limit.getLimit() > 0) {
-			helper.setQuery(helper.getQuery()+ " LIMIT "+l);
-		}
-		if (limit.getOffset() > 0) {
-			helper.setQuery(helper.getQuery()+ " OFFSET "+o);
+		if (l > 0 && o > 0) {
+			helper.setQuery(helper.getQuery()+ " ROWNUM >= "+o+1+" AND ROWNUM <= "+l+o);
+		} else if (l > 0 && o < 1) {
+			helper.setQuery(helper.getQuery()+ " ROWNUM <= "+l);			
+		} else if (l < 1 || o > 0){
+			helper.setQuery(helper.getQuery()+ " ROWNUM >= "+o+1);			
 		}
 
 		return helper;
@@ -131,7 +132,7 @@ public class MySqlExecute<T> extends SQLExecute<T> {
 		return helper;
 	}
 
-
+	
 	@SuppressWarnings("rawtypes")
 	@Override
 	public String getSelectQuery(Class clazz) throws SQLException, QueryBuilderException {
@@ -158,7 +159,7 @@ public class MySqlExecute<T> extends SQLExecute<T> {
 	public String getLockQuery(Class clazz, String tableAlias) throws SQLException, QueryBuilderException {
 		ClauseHelper helper = new ClauseHelper(clazz, builder.getQuery(tableAlias), true);
 		ClauseHelper cls = addLimitClause(addOrderByClause(addWhereClause(helper, tableAlias),tableAlias),tableAlias);
-		return cls.getQuery() + " FOR UPDATE";
-	}		
+		return cls.getQuery() + " FOR UPDATE NOWAIT";
+	}	
 	
 }

@@ -161,6 +161,19 @@
 			<version>2.1.6</version>
 			<scope>test</scope>
 		</dependency>
-
+		
+		<dependency>
+    		<groupId>mysql</groupId>
+    		<artifactId>mysql-connector-java</artifactId>
+    		<version>5.1.16</version>
+			<scope>test</scope>
+		</dependency>
+		
+		<dependency>
+		  	<groupId>com.oracle</groupId>
+  		  	<artifactId>ojdbc</artifactId>
+  		  	<version>10.2.0.4.0</version>
+		  	<scope>test</scope>
+		</dependency>
 	</dependencies>
 </project>
