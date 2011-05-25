@@ -556,7 +556,7 @@ public abstract class SQLExecute<T> {
 			throw new SQLException(CLASS_DOES_NOT_HAVE_ID_ANNOTATION);
 		}
 		if ((fields != null) && (fields.size() > 0)) {
-			String idFieldName = AnnotationHelper.findFieldByAnnotationClass(entity.getClass(),Column.class).getName();
+			String idFieldName = AnnotationHelper.findFieldByAnnotationClass(entity.getClass(),Id.class).getName();
 			fields.add(idFieldName);	
 		}
 		Map<String, Object> objs = AnnotationHelper.getObjectAsMap(entity, fields);
@@ -635,6 +635,10 @@ public abstract class SQLExecute<T> {
 		String idColumn = AnnotationHelper.getIdColumnName(entity);
 		if (idColumn == null || "".equalsIgnoreCase(idColumn)) {
 			throw new SQLException(CLASS_DOES_NOT_HAVE_ID_ANNOTATION);
+		}
+		if ((fields != null) && (fields.size() > 0)) {
+			String idFieldName = AnnotationHelper.findFieldByAnnotationClass(entity.getClass(),Id.class).getName();
+			fields.add(idFieldName);	
 		}		
 		Map<String, Object> objs = AnnotationHelper.getObjectAsMap(entity, fields);
 		
