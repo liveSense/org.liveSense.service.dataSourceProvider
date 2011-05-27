@@ -14,6 +14,7 @@ import java.sql.ResultSet;
 import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -27,9 +28,9 @@ import org.apache.commons.dbutils.BasicRowProcessor;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
 import org.apache.commons.dbutils.handlers.BeanListHandler;
+import org.apache.commons.lang.StringUtils;
 import org.liveSense.api.beanprocessors.DbStandardBeanProcessor;
 import org.liveSense.api.sql.exceptions.SQLException;
-import org.liveSense.misc.queryBuilder.ObjectToSQLLiteral;
 import org.liveSense.misc.queryBuilder.QueryBuilder;
 import org.liveSense.misc.queryBuilder.SimpleSQLQueryBuilder;
 import org.liveSense.misc.queryBuilder.criterias.EqualCriteria;
@@ -47,7 +48,6 @@ public abstract class SQLExecute<T> {
 
 	
 	private static final String THIS_TYPE_OF_JDBC_DIALECT_IS_NOT_IMPLEMENTED = "This type of JDBC dialect is not implemented";
-	private static final String PARAMERER_NAME_ERROR = "Paramerer name contains ':'.";
 	private static final String CLASS_DOES_NOT_HAVE_ENTITY_ANNOTATION = "Class does not contain javax.persistence.Entity or javax.persistence.Entity.Table annotation";
 	private static final String CLASS_DOES_NOT_HAVE_ID_ANNOTATION = "Entity does not contain javax.persistence.Id annotation";
 	private static final String CONNECTION_IS_NULL = "Connection is null";
@@ -60,21 +60,25 @@ public abstract class SQLExecute<T> {
 	private static final String ENTITY_TYPE_MISMATCH = "Entity class type mismatch";
 	private static final String COLUMN_NAME_IS_UNDEFINED = "Column name is undefined";
 	private static final String COLUMN_DEFINITION_IS_UNDEFINED = "Column definition is undefined";
+	private static final String UNKNOWN_PARAMETER = "Unknown parameter";
 	
 
 	public enum StatementType {
-		INSERT, UPDATE
+		INSERT, UPDATE, DELETE, SELECT
 	}
 		
-	private String jdbcDriverClass;
-	private PreparedStatement preparedStatement = null;
+	protected String jdbcDriverClass;
+	
+	private PreparedStatement preparedStatement = null;	
 	private StatementType preparedType = null;
 	@SuppressWarnings("rawtypes")
 	private Class preparedStatementClass = null;
-	private Connection connection = null;
+	private Connection preparedConnection = null;
 	private ArrayList<String> prepareStatementElements = null;
+	
 	private String lastSQLStatement;
-	private ArrayList<Object> lastSQLStatementParameters = new ArrayList<Object>();	
+	private ArrayList<Object> lastSQLStatementParameters = new ArrayList<Object>();
+	
 	protected QueryBuilder builder;
 	
 	
@@ -132,10 +136,43 @@ public abstract class SQLExecute<T> {
 		
 	}
 		
-	private String replaceParameters(String sql, Map<String, Object> params) throws SQLException {
-		if (params == null)
-			return sql;
+	public Map<String, List<Integer>> processSQLParameters(String sql) throws SQLException {
+		Map<String, List<Integer>> paramNames = new HashMap<String, List<Integer>>();
 		
+		int paramCount = 0;
+		int ps = sql.indexOf(':');
+		while (ps != -1) {
+			//check whether we found it in a string literal
+			if (StringUtils.countMatches(sql.substring(1, ps), "'") % 2 == 0) {
+				paramCount++;
+				
+				//get parameter name
+				StringBuffer sb = new StringBuffer();
+				ps++;
+				while (sql.substring(ps, ps + 1).matches("[a-zA-Z0-9_]+"))  {
+					sb.append(sql.substring(ps, ps + 1));
+					ps++;
+				}
+				//store position
+				String paramName = sb.toString();
+				List<Integer> list = paramNames.get(paramName);
+				if (list == null) {
+					list = new ArrayList<Integer>();
+					paramNames.put(paramName, list);					
+				}				
+				list.add(paramCount);
+				StringBuffer sb2 = new StringBuffer(sql);
+				sb2.delete(ps - paramName.length() - 1, ps);
+				sb2.insert(ps - paramName.length() - 1, "?");
+				sql = sb2.toString();
+			}
+			ps = sql.indexOf(':', ps + 1);
+		}
+		lastSQLStatement = sql;
+		return paramNames;
+		
+		/*
+				
 		String[] keys = new String[params.size()];
 		
 		int idx = -1;
@@ -146,25 +183,62 @@ public abstract class SQLExecute<T> {
 		
 		Arrays.sort(keys);
 		
+		List<Integer> paramPositions = new ArrayList<Integer>();
+		Map<Integer, Object> paramValue = new HashMap<Integer, Object>();
+		StringBuffer sb = new StringBuffer(sql);
+		
 		//it's important to go backward (descending order). This way we can avoid to replace wrong (e.g.: :param1, :param11)
 		while (idx != -1) {
 			String key = keys[idx];
 			if (key.contains(":")) throw new SQLException(PARAMERER_NAME_ERROR); 
-				
-			String value;
-			try {
-				value = new ObjectToSQLLiteral(params.get(key)).getLiteral(jdbcDriverClass);
-			}
-			catch (Exception e) {
-				throw new SQLException(e);
-			}
 			
-			//WARNING : this will replace in String literals too, choose your parameter names carefully 
-			sql = sql.replace(":" + key, value);
+			//WARNING : this will search in String literals too, choose your parameter names carefully
+			int ps = sb.toString().indexOf(":" + key);
+			while (ps != -1) {
+				paramPositions.add(ps);
+				paramValue.put(ps, params.get(key));
+				
+				sb.delete(ps, ps + key.length() + 1);				
+				sb.insert(ps, StringUtils.leftPad("?", key.length() + 1));//padding is nedded for to avoid position changes
+				
+				ps = sb.toString().indexOf(":" + key);
+			}
 			idx--;
-		}		
+		}
+		Collections.sort(paramPositions);
+		
+		Object[] sqlParams = new Object[paramPositions.size()];
+		
+		Integer i = 0;
+		for (Integer ps : paramPositions) {
+			sqlParams[i] = paramValue.get(ps);
+			i++;
+		}
 
-		return sql;
+		lastSQLStatement = sb.toString();
+		
+		return sqlParams;
+		*/
+	}
+	
+	private Object[] getSQLParameters(Map<String, List<Integer>> paramNames, Map<String, Object> params) throws SQLException {
+		ArrayList<Object> list = new ArrayList<Object>();
+		
+		if (params == null) 
+			return list.toArray();
+		
+		for (Entry<String, Object> entry : params.entrySet()) {
+			List<Integer> positions = paramNames.get(entry.getKey());
+			
+			if (positions == null)
+				throw new SQLException(UNKNOWN_PARAMETER + " : "+entry.getKey());
+			
+			for (Integer pos : positions) {
+				while (list.size() < pos) list.add(null);
+				list.set(pos - 1, entry.getValue());
+			}			
+		}
+		return list.toArray();
 	}
 	
 
@@ -233,7 +307,7 @@ public abstract class SQLExecute<T> {
 		
 	/**
 	 * Returns RDMS dependent SQLExecuter. (Apache DBCP required).
-	 * The currently supported engines are: MYSQL, HSQLDB, FIREBIRD
+	 * The currently supported engines are: MYSQL, HSQLDB, FIREBIRD, ORACLE
 	 * 
 	 * @param ds The dataSource object
 	 * @return SQL Execute Object (optimized for dialect)
@@ -287,11 +361,33 @@ public abstract class SQLExecute<T> {
 	 * @param params parameter-value pair map 
 	 * @see {@link SQLExecute#queryEntities(Connection connection, Class<T> targetClass, String tableAlias, QueryBuilder builder)}
 	 */
-	@SuppressWarnings({ "rawtypes", "unchecked" })
+	@SuppressWarnings({ "rawtypes" })
 	public List<T> queryEntities(Connection connection, 
 			Class targetClass, String tableAlias, QueryBuilder builder, Map<String, Object> params) throws Exception {
+		return queryEntities(connection, targetClass, tableAlias, builder, params, false);
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 * @param params parameter-value pair map 
+	 * @see {@link SQLExecute#queryEntities(Connection connection, Class<T> targetClass, String tableAlias, QueryBuilder builder)}
+	 */
+	@SuppressWarnings({ "rawtypes" })
+	public List<T> prepareQueryEntities(Connection connection, 
+			Class targetClass, String tableAlias, QueryBuilder builder) throws Exception {
+		return queryEntities(connection, targetClass, tableAlias, builder, null, true);
+	}	
+	
+	/**
+	 * {@inheritDoc}
+	 * @param params parameter-value pair map 
+	 * @see {@link SQLExecute#queryEntities(Connection connection, Class<T> targetClass, String tableAlias, QueryBuilder builder)}
+	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	private List<T> queryEntities(Connection connection, 
+			Class targetClass, String tableAlias, QueryBuilder builder, Map<String, Object> params, boolean prepare) throws Exception {
 		
-		if (connection == null) throw new SQLException(CONNECTION_IS_NULL);
+		if (connection == null) throw new SQLException(CONNECTION_IS_NULL);		
 		
 		this.builder = builder;
 		
@@ -301,11 +397,11 @@ public abstract class SQLExecute<T> {
 		
 		lastSQLStatement = getSelectQuery(targetClass, tableAlias);
 		lastSQLStatementParameters.clear();
-
-		lastSQLStatement = replaceParameters(lastSQLStatement, params);
+			
+		Object[] sqlParams = getSQLParameters(processSQLParameters(lastSQLStatement), params);
 		
-		return run.query(connection, lastSQLStatement, rh);
-	}
+		return run.query(connection, lastSQLStatement, rh, sqlParams);
+	}	
 	
 	/**
 	 * Lock entities in database. The resulset mapped by defult with bean's javax.persistence.Column annotations. 
@@ -352,10 +448,8 @@ public abstract class SQLExecute<T> {
 		
 		lastSQLStatement = getLockQuery(targetClass, tableAlias);
 		lastSQLStatementParameters.clear();
-		
-		lastSQLStatement = replaceParameters(lastSQLStatement, params);
-		
-		return run.query(connection, lastSQLStatement, rh);
+			
+		return run.query(connection, lastSQLStatement, rh, getSQLParameters(processSQLParameters(lastSQLStatement), params));
 	}
 	
 	/**
@@ -374,7 +468,7 @@ public abstract class SQLExecute<T> {
 		Map<String, Object> objs = AnnotationHelper.getObjectAsMap(entity);
 		
 		QueryBuilder builder = new SimpleBeanSQLQueryBuilder(entity.getClass()); 
-		builder.setWhere(new AndOperator(new EqualCriteria<Integer>(idColumn, (Integer) objs.get(idColumn))));
+		builder.setWhere(new AndOperator(new EqualCriteria<Object>(idColumn, objs.get(idColumn))));
 		
 		lockEntities(connection, entity.getClass(), builder); 
 	}	
@@ -425,10 +519,16 @@ public abstract class SQLExecute<T> {
 		}
 		
 		lastSQLStatement = sb.toString();
-		lastSQLStatement = replaceParameters(lastSQLStatement, params);
+		Object[] sqlParams = getSQLParameters(processSQLParameters(lastSQLStatement), params);
 		PreparedStatement stm = connection.prepareStatement(lastSQLStatement);
 				
-		lastSQLStatementParameters.clear();		
+		lastSQLStatementParameters.clear();
+		int idx = 0;
+		while (idx < sqlParams.length) {
+			stm.setObject(idx + 1, sqlParams[idx]);
+			lastSQLStatementParameters.add(sqlParams[idx]);
+			idx++;
+		}		
 		
 		stm.execute();
 	}
@@ -448,7 +548,7 @@ public abstract class SQLExecute<T> {
 		}
 		Map<String, Object> objs = AnnotationHelper.getObjectAsMap(entity);
 				
-		deleteEntities(connection, entity.getClass(), new AndOperator(new EqualCriteria<Integer>(idColumn, (Integer) objs.get(idColumn))));		
+		deleteEntities(connection, entity.getClass(), new AndOperator(new EqualCriteria<Object>(idColumn, objs.get(idColumn))));		
 	}	
 
 	/**
@@ -582,7 +682,7 @@ public abstract class SQLExecute<T> {
 		}
 		
 		lastSQLStatement = sb.toString();
-		lastSQLStatement = replaceParameters(lastSQLStatement, params);
+		Object[] sqlParams = getSQLParameters(processSQLParameters(lastSQLStatement), params);
 		PreparedStatement stm = connection.prepareStatement(lastSQLStatement);
 		
 		lastSQLStatementParameters.clear();
@@ -600,6 +700,13 @@ public abstract class SQLExecute<T> {
 				idx++;
 			}
 		}
+		
+		int idx2 = 0;
+		while (idx2 < sqlParams.length) {
+			stm.setObject(idx + idx2, sqlParams[idx2]);
+			lastSQLStatementParameters.add(sqlParams[idx2]);
+			idx2++;
+		}		
 		
 		stm.execute();		
 	}
@@ -642,7 +749,7 @@ public abstract class SQLExecute<T> {
 		}		
 		Map<String, Object> objs = AnnotationHelper.getObjectAsMap(entity, fields);
 		
-		updateEntities(connection, entity, "", fields, new AndOperator(new EqualCriteria<Integer>(idColumn, new Integer((Integer) objs.get(idColumn)))));	
+		updateEntities(connection, entity, "", fields, new AndOperator(new EqualCriteria<Object>(idColumn, objs.get(idColumn))));	
 	}	
 	
 	/**
@@ -701,7 +808,7 @@ public abstract class SQLExecute<T> {
 		
 		lastSQLStatementParameters.clear();
 		
-		this.connection = connection;
+		preparedConnection = connection;
 	}
 
 	/**
@@ -764,8 +871,22 @@ public abstract class SQLExecute<T> {
 		
 		lastSQLStatementParameters.clear();
 		
-		this.connection = connection;
+		preparedConnection = connection;
 	}
+	
+	/**
+	 * Prepare a delete statement.
+	 * 
+	 * @param connection
+	 * @param targetClass 
+	 * @throws Exception
+	 */
+	@SuppressWarnings("rawtypes")
+	public void prepareDeleteStatement(Connection connection, Class targetClass) throws Exception {
+
+		//TODO : AMOLNAR
+	}
+	
 	
 	/**
 	 * Insert one entity with prepared statement.
@@ -774,7 +895,7 @@ public abstract class SQLExecute<T> {
 	 * @throws Exception
 	 */
 	public void insertEntityWithPreparedStatement(T entity) throws Exception {
-		if (preparedType == null || preparedStatementClass == null || preparedStatement == null || this.connection == null) throw new SQLException("The statement is not prepared");
+		if (preparedType == null || preparedStatementClass == null || preparedStatement == null || preparedConnection == null) throw new SQLException("The statement is not prepared");
 		if (preparedType != StatementType.INSERT) throw new SQLException(STATEMENT_TYPE_IS_NOT_INSERT);
 		if (entity.getClass() != preparedStatementClass) throw new SQLException(ENTITY_TYPE_MISMATCH);
 		
@@ -807,7 +928,7 @@ public abstract class SQLExecute<T> {
 	 * @throws Exception
 	 */
 	public void updateEntityWithPreparedStatement(T entity) throws Exception {
-		if (preparedType == null || preparedStatementClass == null || preparedStatement == null || this.connection == null) throw new SQLException("The statement is not prepared");
+		if (preparedType == null || preparedStatementClass == null || preparedStatement == null || preparedConnection == null) throw new SQLException("The statement is not prepared");
 		if (preparedType != StatementType.UPDATE) throw new SQLException(STATEMENT_TYPE_IS_NOT_UPDATE);
 		if (entity.getClass() != preparedStatementClass) throw new SQLException(ENTITY_TYPE_MISMATCH);
 
@@ -906,10 +1027,17 @@ public abstract class SQLExecute<T> {
 		String select = getSelectQuery(selectClass, tableAlias).replace("*", sb.toString());
 		
 		lastSQLStatement = insert +"\n"+ select;
-		lastSQLStatement = replaceParameters(lastSQLStatement, params);
+		Object[] sqlParams = getSQLParameters(processSQLParameters(lastSQLStatement), params);
 		PreparedStatement stm = connection.prepareStatement(lastSQLStatement);
 		
 		lastSQLStatementParameters.clear();
+		
+		int idx = 0;
+		while (idx < sqlParams.length) {
+			stm.setObject(idx + 1, sqlParams[idx]);
+			lastSQLStatementParameters.add(sqlParams[idx]);
+			idx++;
+		}
 		
 		stm.execute();		
 	}
