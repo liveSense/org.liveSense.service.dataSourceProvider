@@ -6,7 +6,6 @@ import static org.junit.Assert.assertNotNull;
 
 import java.io.File;
 import java.sql.Connection;
-import java.sql.DatabaseMetaData;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.text.SimpleDateFormat;
@@ -431,8 +430,7 @@ public class SQLExecuteTest {
 		builder = new SimpleBeanSQLQueryBuilder(TestBean.class);
 		builder.setWhere(new AndOperator(new LessCriteria<OperandSource>("c", "float_field", new OperandSource("", ":param11", false))));
 		Map<String, Object> params = new HashMap<String, Object>();
-		params.put("param1", 0.01);
-		params.put("param11", 0.02);//--just for ordering test
+		params.put("param11", 0.02);
 		builder.setParameters(params);
 		res = x.queryEntities(connection, TestBean.class, "c", builder, params);
 		assertEquals("Resultset size", 2, res.size());		
