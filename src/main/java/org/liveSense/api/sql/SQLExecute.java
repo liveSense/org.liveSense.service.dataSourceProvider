@@ -4,16 +4,25 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.io.StringWriter;
+import java.io.Writer;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
+import java.sql.Blob;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
 import java.sql.Statement;
+import java.sql.Types;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -21,6 +30,7 @@ import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Id;
+import javax.sql.DataSource;
 
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.dbutils.BasicRowProcessor;
@@ -53,6 +63,7 @@ public abstract class SQLExecute<T> {
 	private static final String CONNECTION_IS_NULL = "Connection is null";
 	private static final String ENTITY_IS_NULL = "Entity is null";
 	private static final String NO_DATASOURCE = "No datasource is defined";
+	private static final String BASIC_DATASOURCE_OBJECT_NEEDED = "No org.apache.commons.dbcp.BasicDataSource object is defined";
 	private static final String INSERT_UNSUCCESSFULL = "INSERT was unsuccessfull";	
 	private static final String UPDATE_UNSUCCESSFULL = "UPDATE was unsuccessfull";
 	private static final String STATEMENT_TYPE_IS_NOT_INSERT = "The statement type does not match with INSERT";
@@ -240,15 +251,17 @@ public abstract class SQLExecute<T> {
 	 * @throws SQLException
 	 */
 	@SuppressWarnings("rawtypes")
-	public static SQLExecute<?> getExecuterByDataSource(BasicDataSource ds) throws SQLException {
+	public static SQLExecute<?> getExecuterByDataSource(DataSource ds) throws SQLException {
 		if (ds == null) throw new SQLException(NO_DATASOURCE);
-		String driverClass = ds.getDriverClassName();
+		if (!(ds instanceof BasicDataSource)) throw new SQLException(BASIC_DATASOURCE_OBJECT_NEEDED);
+		String driverClass = ((BasicDataSource)ds).getDriverClassName();
 		
 		SQLExecute<?> executer;
 		if (driverClass.equals(JdbcDrivers.MYSQL.getDriverClass())) executer = new MySqlExecute(-1);
 		else if (driverClass.equals(JdbcDrivers.HSQLDB.getDriverClass())) executer = new HSqlDbExecute(-1);
 		else if (driverClass.equals(JdbcDrivers.FIREBIRD.getDriverClass())) executer = new FirebirdExecute(-1);
 		else if (driverClass.equals(JdbcDrivers.ORACLE.getDriverClass())) executer = new OracleExecute(-1);
+		else if (driverClass.equals(JdbcDrivers.ORACLE2.getDriverClass())) executer = new OracleExecute(-1);
 
 		else throw new SQLException(THIS_TYPE_OF_JDBC_DIALECT_IS_NOT_IMPLEMENTED+": "+driverClass);
 		executer.jdbcDriverClass = driverClass;
@@ -306,7 +319,126 @@ public abstract class SQLExecute<T> {
 		
 		return run.query(connection, lastSQLStatement, rh);
 	}
+
+	/**
+	 * {@inheritDoc}
+	 * @param tableAlias SQL alias of the table 
+	 * @see {@link SQLExecute#queryEntities(Connection connection, Class<T> targetClass, QueryBuilder builder)}
+	 */
+	@SuppressWarnings({ "rawtypes" })
+	public List<Map<String, ?>> queryEntities(Connection connection, QueryBuilder builder) throws Exception {
+		return queryEntities(connection, "", builder, null);
+	}
+
 	
+	private String convertStreamToString(InputStream is) throws IOException {
+		/*
+		 * To convert the InputStream to String we use the
+		 * Reader.read(char[] buffer) method. We iterate until the
+		 * Reader return -1 which means there's no more data to
+		 * read. We use the StringWriter class to produce the string.
+		 */
+		if (is != null) {
+			Writer writer = new StringWriter();
+
+			char[] buffer = new char[1024];
+			try {
+				Reader reader = new BufferedReader(new InputStreamReader(is,
+						"UTF-8"));
+				int n;
+				while ((n = reader.read(buffer)) != -1) {
+					writer.write(buffer, 0, n);
+				}
+			} finally {
+				is.close();
+			}
+			return writer.toString();
+		} else {
+			return "";
+		}
+	}
+	
+	private String convertReaderToString(Reader reader) throws IOException {
+		StringBuffer data = new StringBuffer(1000);
+		char[] buf = new char[1024];
+        int numRead=0;
+        while((numRead=reader.read(buf)) != -1){
+            String readData = String.valueOf(buf, 0, numRead);
+            data.append(readData);
+            buf = new char[1024];
+        }
+        reader.close();
+        return data.toString();	 
+    }
+	
+	/**
+	 * {@inheritDoc}
+	 * @param params parameter-value pair map 
+	 * @see {@link SQLExecute#queryEntities(Connection connection, Class<T> targetClass, String tableAlias, QueryBuilder builder)}
+	 */
+	@SuppressWarnings({ "rawtypes", "unchecked" })
+	public List<Map<String, ?>> queryEntities(Connection connection, 
+		  String tableAlias, QueryBuilder builder, Map<String, Object> params) throws Exception {
+		
+		if (connection == null) throw new SQLException(CONNECTION_IS_NULL);
+		
+		this.builder = builder;
+		
+		// Create a ResultSetHandler implementation to convert the
+		// first row into an Object[].
+		ResultSetHandler<List<Map<String, ?>>> rh = new ResultSetHandler<List<Map<String, ?>>>() {
+		    public List<Map<String, ?>> handle(ResultSet rs) throws java.sql.SQLException {
+		        ResultSetMetaData meta = rs.getMetaData();
+		        List<Map<String, ?>> result = new ArrayList<Map<String,?>>();
+		        while (rs.next()) {
+		        	HashMap<String, Object> record = new HashMap<String, Object>();
+		        	for (int i = 0; i < meta.getColumnCount(); i++) {
+		        		String columnName = meta.getColumnName(i+1);
+		        		int columnType = meta.getColumnType(i+1);
+		        		
+		        		if (Types.DATE == columnType || Types.TIME == columnType || Types.TIMESTAMP == columnType) {
+		        			record.put(columnName, rs.getDate(i+1));
+		        		} else if (Types.BOOLEAN == columnType) {
+		        			record.put(columnName, rs.getBoolean(i+1));
+		        		} else if (Types.FLOAT == columnType || Types.DECIMAL == columnType || Types.DOUBLE == columnType || Types.NUMERIC == columnType) {
+		        			record.put(columnName, rs.getDouble(i+1));
+		        		} else if (Types.INTEGER == columnType || Types.BIGINT == columnType) {
+		        			record.put(columnName, rs.getInt(i+1));
+		        		} else if (Types.BLOB == columnType) {
+		        			try {
+								record.put(columnName, convertStreamToString(rs.getBlob(i+1).getBinaryStream()));
+							} catch (IOException e) {
+							}
+		        		} else if (Types.CLOB == columnType) {
+		        			try {
+								record.put(columnName, convertReaderToString(rs.getCharacterStream(i+1)));
+							} catch (IOException e) {
+							}
+		        		} else {
+		        			try {
+		        				record.put(columnName, rs.getString(i+1));
+		        			} catch (Exception e) {
+							}
+		        		}
+			        }
+		        	result.add(record);
+		        }
+		        return result;
+		    }
+		};
+
+		// Create a QueryRunner that will use connections from
+		// the given DataSource
+		QueryRunner run = new QueryRunner();
+
+		lastSQLStatement = getSelectQuery(HashMap.class, tableAlias);
+		lastSQLStatementParameters.clear();
+
+		lastSQLStatement = replaceParameters(lastSQLStatement, params);
+		
+		return run.query(connection, lastSQLStatement, rh);
+	}
+
 	/**
 	 * Lock entities in database. The resulset mapped by defult with bean's javax.persistence.Column annotations. 
 	 * If an annotation is not found then the field name is the resultset column name (The _ character are deleted).

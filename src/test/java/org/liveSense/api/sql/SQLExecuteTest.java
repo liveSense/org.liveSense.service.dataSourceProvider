@@ -22,6 +22,7 @@ import org.junit.Test;
 import org.liveSense.api.beanprocessors.TestBean;
 import org.liveSense.api.beanprocessors.TestBean2;
 import org.liveSense.misc.queryBuilder.QueryBuilder;
+import org.liveSense.misc.queryBuilder.SimpleSQLQueryBuilder;
 import org.liveSense.misc.queryBuilder.clauses.OrderByClause;
 import org.liveSense.misc.queryBuilder.criterias.BetweenCriteria;
 import org.liveSense.misc.queryBuilder.criterias.EqualCriteria;
@@ -366,6 +367,33 @@ public class SQLExecuteTest {
 
 		assertEquals("FLOAT_FIELD", 0.33, res.get(1).getFloatField().doubleValue(), 0.0f);
 
+		// Query all records to map
+		QueryBuilder builderMap = new SimpleSQLQueryBuilder("SELECT ID, ID_CUSTOMER, PASSWORD_ANNOTATED, FOUR_PART_COLUMN_NAME, DATE_FIELD_WITH_ANNOTATION, DATE_FIELD_WITHOUT_ANNOTATION, BLOB_FIELD, FLOAT_FIELD FROM BeanTest1");
+		List<Map<String, ?>> resMap = x.queryEntities(connection, builder);
+		assertEquals("Resultset size", 2, res.size());
+
+		assertEquals("ID", new Integer(1), resMap.get(0).get("ID"));
+		assertEquals("ID_CUSTOMER", new Integer(1), resMap.get(0).get("ID_CUSTOMER"));
+		assertEquals("PASSWORD_ANNOTATED", "password", resMap.get(0).get("PASSWORD_ANNOTATED"));
+		assertEquals("FOUR_PART_COLUMN_NAME", new Integer(1), resMap.get(0).get("FOUR_PART_COLUMN_NAME"));
+		assertEquals("BLOB_FIELD", BLOBTEXT, resMap.get(0).get("BLOB_FIELD"));
+		assertNotNull("DATE_FIELD_WITHOUT_ANNOTATION", resMap.get(0).get("DATE_FIELD_WITHOUT_ANNOTATION"));
+		assertEquals("DATE_FIELD_WITHOUT_ANNOTATION", dateWithoutTime, resMap.get(0).get("DATE_FIELD_WITHOUT_ANNOTATION"));
+		assertEquals("DATE_FIELD_WITH_ANNOTATION", dateWithoutTime, resMap.get(0).get("DATE_FIELD_WITH_ANNOTATION"));
+
+		assertEquals("FLOAT_FIELD", 0.3,  (Double)resMap.get(0).get("FLOAT_FIELD"), 0.0f);
+		
+		assertEquals("ID", new Integer(2), resMap.get(1).get("ID"));
+		assertEquals("ID_CUSTOMER", new Integer(2), resMap.get(1).get("ID_CUSTOMER"));
+		assertEquals("PASSWORD_ANNOTATED", "password", resMap.get(1).get("PASSWORD_ANNOTATED"));
+		assertEquals("FOUR_PART_COLUMN_NAME", new Integer(1), resMap.get(1).get("FOUR_PART_COLUMN_NAME"));
+		assertEquals("BLOB_FIELD", blob.toString(), resMap.get(1).get("BLOB_FIELD"));
+		assertEquals("DATE_FIELD_WITHOUT_ANNOTATION", (Date) null, resMap.get(1).get("DATE_FIELD_WITHOUT_ANNOTATION"));
+		assertEquals("DATE_FIELD_WITH_ANNOTATION", dateWithoutTime, resMap.get(1).get("DATE_FIELD_WITH_ANNOTATION"));
+
+		assertEquals("FLOAT_FIELD", 0.33, (Double)resMap.get(1).get("FLOAT_FIELD"), 0.0f);	
+		
+		
 		// Updating bean
 		res.get(1).setConfirmationPassword("testupdate");
 		x.updateEntity(connection, res.get(1));

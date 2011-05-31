@@ -12,6 +12,7 @@ import java.util.Map;
 import javax.sql.DataSource;
 
 import org.apache.commons.dbcp.BasicDataSource;
+import org.apache.commons.dbutils.QueryRunner;
 import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
@@ -226,5 +227,10 @@ public class DataSourceProviderImpl implements DataSourceProvider {
 	public DataSource getDataSource(String dataSource) throws NoDataSourceFound {
 		if (!isDataSource(dataSource)) throw new NoDataSourceFound("No datasource found: "+dataSource);
 		return (DataSource)dsService.getDataSource(dataSource);
+	}
+
+	public QueryRunner getQueryRunner(String dataSource) throws NoDataSourceFound {
+		if (!isDataSource(dataSource)) throw new NoDataSourceFound("No datasource found: "+dataSource);
+		return new QueryRunner(getDataSource(dataSource), false);
 	}
 }			

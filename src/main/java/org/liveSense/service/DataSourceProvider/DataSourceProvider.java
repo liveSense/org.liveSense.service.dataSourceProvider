@@ -5,6 +5,7 @@ import java.sql.SQLException;
 
 import javax.sql.DataSource;
 
+import org.apache.commons.dbutils.QueryRunner;
 import org.liveSense.api.sql.exceptions.NoDataSourceFound;
 
 /**
@@ -17,5 +18,5 @@ public interface DataSourceProvider {
 	 public Connection getConnection(String dataSource) throws NoDataSourceFound, SQLException;
 	 public Connection getConnection(String dataSource, String userName, String password) throws NoDataSourceFound, SQLException;
 	 public DataSource getDataSource(String dataSource) throws NoDataSourceFound;   
-
+	 public QueryRunner getQueryRunner(String dataSource) throws NoDataSourceFound;
 }
