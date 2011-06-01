@@ -313,7 +313,33 @@ public abstract class SQLExecute<T> {
 	 */	
 	@SuppressWarnings("rawtypes")
 	public abstract String getLockQuery(Class clazz, String tableAlias) throws SQLException, QueryBuilderException;	
-		
+
+	/**
+	 * Returns the DataSource connection URL String
+	 * 
+	 * @param ds The DataSource object (have to be instance of org.apache.commons.dbcp.BasicDataSource)
+	 * @return The connection URL
+	 * @throws SQLException
+	 */
+	public static String getDriverClassByDataSource(DataSource ds) throws SQLException {
+		if (ds == null) throw new SQLException(NO_DATASOURCE);
+		if (!(ds instanceof BasicDataSource)) throw new SQLException(BASIC_DATASOURCE_OBJECT_NEEDED);
+		return ((BasicDataSource)ds).getDriverClassName();
+	}
+
+	/**
+	 * Returns the DataSource driver class name
+	 * 
+	 * @param ds The DataSource object (have to be instance of org.apache.commons.dbcp.BasicDataSource)
+	 * @return The driver class name
+	 * @throws SQLException
+	 */
+	public static String getDataSourceUrlByDataSource(DataSource ds) throws SQLException {
+		if (ds == null) throw new SQLException(NO_DATASOURCE);
+		if (!(ds instanceof BasicDataSource)) throw new SQLException(BASIC_DATASOURCE_OBJECT_NEEDED);
+		return ((BasicDataSource)ds).getUrl();
+	}
+
 	/**
 	 * Returns RDMS dependent SQLExecuter. (Apache DBCP required).
 	 * The currently supported engines are: MYSQL, HSQLDB, FIREBIRD, ORACLE
@@ -324,9 +350,7 @@ public abstract class SQLExecute<T> {
 	 */
 	@SuppressWarnings("rawtypes")
 	public static SQLExecute<?> getExecuterByDataSource(DataSource ds) throws SQLException {
-		if (ds == null) throw new SQLException(NO_DATASOURCE);
-		if (!(ds instanceof BasicDataSource)) throw new SQLException(BASIC_DATASOURCE_OBJECT_NEEDED);
-		String driverClass = ((BasicDataSource)ds).getDriverClassName();
+		String driverClass = getDriverClassByDataSource(ds);
 		
 		SQLExecute<?> executer;
 		if (driverClass.equals(JdbcDrivers.MYSQL.getDriverClass())) executer = new MySqlExecute(-1);
@@ -339,6 +363,7 @@ public abstract class SQLExecute<T> {
 		executer.jdbcDriverClass = driverClass;
 		return executer;
 	}
+	
 	
 	/**
 	 * Query entites from database. The resulset mapped by defult with bean's javax.persistence.Column annotations. 
