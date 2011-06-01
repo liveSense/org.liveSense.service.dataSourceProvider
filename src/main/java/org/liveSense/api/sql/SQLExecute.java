@@ -29,6 +29,7 @@ import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Id;
+import javax.sql.DataSource;
 
 import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.dbutils.BasicRowProcessor;
@@ -322,7 +323,7 @@ public abstract class SQLExecute<T> {
 	 * @throws SQLException
 	 */
 	@SuppressWarnings("rawtypes")
-	public static SQLExecute<?> getExecuterByDataSource(BasicDataSource ds) throws SQLException {
+	public static SQLExecute<?> getExecuterByDataSource(DataSource ds) throws SQLException {
 		if (ds == null) throw new SQLException(NO_DATASOURCE);
 		if (!(ds instanceof BasicDataSource)) throw new SQLException(BASIC_DATASOURCE_OBJECT_NEEDED);
 		String driverClass = ((BasicDataSource)ds).getDriverClassName();
