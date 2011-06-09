@@ -368,8 +368,19 @@ public class SQLExecuteTest {
 
 		// Query all records to map
 		QueryBuilder builderMap = new SimpleSQLQueryBuilder("SELECT ID, ID_CUSTOMER, PASSWORD_ANNOTATED, FOUR_PART_COLUMN_NAME, DATE_FIELD_WITH_ANNOTATION, DATE_FIELD_WITHOUT_ANNOTATION, BLOB_FIELD, FLOAT_FIELD FROM BeanTest1");
-		List<Map<String, ?>> resMap = x.queryEntities(connection, builder);
+		List<Map<String, ?>> resMap = x.queryEntities(connection, builderMap);
 		assertEquals("Resultset size", 2, res.size());
+		
+		assertEquals("Number of resultset fields", 8, x.getLastStatementFields().size());
+		assertEquals("Field 0 (ID)", "ID", x.getLastStatementFields().get(0));
+		assertEquals("Field 1 (ID_CUSTOMER)", "ID_CUSTOMER", x.getLastStatementFields().get(1));
+		assertEquals("Field 2 (PASSWORD_ANNOTATED)", "PASSWORD_ANNOTATED", x.getLastStatementFields().get(2));
+		assertEquals("Field 3 (FOUR_PART_COLUMN_NAME)", "FOUR_PART_COLUMN_NAME", x.getLastStatementFields().get(3));
+		assertEquals("Field 4 (DATE_FIELD_WITH_ANNOTATION)", "DATE_FIELD_WITH_ANNOTATION", x.getLastStatementFields().get(4));
+		assertEquals("Field 5 (DATE_FIELD_WITHOUT_ANNOTATION)", "DATE_FIELD_WITHOUT_ANNOTATION", x.getLastStatementFields().get(5));
+		assertEquals("Field 6 (BLOB_FIELD)", "BLOB_FIELD", x.getLastStatementFields().get(6));
+		assertEquals("Field 7 (FLOAT_FIELD)", "FLOAT_FIELD", x.getLastStatementFields().get(7));
+		
 
 		assertEquals("ID", new Integer(1), resMap.get(0).get("ID"));
 		assertEquals("ID_CUSTOMER", new Integer(1), resMap.get(0).get("ID_CUSTOMER"));

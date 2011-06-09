@@ -90,6 +90,8 @@ public abstract class SQLExecute<T> {
 	
 	protected QueryBuilder builder;
 	
+	private ArrayList<String> lastStatementFields = new ArrayList<String>();
+	
 	
 	
 	public StatementType getPreparedType() {	
@@ -508,7 +510,14 @@ public abstract class SQLExecute<T> {
 		// first row into an Object[].
 		ResultSetHandler<List<Map<String, ?>>> rh = new ResultSetHandler<List<Map<String, ?>>>() {
 		    public List<Map<String, ?>> handle(ResultSet rs) throws java.sql.SQLException {
+		    	
 		        ResultSetMetaData meta = rs.getMetaData();
+		        lastStatementFields.clear();
+		        for (int i = 0; i < meta.getColumnCount(); i++) {
+		        	String columnName = meta.getColumnName(i+1);
+		        	lastStatementFields.add(columnName);
+		        }
+
 		        List<Map<String, ?>> result = new ArrayList<Map<String,?>>();
 		        while (rs.next()) {
 		        	HashMap<String, Object> record = new HashMap<String, Object>();
@@ -1479,4 +1488,14 @@ public abstract class SQLExecute<T> {
 			}  
         }
 	}
+
+	public ArrayList<String> getLastStatementFields() {
+		return lastStatementFields;
+	}
+
+	public void setLastStatementFields(ArrayList<String> lastStatementFields) {
+		this.lastStatementFields = lastStatementFields;
+	}
+	
+	
 }
