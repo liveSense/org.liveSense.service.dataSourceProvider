@@ -572,6 +572,8 @@ public abstract class SQLExecute<T> {
 		
 		Object[] sqlParams = getSQLParameters(statement.getParameters(), params);
 		
+		if (sqlParams.length<1) sqlParams = null;
+		
 		return run.query(connection, statement.getSqlStatement(), rh, sqlParams);
 	}	
 	
@@ -664,6 +666,8 @@ public abstract class SQLExecute<T> {
 		StatementWithParameter statement =  processSQLParameters(lastSQLStatement);
 		
 		Object[] sqlParams = getSQLParameters(statement.getParameters(), params);
+		
+		if (sqlParams.length<1) sqlParams = null;
 		
 		return run.query(connection, statement.getSqlStatement(), mapResultSetHandler, sqlParams);
 	}
