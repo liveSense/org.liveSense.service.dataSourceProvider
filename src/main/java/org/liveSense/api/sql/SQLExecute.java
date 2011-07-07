@@ -106,6 +106,11 @@ public abstract class SQLExecute<T> {
 		return lastSQLStatementParameters;
 	}
 
+	
+	public PreparedStatement getPreparedStatement() {
+		return preparedStatement;
+	}
+
 	/**
 	 * This class is a transport class which contains and builds the query. 
 	 *
