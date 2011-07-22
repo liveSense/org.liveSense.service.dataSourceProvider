@@ -121,6 +121,10 @@ public abstract class SQLExecute<T> {
 		private String query;
 		private Boolean subSelect;
 		
+		private Boolean whereClause = false;;
+		private Boolean orderByClause = false;
+		private Boolean limitClause = false;
+		
 		@SuppressWarnings("rawtypes")
 		public ClauseHelper(Class clazz, String query, Boolean subSelect) {
 			this.clazz = clazz;
@@ -128,6 +132,30 @@ public abstract class SQLExecute<T> {
 			this.subSelect = subSelect;
 		}
 				
+		public Boolean getWhereClause() {
+			return whereClause;
+		}
+
+		public void setWhereClause(Boolean whereClause) {
+			this.whereClause = whereClause;
+		}
+
+		public Boolean getOrderByClause() {
+			return orderByClause;
+		}
+
+		public void setOrderByClause(Boolean orderByClause) {
+			this.orderByClause = orderByClause;
+		}
+
+		public Boolean getLimitClause() {
+			return limitClause;
+		}
+
+		public void setLimitClause(Boolean limitClause) {
+			this.limitClause = limitClause;
+		}
+
 		@SuppressWarnings("rawtypes")
 		public Class getClazz() {
 			return clazz;

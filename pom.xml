@@ -46,11 +46,11 @@
 							org.liveSense.api.*;version=${project.version}
                         </Export-Package>
 						<Embed-Dependency>
-							commons-dbcp,
-							commons-pool,
-							commons-beanutils,
-							commons-dbutils,
-							commons-lang
+							commons-dbcp;inline=true,
+							commons-pool;inline=true,
+							commons-beanutils;inline=true,
+							commons-dbutils;inline=true,
+							commons-lang;inline=true
                         </Embed-Dependency>
 						<Include-Resource>
 							{maven-resources}
@@ -86,6 +86,10 @@
 		<dependency>
 			<groupId>org.osgi</groupId>
 			<artifactId>org.osgi.compendium</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>org.osgi.core</artifactId>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.felix</groupId>

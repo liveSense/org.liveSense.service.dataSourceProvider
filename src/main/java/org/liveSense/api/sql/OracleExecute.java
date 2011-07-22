@@ -46,7 +46,8 @@ public class OracleExecute<T> extends SQLExecute<T> {
 		if (!"".equals(whereClause)) {			
 			if (!helper.getSubSelect()) {
 				 makeSubSelective(helper, tableAlias);
-			}			
+			}
+			helper.setWhereClause(true);
 			helper.setQuery(helper.getQuery()+ " WHERE "+whereClause);
 		}
 		return helper;
@@ -80,11 +81,17 @@ public class OracleExecute<T> extends SQLExecute<T> {
 		int o = limit.getOffset();
 		if (l < 1 && o < 1)
 			return helper;
-					
+			
+		helper.setLimitClause(true);
 		if (!helper.getSubSelect()) {
 			makeSubSelective(helper, tableAlias);
 		}
 		
+		if (helper.getWhereClause()) {
+			helper.setQuery(helper.getQuery()+" AND ");
+		} else {
+			helper.setQuery(helper.getQuery()+" WHERE ");			
+		}
 		if (l > 0 && o > 0) {
 			helper.setQuery(helper.getQuery()+ " ROWNUM >= "+o+1+" AND ROWNUM <= "+l+o);
 		} else if (l > 0 && o < 1) {
@@ -115,6 +122,7 @@ public class OracleExecute<T> extends SQLExecute<T> {
 		if ((orderby == null) || (orderby.size() == 0))
 			return helper;
 		
+		helper.setOrderByClause(true);
 		if (!helper.getSubSelect()) {
 			makeSubSelective(helper, tableAlias);
 		}		
@@ -144,7 +152,7 @@ public class OracleExecute<T> extends SQLExecute<T> {
 	public String getSelectQuery(Class clazz, String tableAlias) throws SQLException, QueryBuilderException {
 		ClauseHelper helper = new ClauseHelper(clazz, builder.getQuery(tableAlias), false);
 		ClauseHelper cls = 
-			addLimitClause(addOrderByClause(addWhereClause(helper,tableAlias),tableAlias),tableAlias);
+			addOrderByClause(addLimitClause(addWhereClause(helper,tableAlias),tableAlias),tableAlias);
 		return cls.getQuery();
 	}	
 	
@@ -158,7 +166,7 @@ public class OracleExecute<T> extends SQLExecute<T> {
 	@Override
 	public String getLockQuery(Class clazz, String tableAlias) throws SQLException, QueryBuilderException {
 		ClauseHelper helper = new ClauseHelper(clazz, builder.getQuery(tableAlias), true);
-		ClauseHelper cls = addLimitClause(addOrderByClause(addWhereClause(helper, tableAlias),tableAlias),tableAlias);
+		ClauseHelper cls = addOrderByClause(addLimitClause(addWhereClause(helper, tableAlias),tableAlias),tableAlias);
 		return cls.getQuery() + " FOR UPDATE NOWAIT";
 	}	
 	
