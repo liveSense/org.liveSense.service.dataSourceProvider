@@ -816,7 +816,7 @@ public abstract class SQLExecute<T> {
 		if (condition != null) {
 			QueryBuilder builder = new SimpleSQLQueryBuilder("");
 			builder.setWhere(condition);
-			sb.append(" WHERE "+builder.buildWhere());
+			sb.append(" WHERE "+builder.buildWhere(clazz, condition));
 		}
 		
 		lastSQLStatement = sb.toString();
