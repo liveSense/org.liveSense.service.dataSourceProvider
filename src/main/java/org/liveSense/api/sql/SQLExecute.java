@@ -633,7 +633,8 @@ public abstract class SQLExecute<T> {
 	        while (rs.next()) {
 	        	HashMap<String, Object> record = new HashMap<String, Object>();
 	        	for (int i = 0; i < meta.getColumnCount(); i++) {
-	        		String columnName = meta.getColumnName(i+1);
+	        		String columnName = meta.getColumnLabel(i+1);
+	        		if (columnName == null || "".equals(columnName)) columnName = meta.getColumnName(i+1);
 	        		int columnType = meta.getColumnType(i+1);
 	        		
 	        		if (Types.DATE == columnType || Types.TIME == columnType || Types.TIMESTAMP == columnType) {
