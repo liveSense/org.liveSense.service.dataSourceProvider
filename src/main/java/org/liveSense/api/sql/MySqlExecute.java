@@ -3,7 +3,6 @@ package org.liveSense.api.sql;
 import java.util.List;
 
 import org.liveSense.api.sql.exceptions.SQLException;
-import org.liveSense.api.sql.helpers.ClauseHelper;
 import org.liveSense.misc.queryBuilder.clauses.LimitClause;
 import org.liveSense.misc.queryBuilder.clauses.OrderByClause;
 import org.liveSense.misc.queryBuilder.exceptions.QueryBuilderException;

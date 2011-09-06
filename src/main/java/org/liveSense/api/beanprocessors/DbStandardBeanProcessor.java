@@ -37,7 +37,7 @@ import java.util.Map;
 import javax.persistence.Column;
 
 import org.apache.commons.dbutils.BeanProcessor;
-import org.liveSense.api.sql.helpers.AnnotationHelper;
+import org.liveSense.api.sql.AnnotationHelper;
 
 /**
  * <p>

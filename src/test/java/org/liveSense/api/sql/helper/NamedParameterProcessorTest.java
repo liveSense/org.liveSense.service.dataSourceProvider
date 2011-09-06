@@ -7,8 +7,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
+import org.liveSense.api.sql.NamedParameterProcessor;
 import org.liveSense.api.sql.exceptions.SQLException;
-import org.liveSense.api.sql.helpers.NamedParameterProcessor;
 
 
 public class NamedParameterProcessorTest {
