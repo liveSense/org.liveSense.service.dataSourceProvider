@@ -37,7 +37,7 @@ import java.util.Map;
 import javax.persistence.Column;
 
 import org.apache.commons.dbutils.BeanProcessor;
-import org.liveSense.api.sql.AnnotationHelper;
+import org.liveSense.api.sql.helpers.AnnotationHelper;
 
 /**
  * <p>
@@ -49,7 +49,7 @@ import org.liveSense.api.sql.AnnotationHelper;
  * This class has same functionality as BeanProcesser, the difference
  * is the ResultSet mapping to bean mapping.
  * The following rules are applied:
- * We determinate the field have javax.persitance.Column annotation, beacause this is
+ * We determinate the field have javax.persitance.Column annotation, because this is
  * the primary mapping.
  * The Database field names are upper cased, and the words are separated with _ sign.
  * For example:
