@@ -110,9 +110,10 @@ public abstract class SQLExecute<T> {
 	public Class getPreparedStatementClass() {return preparedStatementClass;}
 	public Connection getPreparedConnection() {return preparedConnection;}
 	public List<String> getPreparedNamedParameters() {return preparedNamedParameters;}
-	public Integer getPreparedSQLParametersCount() {return preparedSQLParametersCount;}
+	public int getPreparedSQLParametersCount() {return preparedSQLParametersCount;}
 	public ArrayList<String> getPreparedFields() {return preparedFields;}
 	public String getPreparedSQL() {return preparedSQL;}
+	public PreparedStatement getPreparedStatement() {return preparedStatement;}
 	public Map<String, Integer> getPreparedProcedureOutputParams() {return preparedProcedureOutputParams;}
 	//log
 	public Map<String, Object> getLastNamedParameters() {return lastNamedParameters;}
