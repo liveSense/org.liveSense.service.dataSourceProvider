@@ -1,4 +1,4 @@
-package org.liveSense.api.sql.helpers;
+package org.liveSense.api.sql;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;

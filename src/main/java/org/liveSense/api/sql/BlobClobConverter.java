@@ -1,4 +1,4 @@
-package org.liveSense.api.sql.helpers;
+package org.liveSense.api.sql;
 
 import java.io.BufferedReader;
 import java.io.IOException;

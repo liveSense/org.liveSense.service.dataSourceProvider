@@ -1,4 +1,4 @@
-package org.liveSense.api.sql.helpers;
+package org.liveSense.api.sql;
 
 import java.util.ArrayList;
 import java.util.HashMap;
