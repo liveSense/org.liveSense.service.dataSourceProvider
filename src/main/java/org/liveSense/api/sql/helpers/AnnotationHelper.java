@@ -1,4 +1,4 @@
-package org.liveSense.api.sql;
+package org.liveSense.api.sql.helpers;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -48,6 +48,33 @@ public class AnnotationHelper extends BaseAnnotationHelper {
     	}
     	return ret;
     }
+    
+    public static Map<String, Object> getObjectAsMap2(Object bean) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException, InstantiationException {
+    	return getObjectAsMap2(bean, (List<String>)null);
+    }
+
+    public static Map<String, Object> getObjectAsMap2(Object bean, String[] fieldList) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException, InstantiationException {
+    	List<String> list =  new ArrayList<String>(Arrays.asList(fieldList));
+    	return getObjectAsMap2(bean, list);
+    }    
+	
+    public static Map<String, Object> getObjectAsMap2(Object bean, List<String> fieldList) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException, InstantiationException {
+    	Map<String, Object> ret = new HashMap<String, Object>();
+    	
+    	List<Field> fields = getAllFields(bean.getClass());
+  	
+    	for (Field fld : fields) {
+    		if ((fieldList ==  null) || (fieldList.size() == 0) || (fieldList.indexOf(fld.getName()) != -1)) {
+	    		Annotation[] annotations = fld.getAnnotations();
+	    		for (int i=0; i<annotations.length; i++) {
+	    			if (annotations[i] instanceof Column) {
+	    				ret.put(fld.getName(), BeanUtilsBean.getInstance().getPropertyUtils().getNestedProperty(bean, fld.getName()));
+	    			}
+	    		}
+    		}
+    	}
+    	return ret;
+    }    
     
     public static Set<String> getClassColumnNames(Class<?> clazz) throws IllegalAccessException, InvocationTargetException, NoSuchMethodException {
     	return getClassColumnNames(clazz,(List<String>)null);
@@ -130,6 +157,33 @@ public class AnnotationHelper extends BaseAnnotationHelper {
     		if (idField && clm != null) return clm.name();
     	}
     	return null;
+    }
+    
+    public static Map<String, String> getAnnotationMap(Class<?> clazz, List<String> fieldList, boolean includeIdColumn) {
+    	
+    	Map<String, String> ret = new HashMap<String, String>();
+    	
+    	List<Field> fields = getAllFields(clazz);
+  	
+    	for (Field fld : fields) {
+    		if ((fieldList ==  null) || (fieldList.size() == 0) || (fieldList.indexOf(fld.getName()) != -1)) {
+    			Annotation[] annotations = fld.getAnnotations();
+    			for (int i=0; i<annotations.length; i++) {
+    				if (annotations[i] instanceof Column) {
+    					Column col = (Column)annotations[i];
+    					ret.put(fld.getName(), col.name());
+    				}
+    				if (!includeIdColumn) {
+	    				if (annotations[i] instanceof Id) {
+	    					ret.remove(fld.getName());
+	    					break;
+	    				}
+    				}
+    			}
+    		}
+    	}   	
+    	
+    	return ret;
     }
 
 }
