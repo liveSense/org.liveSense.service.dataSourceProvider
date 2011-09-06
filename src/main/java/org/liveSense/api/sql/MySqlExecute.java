@@ -3,6 +3,7 @@ package org.liveSense.api.sql;
 import java.util.List;
 
 import org.liveSense.api.sql.exceptions.SQLException;
+import org.liveSense.api.sql.helpers.ClauseHelper;
 import org.liveSense.misc.queryBuilder.clauses.LimitClause;
 import org.liveSense.misc.queryBuilder.clauses.OrderByClause;
 import org.liveSense.misc.queryBuilder.exceptions.QueryBuilderException;
@@ -161,4 +162,8 @@ public class MySqlExecute<T> extends SQLExecute<T> {
 		return cls.getQuery() + " FOR UPDATE";
 	}		
 	
+	@Override
+	public String getBlobName(){
+		return "LONGTEXT";
+	}
 }

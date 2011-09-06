@@ -3,6 +3,7 @@ package org.liveSense.api.sql;
 import java.util.List;
 
 import org.liveSense.api.sql.exceptions.SQLException;
+import org.liveSense.api.sql.helpers.ClauseHelper;
 import org.liveSense.misc.queryBuilder.clauses.LimitClause;
 import org.liveSense.misc.queryBuilder.clauses.OrderByClause;
 import org.liveSense.misc.queryBuilder.exceptions.QueryBuilderException;
@@ -160,6 +161,11 @@ public class FirebirdExecute<T> extends SQLExecute<T> {
 		ClauseHelper helper = new ClauseHelper(clazz, builder.getQuery(tableAlias), true);
 		ClauseHelper cls = addLimitClause(addOrderByClause(addWhereClause(helper, tableAlias),tableAlias),tableAlias);
 		return cls.getQuery() + " WITH LOCK";
-	}	
+	}
+	
+	@Override
+	public String getBlobName(){
+		return "BLOB";
+	}
 	
 }

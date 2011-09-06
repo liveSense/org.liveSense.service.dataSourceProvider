@@ -3,6 +3,7 @@ package org.liveSense.api.sql;
 import java.util.List;
 
 import org.liveSense.api.sql.exceptions.SQLException;
+import org.liveSense.api.sql.helpers.ClauseHelper;
 import org.liveSense.misc.queryBuilder.clauses.LimitClause;
 import org.liveSense.misc.queryBuilder.clauses.OrderByClause;
 import org.liveSense.misc.queryBuilder.exceptions.QueryBuilderException;
@@ -168,6 +169,11 @@ public class OracleExecute<T> extends SQLExecute<T> {
 		ClauseHelper helper = new ClauseHelper(clazz, builder.getQuery(tableAlias), true);
 		ClauseHelper cls = addOrderByClause(addLimitClause(addWhereClause(helper, tableAlias),tableAlias),tableAlias);
 		return cls.getQuery() + " FOR UPDATE NOWAIT";
-	}	
+	}
+	
+	@Override
+	public String getBlobName(){
+		return "CLOB";
+	}
 	
 }

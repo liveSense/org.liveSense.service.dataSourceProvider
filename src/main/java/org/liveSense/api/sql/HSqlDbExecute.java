@@ -3,6 +3,7 @@ package org.liveSense.api.sql;
 import java.util.List;
 
 import org.liveSense.api.sql.exceptions.SQLException;
+import org.liveSense.api.sql.helpers.ClauseHelper;
 import org.liveSense.misc.queryBuilder.clauses.LimitClause;
 import org.liveSense.misc.queryBuilder.clauses.OrderByClause;
 import org.liveSense.misc.queryBuilder.exceptions.QueryBuilderException;
@@ -155,6 +156,11 @@ public class HSqlDbExecute<T> extends SQLExecute<T> {
 	@Override
 	public String getLockQuery(Class clazz, String tableAlias) throws SQLException, QueryBuilderException {
 		throw new QueryBuilderException("Record level lock is unsupported by HSQLDB");
-	}		
+	}
+	
+	@Override
+	public String getBlobName(){
+		return "LONGVARCHAR";
+	}
 	
 }
