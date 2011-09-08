@@ -1481,7 +1481,7 @@ public abstract class SQLExecuteBaseTest {
 		QueryBuilder builder = new SimpleBeanSQLQueryBuilder(TestBean.class);
 		
 		//tested method
-		List<Map<String, ?>> resMap = exec.queryEntities(connection, "", builder, null);
+		List<Map<String, ?>> resMap = exec.queryEntitiesAsMap(connection, "", builder, null);
 		
 		//tests
 		assertTrue(resMap.size() == 2);

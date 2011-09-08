@@ -2002,8 +2002,20 @@ public abstract class SQLExecute<T> {
 	        return result;
 	    }
 	};
-	
-	public List<Map<String, ?>> queryEntities(Connection connection,
+
+	public List<Map<String, ?>> queryEntitiesAsMap(Connection connection, QueryBuilder builder) throws Exception {
+		return queryEntitiesAsMap(connection, null, builder, null);
+	}
+
+	public List<Map<String, ?>> queryEntitiesAsMap(Connection connection,  String tableAlias, QueryBuilder builder) throws Exception {
+		return queryEntitiesAsMap(connection, tableAlias, builder, null);
+	}
+
+	public List<Map<String, ?>> queryEntitiesAsMap(Connection connection, QueryBuilder builder, Map<String, Object> params) throws Exception {
+		return queryEntitiesAsMap(connection, null, builder, params);
+	}
+
+	public List<Map<String, ?>> queryEntitiesAsMap(Connection connection,
 		  String tableAlias, QueryBuilder builder, Map<String, Object> params) throws Exception {
 		
     	clearLastStatement();
