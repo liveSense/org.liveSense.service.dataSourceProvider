@@ -6,7 +6,9 @@ import java.sql.SQLException;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.hsqldb.Server;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 
@@ -15,9 +17,25 @@ public class SQLExecuteHSQLTest
 	
 	
 	//FIELDS
-	private Server hsqlServer;
+	private static Server hsqlServer;
 	
 	//TEST - init/fina
+	@BeforeClass
+	public static void beforeClass() {
+		
+		hsqlServer = new Server();
+		hsqlServer.setDatabaseName(0, "testDb");
+		hsqlServer.setAddress("127.0.0.1");
+		hsqlServer.setDatabasePath(0, "file:./target/test-classes/testDb");		
+		hsqlServer.start();		
+	}
+	
+	@AfterClass
+	public static void afterClass() {
+
+		hsqlServer.stop();		
+	}
+	
 	@Before
 	public void before() 
 		throws Exception {
@@ -46,12 +64,7 @@ public class SQLExecuteHSQLTest
 	private Server connect() 
 		throws IOException, SQLException {
 		
-		hsqlServer = new Server();
-		hsqlServer.setDatabaseName(0, "testDb");
-		hsqlServer.setAddress("127.0.0.1");
-		hsqlServer.setDatabasePath(0, "file:./target/test-classes/testDb");
-		
-		hsqlServer.start();
+
 		dataSource = new BasicDataSource();
 		dataSource.setDriverClassName("org.hsqldb.jdbcDriver");
 		dataSource.setUrl("jdbc:hsqldb:hsql://localhost/testDb");
@@ -73,8 +86,6 @@ public class SQLExecuteHSQLTest
 	protected void disconnect() throws SQLException {
 		
 		super.disconnect();
-
-		hsqlServer.stop();
 	}
 	
 	
