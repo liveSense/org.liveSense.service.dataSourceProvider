@@ -21,7 +21,7 @@ public class SQLExecuteHSQLTest
 	
 	//TEST - init/fina
 	@BeforeClass
-	public static void beforeClass() {
+	public static void beforeClass() throws Exception {
 		
 		hsqlServer = new Server();
 		hsqlServer.setDatabaseName(0, "testDb");
