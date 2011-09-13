@@ -2004,7 +2004,7 @@ public abstract class SQLExecute<T> {
 	};
 
 	public List<Map<String, ?>> queryEntitiesAsMap(Connection connection, QueryBuilder builder) throws Exception {
-		return queryEntitiesAsMap(connection, null, builder, null);
+		return queryEntitiesAsMap(connection, "", builder, null);
 	}
 
 	public List<Map<String, ?>> queryEntitiesAsMap(Connection connection,  String tableAlias, QueryBuilder builder) throws Exception {
@@ -2012,7 +2012,7 @@ public abstract class SQLExecute<T> {
 	}
 
 	public List<Map<String, ?>> queryEntitiesAsMap(Connection connection, QueryBuilder builder, Map<String, Object> params) throws Exception {
-		return queryEntitiesAsMap(connection, null, builder, params);
+		return queryEntitiesAsMap(connection, "", builder, params);
 	}
 
 	public List<Map<String, ?>> queryEntitiesAsMap(Connection connection,
