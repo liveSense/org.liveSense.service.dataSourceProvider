@@ -363,9 +363,16 @@ public abstract class SQLExecute<T> {
 		
 		Class localClass = clazz;
 		if (localClass == null)	localClass = this.clazz;
+		if (localClass == null)	localClass = builder.getClazz();
 		
+		String localTableAlias = tableAlias;
+		if (localTableAlias == null)
+			localTableAlias = builder.getTableAlias();
+		if (localTableAlias == null)
+			localTableAlias = "";
+				
 		this.builder = builder;
-		String sql = getSelectQuery(localClass, tableAlias);
+		String sql = getSelectQuery(localClass, localTableAlias);
 		
 		prepare(StatementType.SELECT, connection, localClass, sql, null);
 	}
@@ -447,9 +454,16 @@ public abstract class SQLExecute<T> {
 
 		Class localClass = clazz;
 		if (localClass == null)	localClass = this.clazz;
+		if (localClass == null)	localClass = builder.getClazz();
+		
+		String localTableAlias = tableAlias;
+		if (localTableAlias == null)
+			localTableAlias = builder.getTableAlias();
+		if (localTableAlias == null)
+			localTableAlias = "";		
 
 		this.builder = builder;
-		String sql = getLockQuery(localClass, tableAlias);
+		String sql = getLockQuery(localClass, localTableAlias);
 		
 		prepare(StatementType.LOCK, connection, localClass, sql, null);
 	}
