@@ -44,7 +44,7 @@ public class SQLExecuteHSQLTest
 	
 	//METHODS - private
 	private Server connect() 
-		throws IOException, SQLException {
+		throws Exception {
 		
 		hsqlServer = new Server();
 		hsqlServer.setDatabaseName(0, "testDb");
@@ -52,6 +52,18 @@ public class SQLExecuteHSQLTest
 		hsqlServer.setDatabasePath(0, "file:./target/test-classes/testDb");
 		
 		hsqlServer.start();
+		boolean running = false;
+		long serverTimeout = 10000;
+		long startTime = System.currentTimeMillis();
+		while (!running) {
+			if (System.currentTimeMillis() > startTime+serverTimeout)
+				throw new Exception("HSQL Server timed out");
+			try {
+				hsqlServer.checkRunning(true);
+				running = true;
+			} catch (Exception e) {
+			}
+		}
 		dataSource = new BasicDataSource();
 		dataSource.setDriverClassName("org.hsqldb.jdbcDriver");
 		dataSource.setUrl("jdbc:hsqldb:hsql://localhost/testDb");

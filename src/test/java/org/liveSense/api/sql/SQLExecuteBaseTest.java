@@ -209,7 +209,7 @@ public abstract class SQLExecuteBaseTest {
 	private void assertTestBeanID1(TestBean bean, Double val) throws ParseException {
 		assertTrue(bean.getId() == 1);
 		assertTrue(bean.getIdCustomer() == 1);
-		assertTrue(bean.getConfirmationPassword().equals("password"));
+		assertTrue("password".equals(bean.getConfirmationPassword()));
 		assertTrue(bean.getFourPartColumnName());
 		assertTrue(bean.getDateFieldWithAnnotation().equals(new SimpleDateFormat("yyyy.MM.dd").parse("2011.08.30")));
 		assertTrue(bean.getBlob().equals(STRING_UTF8));
@@ -219,7 +219,7 @@ public abstract class SQLExecuteBaseTest {
 	private void assertTestBeanID2(TestBean bean, Double val) throws ParseException {
 		assertTrue(bean.getId() == 2);
 		assertTrue(bean.getIdCustomer() == 3);
-		assertTrue(bean.getConfirmationPassword().equals("password2"));
+		assertTrue("password2".equals(bean.getConfirmationPassword()));
 		assertTrue(!bean.getFourPartColumnName());
 		assertTrue(bean.getDateFieldWithAnnotation().equals(new SimpleDateFormat("yyyy.MM.dd").parse("2011.08.31")));
 		assertTrue(bean.getBlob().equals(STRING_LOREM_IPSUM));
