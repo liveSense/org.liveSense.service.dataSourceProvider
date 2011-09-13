@@ -6,7 +6,9 @@ import java.sql.SQLException;
 import org.apache.commons.dbcp.BasicDataSource;
 import org.hsqldb.Server;
 import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.BeforeClass;
 import org.junit.Test;
 
 
@@ -15,9 +17,38 @@ public class SQLExecuteHSQLTest
 	
 	
 	//FIELDS
-	private Server hsqlServer;
+	private static Server hsqlServer;
 	
 	//TEST - init/fina
+	@BeforeClass
+	public static void beforeClass() {
+		
+		hsqlServer = new Server();
+		hsqlServer.setDatabaseName(0, "testDb");
+		hsqlServer.setAddress("127.0.0.1");
+		hsqlServer.setDatabasePath(0, "file:./target/test-classes/testDb");
+		
+		hsqlServer.start();
+		boolean running = false;
+		long serverTimeout = 10000;
+		long startTime = System.currentTimeMillis();
+		while (!running) {
+			if (System.currentTimeMillis() > startTime+serverTimeout)
+				throw new Exception("HSQL Server timed out");
+			try {
+				hsqlServer.checkRunning(true);
+				running = true;
+			} catch (Exception e) {
+			}
+		}
+	}
+	
+	@AfterClass
+	public static void afterClass() {
+
+		hsqlServer.stop();		
+	}
+	
 	@Before
 	public void before() 
 		throws Exception {
@@ -44,26 +75,8 @@ public class SQLExecuteHSQLTest
 	
 	//METHODS - private
 	private Server connect() 
-		throws Exception {
+		throws IOException, SQLException {
 		
-		hsqlServer = new Server();
-		hsqlServer.setDatabaseName(0, "testDb");
-		hsqlServer.setAddress("127.0.0.1");
-		hsqlServer.setDatabasePath(0, "file:./target/test-classes/testDb");
-		
-		hsqlServer.start();
-		boolean running = false;
-		long serverTimeout = 10000;
-		long startTime = System.currentTimeMillis();
-		while (!running) {
-			if (System.currentTimeMillis() > startTime+serverTimeout)
-				throw new Exception("HSQL Server timed out");
-			try {
-				hsqlServer.checkRunning(true);
-				running = true;
-			} catch (Exception e) {
-			}
-		}
 		dataSource = new BasicDataSource();
 		dataSource.setDriverClassName("org.hsqldb.jdbcDriver");
 		dataSource.setUrl("jdbc:hsqldb:hsql://localhost/testDb");
@@ -85,8 +98,6 @@ public class SQLExecuteHSQLTest
 	protected void disconnect() throws SQLException {
 		
 		super.disconnect();
-
-		hsqlServer.stop();
 	}
 	
 	

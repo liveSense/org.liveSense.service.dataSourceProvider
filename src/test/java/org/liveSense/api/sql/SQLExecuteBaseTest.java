@@ -779,11 +779,19 @@ public abstract class SQLExecuteBaseTest {
 		bean.setDateFieldWithAnnotation(new SimpleDateFormat("yyyy.MM.dd").parse("2011.09.01"));
 		bean.setBlob(StringUtils.repeat(STRING_UTF8+STRING_LOREM_IPSUM, 1000));
 		bean.setFloatField(0.7);
+		List<String> fields = new ArrayList<String>();
+		fields.add("id"); 
+		fields.add("idCustomer");
+		fields.add("confirmationPassword");
+		fields.add("fourPartColumnName");
+		fields.add("blob");				
+		fields.add("floatField");
+		fields.add("dateFieldWithAnnotation");
 		
 		SQLExecute<TestBean> exec2 = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
 				
 		//tested method
-		exec.insertEntity(connection, bean);
+		exec.insertEntity(connection, bean, fields);
 		//tests
 		assertExec(
 			exec,
@@ -1291,6 +1299,35 @@ public abstract class SQLExecuteBaseTest {
 			2,
 			null,
 			"INSERT INTO BeanTest2 (ID,ID_CUSTOMER)\nSELECT ID,ID_CUSTOMER FROM (SELECT ID,ID_CUSTOMER FROM BeanTest1 )  WHERE (ID BETWEEN ? AND ?)",
+			null,
+			null);	
+	}
+	
+	@Test
+	@SuppressWarnings({ "unchecked", "serial" })
+	public void testPrepareInsertSelect2()
+		throws Exception {
+	
+		//prepare
+		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		QueryBuilder builder = new SimpleSQLQueryBuilder("SELECT ID,ID_CUSTOMER FROM BeanTest1");
+		builder.setClazz(TestBean.class);
+		builder.setWhere(new AndOperator(new BetweenCriteria<OperandSource>("id", new OperandSource("",":from", false), new OperandSource("",":to", false))));
+				
+		//tested method
+		exec.prepareInsertSelectStatement(connection,
+			TestBean2.class, new String[] {"id", "idCustomer"},
+			builder);
+		//tests
+		assertExec(
+			exec,
+			StatementType.INSERT_SELECT,
+			new ArrayList<String>() {{ 
+				add("from"); 
+				add("to"); }} ,			
+			2,
+			null,
+			"INSERT INTO BeanTest2 (ID,ID_CUSTOMER)\nSELECT * FROM (SELECT ID,ID_CUSTOMER FROM BeanTest1 )  WHERE (ID BETWEEN ? AND ?)",
 			null,
 			null);	
 	}

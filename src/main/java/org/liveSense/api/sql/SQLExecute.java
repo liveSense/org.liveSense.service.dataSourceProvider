@@ -363,9 +363,16 @@ public abstract class SQLExecute<T> {
 		
 		Class localClass = clazz;
 		if (localClass == null)	localClass = this.clazz;
+		if (localClass == null)	localClass = builder.getClazz();
 		
+		String localTableAlias = tableAlias;
+		if (localTableAlias == null)
+			localTableAlias = builder.getTableAlias();
+		if (localTableAlias == null)
+			localTableAlias = "";
+				
 		this.builder = builder;
-		String sql = getSelectQuery(localClass, tableAlias);
+		String sql = getSelectQuery(localClass, localTableAlias);
 		
 		prepare(StatementType.SELECT, connection, localClass, sql, null);
 	}
@@ -447,9 +454,16 @@ public abstract class SQLExecute<T> {
 
 		Class localClass = clazz;
 		if (localClass == null)	localClass = this.clazz;
+		if (localClass == null)	localClass = builder.getClazz();
+		
+		String localTableAlias = tableAlias;
+		if (localTableAlias == null)
+			localTableAlias = builder.getTableAlias();
+		if (localTableAlias == null)
+			localTableAlias = "";		
 
 		this.builder = builder;
-		String sql = getLockQuery(localClass, tableAlias);
+		String sql = getLockQuery(localClass, localTableAlias);
 		
 		prepare(StatementType.LOCK, connection, localClass, sql, null);
 	}
@@ -910,6 +924,72 @@ public abstract class SQLExecute<T> {
 			this.builder.setWhere(selectCondition);
 		}
 		String select = getSelectQuery(localClassSelect, tableAlias).replace("*", sb.toString());
+		
+		String sql = insert +"\n"+ select;
+		
+		prepare(StatementType.INSERT_SELECT, connection, null, sql, null);
+	}
+	
+	/**
+	 * Prepare a statement for insert entities into database. The result set mapped with bean's javax.persistence.Column annotations by default.
+	 * If an annotation is not found then the field name is the result set column name (The _ character are deleted).
+	 * 
+	 * @param connection SQL Connection
+	 * @param insertClass Class used by AnnotationHelper
+	 * @param insertFields list of fields used in SQL
+	 * @param builder Query builder
+	 * @throws Exception
+	 */
+	@SuppressWarnings("rawtypes")
+	public void prepareInsertSelectStatement(
+		Connection connection,
+		Class insertClass, String[] insertFields,
+		QueryBuilder builder)
+		throws java.sql.SQLException, SQLException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, QueryBuilderException{
+				
+		List<String> list1 = new ArrayList<String>(Arrays.asList(insertFields));
+		
+		prepareInsertSelectStatement(connection, insertClass, list1, builder);
+	}
+		
+	/**
+	 * {@inheritDoc}
+	 * @see {@link SQLExecute#prepareInsertSelectStatement(Connection connection, Class insertClass, String[] insertFields,	QueryBuilder builder)}
+	 */
+	@SuppressWarnings("rawtypes")
+	public void prepareInsertSelectStatement(
+		Connection connection,
+		Class insertClass, List<String> insertFields,
+		QueryBuilder builder)
+		throws java.sql.SQLException, SQLException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, QueryBuilderException{
+			
+		Class localClassInsert = insertClass;
+		if (localClassInsert == null) localClassInsert = this.clazz;
+		
+		this.builder = builder;
+		
+		String insertTableName = AnnotationHelper.getTableName(localClassInsert);
+		if (StringUtils.isEmpty(insertTableName)) {
+			throw new SQLException(CLASS_DOES_NOT_HAVE_ENTITY_ANNOTATION);
+		}
+		
+		//insert
+		ArrayList<String> insertColumns = AnnotationHelper.getClassColumnNames(localClassInsert, insertFields, true);
+		StringBuffer sb = new StringBuffer();
+		sb.append("INSERT INTO "+insertTableName+" (");
+		boolean first = true;
+		for (String columnName : insertColumns) {
+			if (!first) {
+				sb.append(",");
+			}
+			else first = false;
+			sb.append(columnName);
+		}
+		sb.append(")");
+		String insert = sb.toString();
+			
+		//select
+		String select = getSelectQuery(null);
 		
 		String sql = insert +"\n"+ select;
 		
@@ -1549,7 +1629,20 @@ public abstract class SQLExecute<T> {
 	 * @throws Exception
 	 */
 	public void insertEntity(Connection connection, T entity) throws Exception {
-		prepareInsertStatement(connection, entity.getClass());
+		
+		insertEntity(connection, entity, null);
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 * 
+	 * @param fields list of fields used in SQL
+	 * @see {@link SQLExecute#insertEntity((Connection connection, T entity)}
+	*/
+	public void insertEntity(Connection connection, T entity, List<String> fields) throws Exception {
+		
+		clearLastStatement();
+		prepareInsertStatement(connection, entity.getClass(), fields);
 		insertEntityWithPreparedStatement(entity);
 	}
 	

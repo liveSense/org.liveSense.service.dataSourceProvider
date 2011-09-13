@@ -40,12 +40,8 @@ public class SimpleBeanSQLQueryBuilder  extends QueryBuilder {
 
 	@Override
 	public String getQuery() {
-		return getQuery("");
+		return this.statement;
 	}
 	
-	@Override
-	public String getQuery(String tableAlias) {
-		return this.statement+" "+tableAlias;
-	}	
 
 }
