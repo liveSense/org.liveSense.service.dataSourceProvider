@@ -158,6 +158,13 @@
 			<artifactId>jaybird</artifactId>
 			<version>2.1.6</version>
 			<scope>test</scope>
+			<exclusions>
+				<exclusion>
+					<artifactId>jms</artifactId>
+					<groupId>javax.jms</groupId>				
+				</exclusion>
+			
+			</exclusions>
 		</dependency>
 		
 		<dependency>
