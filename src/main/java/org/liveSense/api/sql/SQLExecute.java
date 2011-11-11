@@ -24,9 +24,7 @@ import java.util.Map.Entry;
 
 import javax.persistence.Column;
 import javax.persistence.Id;
-import javax.sql.DataSource;
 
-import org.apache.commons.dbcp.BasicDataSource;
 import org.apache.commons.dbutils.BasicRowProcessor;
 import org.apache.commons.dbutils.QueryRunner;
 import org.apache.commons.dbutils.ResultSetHandler;
@@ -76,7 +74,6 @@ public abstract class SQLExecute<T> {
 	
 	//FIELDS
 	//create parameters
-	private DataSource dataSource;
 	@SuppressWarnings("rawtypes")
 	private Class clazz;
 	//prepare
@@ -101,7 +98,6 @@ public abstract class SQLExecute<T> {
 	
 	//GETTERS (NO SETTERS)
 	//create parameters
-	public DataSource getDataSource() {return dataSource;}
 	@SuppressWarnings("rawtypes")
 	public Class getClazz() {return clazz;}
 	//prepare
@@ -122,6 +118,73 @@ public abstract class SQLExecute<T> {
 	
 
 	//CONSTRUCTOR (FACTORY)
+
+	public static JdbcDrivers getJdbcDriverByConnection(Connection conn) throws Exception {
+		try {
+            if(conn != null && (!conn.isClosed())){
+            	DatabaseMetaData metaData = conn.getMetaData();
+            	return JdbcDrivers.getJdbcDriverByMetaDataProductName(metaData.getDatabaseProductName());
+             } else {
+                 String msg = "Cannot determinate JDBC Driver by name. Connection is not alive.";
+            	 throw new Exception(msg);
+             }
+        } catch (SQLException e) {
+            String msg = "Failed to create registry database." + e.getMessage();
+            throw new Exception(msg, e);
+        }
+    }
+
+	/**
+	 * get the RDBMS Dialect Dependent Executer by JdbcDriver enumerator
+	 * @param driver
+	 * @return The RDBMS Dependent executer
+	 * @throws SQLException
+	 */
+	public static SQLExecute<?> getExecuterByJdbcDriver(JdbcDrivers driver) throws SQLException {
+		SQLExecute<?> executer = null;
+		if (driver == JdbcDrivers.MYSQL) executer = new MySqlExecute(-1);
+		else if (driver == JdbcDrivers.HSQLDB) executer = new HSqlDbExecute(-1);
+		else if (driver == JdbcDrivers.FIREBIRD) executer = new FirebirdExecute(-1);
+		else if (driver == JdbcDrivers.ORACLE) executer = new OracleExecute(-1);
+		else throw new SQLException(THIS_TYPE_OF_JDBC_DIALECT_IS_NOT_IMPLEMENTED+": "+driver.name());
+		return executer;
+	}
+
+	
+	/**
+	 * Returns RDMS dependent SQLExecute. 
+	 * The currently supported engines are: MYSQL, HSQLDB, FIREBIRD, ORACLE
+	 * 
+	 * @param conn JDBC Connection
+	 * @return SQL Execute Object (optimized for dialect)
+	 * @throws SQLException
+	 */
+	public static SQLExecute<?> getExecuterByConnection(Connection conn) throws SQLException {
+		return getExecuterByConnection(conn, null);
+	}
+	
+	/**
+	 * {@inheritDoc}
+	 * @param clazz Class used by AnnotationHelper
+	 * @see {@link SQLExecute#getExecuterByConnection(Connection con)}
+	 */
+	@SuppressWarnings("rawtypes")
+	public static SQLExecute<?> getExecuterByConnection(Connection conn, Class clazz) throws SQLException {
+		SQLExecute<?> executer = null;
+		try {
+			JdbcDrivers driver = getJdbcDriverByConnection(conn);
+			executer = getExecuterByJdbcDriver(driver);
+		} catch (Exception e) {
+			throw new SQLException("Could not get SqlExecuter by connection: "+e.getMessage(), e);
+		}
+		if (executer != null) {
+			executer.clazz = clazz;
+		} else {
+			throw new SQLException("Could not get SqlExecuter by connection, executer is null");
+		}
+		return executer;
+	}
+	
 	/**
 	 * Returns RDMS dependent SQLExecute. (Apache DBCP required).
 	 * The currently supported engines are: MYSQL, HSQLDB, FIREBIRD, ORACLE
@@ -130,37 +193,33 @@ public abstract class SQLExecute<T> {
 	 * @return SQL Execute Object (optimized for dialect)
 	 * @throws SQLException
 	 */
-	public static SQLExecute<?> getExecuterByDataSource(DataSource ds) throws SQLException {
-		return getExecuterByDataSource(ds, null);
+/*
+	public static SQLExecute<?> getExecuterByDataSource(Connection conn) throws SQLException {
+		return getExecuterByDataSource(conn, null);
 	}
-	
-	
-
-
+*/
 	/**
 	 * {@inheritDoc}
 	 * @param clazz Class used by AnnotationHelper
 	 * @see {@link SQLExecute#getExecuterByDataSource(DataSource ds)}
 	 */
+/*
 	@SuppressWarnings("rawtypes")
 	public static SQLExecute<?> getExecuterByDataSource(DataSource ds, Class clazz) throws SQLException {
-		String driverClass = getDriverClassByDataSource(ds);
-		
+		String driverClassName = getDriverClassNameByDataSource(ds);		
 		SQLExecute<?> executer = null;
-		if (driverClass.equals(JdbcDrivers.MYSQL.getDriverClass())) executer = new MySqlExecute(-1);
-		else if (driverClass.equals(JdbcDrivers.HSQLDB.getDriverClass())) executer = new HSqlDbExecute(-1);
-		else if (driverClass.equals(JdbcDrivers.FIREBIRD.getDriverClass())) executer = new FirebirdExecute(-1);
-		else if (driverClass.equals(JdbcDrivers.ORACLE.getDriverClass())) executer = new OracleExecute(-1);
-		else if (driverClass.equals(JdbcDrivers.ORACLE2.getDriverClass())) executer = new OracleExecute(-1);
-
-		else throw new SQLException(THIS_TYPE_OF_JDBC_DIALECT_IS_NOT_IMPLEMENTED+": "+driverClass);
+		JdbcDrivers driver = JdbcDrivers.getJdbcDriverByDriverClassName(driverClassName);
+		if (driver == JdbcDrivers.MYSQL) executer = new MySqlExecute(-1);
+		else if (driver == JdbcDrivers.HSQLDB) executer = new HSqlDbExecute(-1);
+		else if (driver == JdbcDrivers.FIREBIRD) executer = new FirebirdExecute(-1);
+		else if (driver == JdbcDrivers.ORACLE) executer = new OracleExecute(-1);
+		else throw new SQLException(THIS_TYPE_OF_JDBC_DIALECT_IS_NOT_IMPLEMENTED+": "+driverClassName);
 		
 		executer.dataSource = ds;
 		executer.clazz = clazz;
 		return executer;
 	}
-	
-	
+*/	
 	
 	//METHODS - static
 	/**
@@ -170,10 +229,47 @@ public abstract class SQLExecute<T> {
 	 * @return The driver class name
 	 * @throws SQLException
 	 */
-	public static String getDriverClassByDataSource(DataSource ds) throws SQLException {
+/*
+	public static String getDriverClassNameByDataSource(DataSource ds) throws SQLException {
 		if (!(ds instanceof BasicDataSource)) throw new SQLException(BASIC_DATASOURCE_OBJECT_NEEDED);
 		return ((BasicDataSource)ds).getDriverClassName();
 	}
+*/
+	/*
+	 private String getDatabaseType(Connection conn) throws Exception{
+	        String type = null;
+	        try {
+	            if(conn != null && (!conn.isClosed())){
+	                DatabaseMetaData metaData = conn.getMetaData();
+	                //TODO : Add more types (postgres,db2,etc...)
+	                if (metaData.getDatabaseProductName().matches("(?i).*hsql.*")) {
+	                    type = "hsql";
+	                } else if (metaData.getDatabaseProductName().matches("(?i).*derby.*")) {
+	                    type = "derby";
+	                } else if (metaData.getDatabaseProductName().matches("(?i).*mysql.*")) {
+	                    type = "mysql";
+	                } else if (metaData.getDatabaseProductName().matches("(?i).*oracle.*")) {
+	                    type = "oracle";
+	                } else if (metaData.getDatabaseProductName().matches("(?i).*microsoft.*")) {
+	                    type = "mssql";
+	                } else if (metaData.getDatabaseProductName().matches("(?i).*h2.*")) {
+	                    type = "h2";
+	                } else {
+	                    String msg = "Unsupported database: " + metaData.getDatabaseProductName() +
+	                            ". Database will not be created automatically by the WSO2 Registry. " +
+	                            "Please create the database using appropriate database scripts for " +
+	                            "the database.";
+	                    throw new Exception(msg);
+	                }
+	            }
+	        } catch (SQLException e) {
+	            String msg = "Failed to create registry database." + e.getMessage();
+
+	            throw new Exception(msg, e);
+	        }
+	        return type;
+	    }
+	*/
 
 	/**
 	 * Returns the DataSource connection URL String
@@ -182,11 +278,12 @@ public abstract class SQLExecute<T> {
 	 * @return The connection URL
 	 * @throws SQLException
 	 */
+/*
 	public static String getDataSourceUrlByDataSource(DataSource ds) throws SQLException {
 		if (!(ds instanceof BasicDataSource)) throw new SQLException(BASIC_DATASOURCE_OBJECT_NEEDED);
 		return ((BasicDataSource)ds).getUrl();
 	}
-	
+*/	
 	
 	
 	//METHODS - abstract

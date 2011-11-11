@@ -243,7 +243,7 @@ public abstract class SQLExecuteBaseTest {
 		throws Exception {
 	
 		//prepare
-		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		SimpleSQLQueryBuilder builder = new SimpleSQLQueryBuilder("SELECT * FROM BeanTest1");
 		builder.setWhere(new AndOperator(new EqualCriteria<OperandSource>("id", new OperandSource("", ":id", false))));
 		
@@ -267,7 +267,7 @@ public abstract class SQLExecuteBaseTest {
 		throws Exception {
 		
 		//prepare
-		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		SimpleSQLQueryBuilder builder = new SimpleSQLQueryBuilder("SELECT * FROM BeanTest1");
 		builder.setWhere(new AndOperator(new EqualCriteria<OperandSource>("id", new OperandSource("", ":id", false))));
 		exec.prepareQueryStatement(connection, builder);
@@ -312,7 +312,7 @@ public abstract class SQLExecuteBaseTest {
 		throws Exception {
 	
 		//prepare
-		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		SimpleSQLQueryBuilder builder = new SimpleSQLQueryBuilder("SELECT * FROM BeanTest1");
 		builder.setWhere(new AndOperator(new EqualCriteria<OperandSource>("id", new OperandSource("", ":id", false))));
 		Map<String, Object> params = new HashMap<String, Object>();
@@ -340,7 +340,7 @@ public abstract class SQLExecuteBaseTest {
 		throws Exception {
 	
 		//prepare
-		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		
 		//tested method
 		exec.prepareQueryStatement(connection);
@@ -362,7 +362,7 @@ public abstract class SQLExecuteBaseTest {
 		throws Exception {
 	
 		//prepare
-		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		exec.prepareQueryStatement(connection);
 		TestBean bean = new TestBean();
 		bean.setId(1);
@@ -405,7 +405,7 @@ public abstract class SQLExecuteBaseTest {
 		throws Exception {
 	
 		//prepare
-		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		TestBean bean = new TestBean();
 		bean.setId(1);
 		
@@ -430,7 +430,7 @@ public abstract class SQLExecuteBaseTest {
 		throws Exception {
 	
 		//prepare
-		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		SimpleSQLQueryBuilder builder = new SimpleSQLQueryBuilder("SELECT * FROM BeanTest1");
 		builder.setWhere(new AndOperator(new EqualCriteria<OperandSource>("id", new OperandSource("", ":id", false))));
 		
@@ -454,14 +454,14 @@ public abstract class SQLExecuteBaseTest {
 		throws Exception {
 		
 		//prepare
-		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		SimpleSQLQueryBuilder builder = new SimpleSQLQueryBuilder("SELECT * FROM BeanTest1");
 		builder.setWhere(new AndOperator(new EqualCriteria<OperandSource>("id", new OperandSource("", ":id", false))));
 		exec.prepareLockStatement(connection, builder);
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("id", new Integer(1));
 		
-		SQLExecute<TestBean> exec2 = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec2 = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection2, TestBean.class);
 		exec2.prepareLockStatement(connection2, builder);
 		
 		//tested method
@@ -484,7 +484,7 @@ public abstract class SQLExecuteBaseTest {
 			assertTrue(false);
 		}
 		catch (SQLException e) {
-			if (dataSource.getDriverClassName().equals(JdbcDrivers.FIREBIRD.getDriverClass())) {
+			if (SQLExecute.getJdbcDriverByConnection(connection) == JdbcDrivers.FIREBIRD) {
 				assertTrue(e.getErrorCode() == 335544345);
 			} else throw e;
 		}
@@ -510,7 +510,7 @@ public abstract class SQLExecuteBaseTest {
 			assertTrue(false);
 		}
 		catch (SQLException e) {
-			if (dataSource.getDriverClassName().equals(JdbcDrivers.FIREBIRD.getDriverClass())) {
+			if (SQLExecute.getJdbcDriverByConnection(connection) == JdbcDrivers.FIREBIRD) {
 				assertTrue(e.getErrorCode() == 335544345);
 			} else throw e;
 		}
@@ -522,13 +522,13 @@ public abstract class SQLExecuteBaseTest {
 		throws Exception {
 	
 		//prepare
-		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		SimpleSQLQueryBuilder builder = new SimpleSQLQueryBuilder("SELECT * FROM BeanTest1");
 		builder.setWhere(new AndOperator(new EqualCriteria<OperandSource>("id", new OperandSource("", ":id", false))));
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("id", new Integer(1));
 		
-		SQLExecute<TestBean> exec2 = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec2 = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection2, TestBean.class);
 		
 		//tested method
 		List<TestBean> beans = exec.lockEntities(connection, builder, params);
@@ -550,7 +550,7 @@ public abstract class SQLExecuteBaseTest {
 			assertTrue(false);
 		}
 		catch (SQLException e) {
-			if (dataSource.getDriverClassName().equals(JdbcDrivers.FIREBIRD.getDriverClass())) {
+			if (SQLExecute.getJdbcDriverByConnection(connection2) == JdbcDrivers.FIREBIRD) {
 				assertTrue(e.getErrorCode() == 335544345);
 			} else throw e;
 		}
@@ -562,7 +562,7 @@ public abstract class SQLExecuteBaseTest {
 		throws Exception {
 	
 		//prepare
-		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		
 		//tested method
 		exec.prepareLockStatement(connection);
@@ -584,7 +584,7 @@ public abstract class SQLExecuteBaseTest {
 		throws Exception {
 		
 		//prepare
-		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		SimpleSQLQueryBuilder builder = new SimpleSQLQueryBuilder("SELECT * FROM BeanTest1");
 		builder.setWhere(new AndOperator(new EqualCriteria<OperandSource>("id", new OperandSource("", ":id", false))));
 		exec.prepareLockStatement(connection);
@@ -593,7 +593,7 @@ public abstract class SQLExecuteBaseTest {
 		TestBean bean = new TestBean();
 		bean.setId(1);
 		
-		SQLExecute<TestBean> exec2 = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec2 = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection2, TestBean.class);
 		exec2.prepareLockStatement(connection2, builder);
 		
 		//tested method
@@ -616,7 +616,7 @@ public abstract class SQLExecuteBaseTest {
 			assertTrue(false);
 		}
 		catch (SQLException e) {
-			if (dataSource.getDriverClassName().equals(JdbcDrivers.FIREBIRD.getDriverClass())) {
+			if (SQLExecute.getJdbcDriverByConnection(connection) == JdbcDrivers.FIREBIRD) {
 				assertTrue(e.getErrorCode() == 335544345);
 			} else throw e;
 		}
@@ -643,7 +643,7 @@ public abstract class SQLExecuteBaseTest {
 			assertTrue(false);
 		}
 		catch (SQLException e) {
-			if (dataSource.getDriverClassName().equals(JdbcDrivers.FIREBIRD.getDriverClass())) {
+			if (SQLExecute.getJdbcDriverByConnection(connection) == JdbcDrivers.FIREBIRD) {
 				assertTrue(e.getErrorCode() == 335544345);
 			} else throw e;
 		}
@@ -655,11 +655,11 @@ public abstract class SQLExecuteBaseTest {
 		throws Exception {
 	
 		//prepare
-		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		TestBean bean = new TestBean();
 		bean.setId(1);
 		
-		SQLExecute<TestBean> exec2 = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec2 = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection2, TestBean.class);
 		
 		//tested method
 		TestBean bean2 = exec.lockEntity(connection, bean);
@@ -680,7 +680,7 @@ public abstract class SQLExecuteBaseTest {
 			assertTrue(false);
 		}
 		catch (SQLException e) {
-			if (dataSource.getDriverClassName().equals(JdbcDrivers.FIREBIRD.getDriverClass())) {
+			if (SQLExecute.getJdbcDriverByConnection(connection2) == JdbcDrivers.FIREBIRD) {
 				assertTrue(e.getErrorCode() == 335544345);
 			} else throw e;
 		}
@@ -692,7 +692,7 @@ public abstract class SQLExecuteBaseTest {
 		throws Exception {
 	
 		//prepare
-		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		
 		//tested method
 		exec.prepareInsertStatement(connection);
@@ -721,7 +721,7 @@ public abstract class SQLExecuteBaseTest {
 		throws Exception {
 		
 		//prepare
-		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		final TestBean bean = new TestBean();
 		bean.setId(3);
 		bean.setIdCustomer(4);
@@ -732,7 +732,7 @@ public abstract class SQLExecuteBaseTest {
 		bean.setFloatField(0.7);
 		exec.prepareInsertStatement(connection);
 		
-		SQLExecute<TestBean> exec2 = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec2 = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		
 		//tested method
 		exec.insertEntityWithPreparedStatement(bean);
@@ -770,7 +770,7 @@ public abstract class SQLExecuteBaseTest {
 		throws Exception {
 		
 		//prepare
-		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		final TestBean bean = new TestBean();
 		bean.setId(3);
 		bean.setIdCustomer(4);
@@ -788,7 +788,7 @@ public abstract class SQLExecuteBaseTest {
 		fields.add("floatField");
 		fields.add("dateFieldWithAnnotation");
 		
-		SQLExecute<TestBean> exec2 = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec2 = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 				
 		//tested method
 		exec.insertEntity(connection, bean, fields);
@@ -826,7 +826,7 @@ public abstract class SQLExecuteBaseTest {
 		throws Exception {
 	
 		//prepare
-		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		Object condition = new AndOperator(new GreaterCriteria<OperandSource>("t", "id", new OperandSource("", ":id", false)));
 		
 		//tested method
@@ -849,7 +849,7 @@ public abstract class SQLExecuteBaseTest {
 		throws Exception {
 		
 		//prepare
-		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		Object condition = new AndOperator(new GreaterCriteria<OperandSource>("t", "floatField", new OperandSource("", ":floatfield", false)));
 		exec.prepareUpdateStatement(connection, null, "t", Arrays.asList(new String[]{"floatField"}), condition);
 		Map<String, Object> params = new HashMap<String, Object>();
@@ -859,7 +859,7 @@ public abstract class SQLExecuteBaseTest {
 		SimpleBeanSQLQueryBuilder builder2 = new SimpleBeanSQLQueryBuilder(TestBean.class);
 		builder2.setWhere(new AndOperator(new EqualCriteria<OperandSource>("floatField", new OperandSource(1.0))));
 		
-		SQLExecute<TestBean> exec2 = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec2 = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		
 		//tested method
 		exec.updateEntitiesWithPreparedStatement(bean, params);
@@ -913,7 +913,7 @@ public abstract class SQLExecuteBaseTest {
 		throws Exception {
 		
 		//prepare
-		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		Object condition = new AndOperator(new GreaterCriteria<OperandSource>("t", "floatField", new OperandSource("", ":floatfield", false)));
 		exec.prepareUpdateStatement(connection, null, "t", Arrays.asList(new String[]{"floatField"}), condition);
 		Map<String, Object> params = new HashMap<String, Object>();
@@ -923,7 +923,7 @@ public abstract class SQLExecuteBaseTest {
 		SimpleBeanSQLQueryBuilder builder2 = new SimpleBeanSQLQueryBuilder(TestBean.class);
 		builder2.setWhere(new AndOperator(new EqualCriteria<OperandSource>("floatField", new OperandSource(1.0))));
 		
-		SQLExecute<TestBean> exec2 = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec2 = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		
 		//tested method
 		exec.updateEntities(connection, bean, "t", Arrays.asList(new String[]{"floatField"}), condition, params);
@@ -977,7 +977,7 @@ public abstract class SQLExecuteBaseTest {
 		throws Exception {
 	
 		//prepare
-		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 			
 		//tested method
 		exec.prepareUpdateStatement(connection, TestBean.class, Arrays.asList(new String[]{"floatField"}));
@@ -999,7 +999,7 @@ public abstract class SQLExecuteBaseTest {
 		throws Exception {
 		
 		//prepare
-		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		exec.prepareUpdateStatement(connection, TestBean.class, Arrays.asList(new String[]{"floatField"}));
 		TestBean bean = new TestBean();
 		bean.setId(2);
@@ -1007,7 +1007,7 @@ public abstract class SQLExecuteBaseTest {
 		SimpleBeanSQLQueryBuilder builder2 = new SimpleBeanSQLQueryBuilder(TestBean.class);
 		builder2.setWhere(new AndOperator(new EqualCriteria<OperandSource>("floatField", new OperandSource(1.0))));
 		
-		SQLExecute<TestBean> exec2 = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec2 = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		
 		//tested method
 		exec.updateEntityWithPreparedStatement(bean);
@@ -1036,14 +1036,14 @@ public abstract class SQLExecuteBaseTest {
 		throws Exception {
 		
 		//prepare
-		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		TestBean bean = new TestBean();
 		bean.setId(2);
 		bean.setFloatField(1.0);
 		SimpleBeanSQLQueryBuilder builder2 = new SimpleBeanSQLQueryBuilder(TestBean.class);
 		builder2.setWhere(new AndOperator(new EqualCriteria<OperandSource>("floatField", new OperandSource(1.0))));
 		
-		SQLExecute<TestBean> exec2 = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec2 = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		
 		//tested method
 		exec.updateEntity(connection, bean, Arrays.asList(new String[]{"floatField"}));
@@ -1070,7 +1070,7 @@ public abstract class SQLExecuteBaseTest {
 		throws Exception {
 	
 		//prepare
-		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		Object condition = new AndOperator(new GreaterCriteria<OperandSource>("t", "floatField", new OperandSource("", ":floatfield", false)));
 		
 		//tested method
@@ -1093,7 +1093,7 @@ public abstract class SQLExecuteBaseTest {
 		throws Exception {
 		
 		//prepare
-		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		Object condition = new AndOperator(new GreaterCriteria<OperandSource>("t", "floatField", new OperandSource("", ":floatfield", false)));
 		exec.prepareDeleteStatement(connection, null, "t", condition);
 		Map<String, Object> params = new HashMap<String, Object>();
@@ -1101,7 +1101,7 @@ public abstract class SQLExecuteBaseTest {
 		SimpleBeanSQLQueryBuilder builder2 = new SimpleBeanSQLQueryBuilder(TestBean.class);
 		builder2.setWhere(new AndOperator(new EqualCriteria<OperandSource>("floatField", new OperandSource(1.0))));
 		
-		SQLExecute<TestBean> exec2 = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec2 = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		
 		//tested method
 		exec.deleteEntitiesWithPreparedStatement(params);
@@ -1145,7 +1145,7 @@ public abstract class SQLExecuteBaseTest {
 		throws Exception {
 		
 		//prepare
-		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		Object condition = new AndOperator(new GreaterCriteria<OperandSource>("t", "floatField", new OperandSource("", ":floatfield", false)));
 		exec.prepareDeleteStatement(connection, null, "t", condition);
 		Map<String, Object> params = new HashMap<String, Object>();
@@ -1153,7 +1153,7 @@ public abstract class SQLExecuteBaseTest {
 		SimpleBeanSQLQueryBuilder builder2 = new SimpleBeanSQLQueryBuilder(TestBean.class);
 		builder2.setWhere(new AndOperator(new EqualCriteria<OperandSource>("floatField", new OperandSource(1.0))));
 		
-		SQLExecute<TestBean> exec2 = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec2 = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		
 		//tested method
 		exec.deleteEntities(connection, null, "t", condition, params);
@@ -1198,7 +1198,7 @@ public abstract class SQLExecuteBaseTest {
 		throws Exception {
 	
 		//prepare
-		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 			
 		//tested method
 		exec.prepareDeleteStatement(connection);
@@ -1220,14 +1220,14 @@ public abstract class SQLExecuteBaseTest {
 		throws Exception {
 		
 		//prepare
-		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		exec.prepareDeleteStatement(connection);
 		TestBean bean = new TestBean();
 		bean.setId(2);
 		SimpleBeanSQLQueryBuilder builder2 = new SimpleBeanSQLQueryBuilder(TestBean.class);
 		builder2.setWhere(new AndOperator(new EqualCriteria<OperandSource>("floatField", new OperandSource(1.0))));
 		
-		SQLExecute<TestBean> exec2 = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec2 = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		
 		//tested method
 		exec.deleteEntityWithPreparedStatement(bean);
@@ -1252,13 +1252,13 @@ public abstract class SQLExecuteBaseTest {
 		throws Exception {
 		
 		//prepare
-		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		TestBean bean = new TestBean();
 		bean.setId(2);
 		SimpleBeanSQLQueryBuilder builder2 = new SimpleBeanSQLQueryBuilder(TestBean.class);
 		builder2.setWhere(new AndOperator(new EqualCriteria<OperandSource>("floatField", new OperandSource(1.0))));
 		
-		SQLExecute<TestBean> exec2 = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec2 = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		
 		//tested method
 		exec.deleteEntity(connection, bean);
@@ -1283,7 +1283,7 @@ public abstract class SQLExecuteBaseTest {
 		throws Exception {
 	
 		//prepare
-		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 				
 		//tested method
 		exec.prepareInsertSelectStatement(connection,
@@ -1309,7 +1309,7 @@ public abstract class SQLExecuteBaseTest {
 		throws Exception {
 	
 		//prepare
-		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		QueryBuilder builder = new SimpleSQLQueryBuilder("SELECT ID,ID_CUSTOMER FROM BeanTest1");
 		builder.setClazz(TestBean.class);
 		builder.setWhere(new AndOperator(new BetweenCriteria<OperandSource>("id", new OperandSource("",":from", false), new OperandSource("",":to", false))));
@@ -1338,11 +1338,11 @@ public abstract class SQLExecuteBaseTest {
 		throws Exception {
 		
 		//prepare
-		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		exec.prepareInsertSelectStatement(connection,
 			TestBean2.class, new String[] {"id", "idCustomer", "confirmationPassword", "fourPartColumnName", "blob", "floatField", "dateFieldWithAnnotation"},
 			TestBean.class, "", new String[] {"id", "idCustomer", "confirmationPassword", "fourPartColumnName", "blob", "floatField", "dateFieldWithAnnotation"}, new AndOperator(new BetweenCriteria<OperandSource>("id", new OperandSource("",":from", false), new OperandSource("",":to", false))));
-		SQLExecute<TestBean2> exec2 = (SQLExecute<TestBean2>) SQLExecute.getExecuterByDataSource(dataSource, TestBean2.class);
+		SQLExecute<TestBean2> exec2 = (SQLExecute<TestBean2>) SQLExecute.getExecuterByConnection(connection, TestBean2.class);
 		QueryBuilder builder = new SimpleBeanSQLQueryBuilder(TestBean2.class);
 		builder.setOrderBy(new OrderByClause("id", false));
 		Map<String, Object> params = new HashMap<String, Object>();
@@ -1379,8 +1379,8 @@ public abstract class SQLExecuteBaseTest {
 		throws Exception {
 		
 		//prepare
-		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
-		SQLExecute<TestBean2> exec2 = (SQLExecute<TestBean2>) SQLExecute.getExecuterByDataSource(dataSource, TestBean2.class);
+		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
+		SQLExecute<TestBean2> exec2 = (SQLExecute<TestBean2>) SQLExecute.getExecuterByConnection(connection, TestBean2.class);
 		QueryBuilder builder = new SimpleBeanSQLQueryBuilder(TestBean2.class);
 		builder.setOrderBy(new OrderByClause("id", false));
 		Map<String, Object> params = new HashMap<String, Object>();
@@ -1420,7 +1420,7 @@ public abstract class SQLExecuteBaseTest {
 		
 		//prepare
 		createTestProcedure();
-		SQLExecute exec = SQLExecute.getExecuterByDataSource(dataSource);
+		SQLExecute exec = SQLExecute.getExecuterByConnection(connection);
 		
 		//tested method
 		exec.prepareExecuteProcedure(connection, "testproc");
@@ -1444,7 +1444,7 @@ public abstract class SQLExecuteBaseTest {
 		
 		//prepare
 		createTestProcedure();
-		SQLExecute exec = SQLExecute.getExecuterByDataSource(dataSource);
+		SQLExecute exec = SQLExecute.getExecuterByConnection(connection);
 		exec.prepareExecuteProcedure(connection, "testproc");
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("PARAM1", "10.5");
@@ -1480,7 +1480,7 @@ public abstract class SQLExecuteBaseTest {
 		
 		//prepare
 		createTestProcedure();
-		SQLExecute exec = SQLExecute.getExecuterByDataSource(dataSource);
+		SQLExecute exec = SQLExecute.getExecuterByConnection(connection);
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("PARAM1", "10.5");
 		params.put("param2", 20);
@@ -1514,7 +1514,7 @@ public abstract class SQLExecuteBaseTest {
 		throws Exception {
 
 		//prepare
-		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		QueryBuilder builder = new SimpleBeanSQLQueryBuilder(TestBean.class);
 		
 		//tested method
@@ -1546,7 +1546,7 @@ public abstract class SQLExecuteBaseTest {
 		throws org.liveSense.api.sql.exceptions.SQLException, SQLException{
 		
 		//prepare
-		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 
 		//tested method
 		exec.executeScript(connection, new File("./target/test-classes/test.sql"), "Create");
@@ -1611,7 +1611,7 @@ public abstract class SQLExecuteBaseTest {
 		//prepare
 		connection.close();
 		connection = dataSource.getConnection();
-		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		executeSql(connection, "DROP TABLE beantest1");
 		connection.commit();
 
@@ -1630,7 +1630,7 @@ public abstract class SQLExecuteBaseTest {
 		//prepare
 		connection.close();
 		connection = dataSource.getConnection();
-		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 
 		//tested method
 		exec.dropTable(connection);
@@ -1647,7 +1647,7 @@ public abstract class SQLExecuteBaseTest {
 		//prepare
 		connection.close();
 		connection = dataSource.getConnection();
-		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByDataSource(dataSource, TestBean.class);
+		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 
 		//tested method
 		boolean exists = exec.existsTable(connection);
