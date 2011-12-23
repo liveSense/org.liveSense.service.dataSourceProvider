@@ -35,6 +35,7 @@ import org.liveSense.misc.queryBuilder.criterias.GreaterCriteria;
 import org.liveSense.misc.queryBuilder.jdbcDriver.JdbcDrivers;
 import org.liveSense.misc.queryBuilder.operands.OperandSource;
 import org.liveSense.misc.queryBuilder.operators.AndOperator;
+import org.liveSense.misc.queryBuilder.operators.Operator;
 
 @Ignore
 public abstract class SQLExecuteBaseTest {
@@ -827,7 +828,7 @@ public abstract class SQLExecuteBaseTest {
 	
 		//prepare
 		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
-		Object condition = new AndOperator(new GreaterCriteria<OperandSource>("t", "id", new OperandSource("", ":id", false)));
+		Operator condition = new AndOperator(new GreaterCriteria<OperandSource>("t", "id", new OperandSource("", ":id", false)));
 		
 		//tested method
 		exec.prepareUpdateStatement(connection, null, "t", Arrays.asList(new String[]{"floatField"}), condition);
@@ -850,7 +851,7 @@ public abstract class SQLExecuteBaseTest {
 		
 		//prepare
 		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
-		Object condition = new AndOperator(new GreaterCriteria<OperandSource>("t", "floatField", new OperandSource("", ":floatfield", false)));
+		Operator condition = new AndOperator(new GreaterCriteria<OperandSource>("t", "floatField", new OperandSource("", ":floatfield", false)));
 		exec.prepareUpdateStatement(connection, null, "t", Arrays.asList(new String[]{"floatField"}), condition);
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("floatfield", new Float(0.5));
@@ -914,7 +915,7 @@ public abstract class SQLExecuteBaseTest {
 		
 		//prepare
 		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
-		Object condition = new AndOperator(new GreaterCriteria<OperandSource>("t", "floatField", new OperandSource("", ":floatfield", false)));
+		Operator condition = new AndOperator(new GreaterCriteria<OperandSource>("t", "floatField", new OperandSource("", ":floatfield", false)));
 		exec.prepareUpdateStatement(connection, null, "t", Arrays.asList(new String[]{"floatField"}), condition);
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("floatfield", new Float(0.5));
@@ -1071,7 +1072,7 @@ public abstract class SQLExecuteBaseTest {
 	
 		//prepare
 		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
-		Object condition = new AndOperator(new GreaterCriteria<OperandSource>("t", "floatField", new OperandSource("", ":floatfield", false)));
+		Operator condition = new AndOperator(new GreaterCriteria<OperandSource>("t", "floatField", new OperandSource("", ":floatfield", false)));
 		
 		//tested method
 		exec.prepareDeleteStatement(connection, null, "t", condition);
@@ -1094,7 +1095,7 @@ public abstract class SQLExecuteBaseTest {
 		
 		//prepare
 		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
-		Object condition = new AndOperator(new GreaterCriteria<OperandSource>("t", "floatField", new OperandSource("", ":floatfield", false)));
+		Operator condition = new AndOperator(new GreaterCriteria<OperandSource>("t", "floatField", new OperandSource("", ":floatfield", false)));
 		exec.prepareDeleteStatement(connection, null, "t", condition);
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("floatfield", new Float(0.5));
@@ -1146,7 +1147,7 @@ public abstract class SQLExecuteBaseTest {
 		
 		//prepare
 		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
-		Object condition = new AndOperator(new GreaterCriteria<OperandSource>("t", "floatField", new OperandSource("", ":floatfield", false)));
+		Operator condition = new AndOperator(new GreaterCriteria<OperandSource>("t", "floatField", new OperandSource("", ":floatfield", false)));
 		exec.prepareDeleteStatement(connection, null, "t", condition);
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("floatfield", new Float(0.5));

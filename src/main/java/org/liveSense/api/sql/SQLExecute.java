@@ -34,11 +34,13 @@ import org.liveSense.api.beanprocessors.DbStandardBeanProcessor;
 import org.liveSense.api.sql.exceptions.SQLException;
 import org.liveSense.misc.queryBuilder.QueryBuilder;
 import org.liveSense.misc.queryBuilder.SimpleSQLQueryBuilder;
+import org.liveSense.misc.queryBuilder.criterias.Criteria;
 import org.liveSense.misc.queryBuilder.criterias.EqualCriteria;
 import org.liveSense.misc.queryBuilder.exceptions.QueryBuilderException;
 import org.liveSense.misc.queryBuilder.jdbcDriver.JdbcDrivers;
 import org.liveSense.misc.queryBuilder.operands.OperandSource;
 import org.liveSense.misc.queryBuilder.operators.AndOperator;
+import org.liveSense.misc.queryBuilder.operators.Operator;
 
 
 /**
@@ -63,7 +65,6 @@ public abstract class SQLExecute<T> {
 	private static final String CLASS_DOES_NOT_HAVE_ENTITY_ANNOTATION = "Class does not contain javax.persistence.Entity or javax.persistence.Entity.Table annotation";
 	private static final String CLASS_DOES_NOT_HAVE_ID_ANNOTATION = "Entity does not contain javax.persistence.Id annotation";
 	private static final String ENTITY_IS_NULL = "Entity is null";
-	private static final String BASIC_DATASOURCE_OBJECT_NEEDED = "No org.apache.commons.dbcp.BasicDataSource object is defined";
 	private static final String ENTITY_TYPE_MISMATCH = "Entity class type mismatch";
 	private static final String COLUMN_NAME_IS_UNDEFINED = "Column name is undefined";
 	private static final String COLUMN_DEFINITION_IS_UNDEFINED = "Column definition is undefined";
@@ -692,10 +693,26 @@ public abstract class SQLExecute<T> {
 	 * @throws Exception
 	 */
 	public void prepareUpdateStatement(
-		Connection connection, Object condition) throws Exception {
+		Connection connection, Operator condition) throws Exception {
 		
 		prepareUpdateStatement(connection, null, condition);
 	}
+
+	/**
+	 * Prepare a statement for update entities in database. The result set mapped with bean's javax.persistence.Column annotations by default.
+	 * If an annotation is not found then the field name is the result set column name (The _ character are deleted).
+	 * 
+	 * @param connection SQL Connection
+	 * @param condition SQL condition
+	 * @throws Exception
+	 */
+	public void prepareUpdateStatement(
+		Connection connection, Criteria<?> condition) throws Exception {
+		
+		prepareUpdateStatement(connection, null, new AndOperator(condition));
+	}
+	
+	
 	
 	/**
 	 * {@inheritDoc}
@@ -704,11 +721,23 @@ public abstract class SQLExecute<T> {
 	 */
 	@SuppressWarnings("rawtypes")
 	public void prepareUpdateStatement(
-		Connection connection, Class clazz, Object condition) throws Exception {
+		Connection connection, Class clazz, Operator condition) throws Exception {
 		
 		prepareUpdateStatement(connection, clazz, (List<String>)null, condition);
 	}
-	
+
+	/**
+	 * {@inheritDoc}
+	 * @param clazz Class used by AnnotationHelper
+	 * @see {@link SQLExecute#prepareUpdateStatement(Connection connection, Object condition)}
+	 */
+	@SuppressWarnings("rawtypes")
+	public void prepareUpdateStatement(
+		Connection connection, Class clazz, Criteria<?> condition) throws Exception {
+		
+		prepareUpdateStatement(connection, clazz, (List<String>)null, new AndOperator(condition));
+	}
+
 	/**
 	 * {@inheritDoc}
 	 * @param fields list of fields used in SQL
@@ -716,12 +745,12 @@ public abstract class SQLExecute<T> {
 	 */
 	@SuppressWarnings("rawtypes")
 	public void prepareUpdateStatement(
-		Connection connection, Class clazz, String[] fields, Object condition) throws Exception {
+		Connection connection, Class clazz, String[] fields, Operator condition) throws Exception {
 		
 		List<String> list = new ArrayList<String>(Arrays.asList(fields));
 		prepareUpdateStatement(connection, clazz, list, condition);
 	}
-	
+
 	/**
 	 * {@inheritDoc}
 	 * @param fields list of fields used in SQL
@@ -729,10 +758,36 @@ public abstract class SQLExecute<T> {
 	 */
 	@SuppressWarnings("rawtypes")
 	public void prepareUpdateStatement(
-		Connection connection, Class clazz, List<String> fields, Object condition) throws Exception {
+		Connection connection, Class clazz, String[] fields, Criteria<?> condition) throws Exception {
+		
+		List<String> list = new ArrayList<String>(Arrays.asList(fields));
+		prepareUpdateStatement(connection, clazz, list, new AndOperator(condition));
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * @param fields list of fields used in SQL
+	 * @see {@link SQLExecute#prepareUpdateStatement(Connection connection, Class clazz, Object condition)}
+	 */
+	@SuppressWarnings("rawtypes")
+	public void prepareUpdateStatement(
+		Connection connection, Class clazz, List<String> fields, Operator condition) throws Exception {
 		
 		prepareUpdateStatement(connection, clazz, "", fields, condition);
 	}
+
+	/**
+	 * {@inheritDoc}
+	 * @param fields list of fields used in SQL
+	 * @see {@link SQLExecute#prepareUpdateStatement(Connection connection, Class clazz, Object condition)}
+	 */
+	@SuppressWarnings("rawtypes")
+	public void prepareUpdateStatement(
+		Connection connection, Class clazz, List<String> fields, Criteria<?> condition) throws Exception {
+		
+		prepareUpdateStatement(connection, clazz, "", fields, new AndOperator(condition));
+	}
+
 	
 	/**
 	 * {@inheritDoc}
@@ -741,7 +796,18 @@ public abstract class SQLExecute<T> {
 	 */
 	@SuppressWarnings("rawtypes")
 	public void prepareUpdateStatement(
-		Connection connection, Class clazz, String tableAlias, List<String> fields, Object condition) throws Exception {
+		Connection connection, Class clazz, String tableAlias, List<String> fields, Criteria<?> condition) throws Exception {
+		prepareUpdateStatement(connection, clazz, tableAlias, fields, new AndOperator(condition));
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * @param fields list of fields used in SQL
+	 * @see {@link SQLExecute#prepareUpdateStatement(Connection connection, Class clazz, List<String> fields, Object condition)}
+	 */
+	@SuppressWarnings("rawtypes")
+	public void prepareUpdateStatement(
+		Connection connection, Class clazz, String tableAlias, List<String> fields, Operator condition) throws Exception {
 		
 		Class localClass = clazz;
 		if (localClass == null)	localClass = this.clazz;
@@ -830,7 +896,7 @@ public abstract class SQLExecute<T> {
 			throw new SQLException(CLASS_DOES_NOT_HAVE_ID_ANNOTATION);
 		}
 		
-		Object condition = new AndOperator(new EqualCriteria<OperandSource>(idColumn, new OperandSource("", ":"+idColumn, false)));
+		Operator condition = new AndOperator(new EqualCriteria<OperandSource>(idColumn, new OperandSource("", ":"+idColumn, false)));
 		
 		prepareUpdateStatement(connection, localClass, fields, condition);
 	}
@@ -846,10 +912,37 @@ public abstract class SQLExecute<T> {
 	 * @throws Exception
 	 */
 	public void prepareDeleteStatement(
-		Connection connection, Object condition) throws Exception {
+		Connection connection, Operator condition) throws Exception {
 		
 		prepareDeleteStatement(connection, null, condition);
 	}
+
+	/**
+	 * Prepare a statement for delete entities from database. The result set mapped with bean's javax.persistence.Column annotations by default.
+	 * If an annotation is not found then the field name is the result set column name (The _ character are deleted).
+	 * 
+	 * @param connection SQL Connection
+	 * @param condition SQL condition
+	 * @throws Exception
+	 */
+	public void prepareDeleteStatement(
+		Connection connection, Criteria<?> condition) throws Exception {
+		
+		prepareDeleteStatement(connection, null, new AndOperator(condition));
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * @param clazz Class used by AnnotationHelper
+	 * @see {@link SQLExecute#prepareDeleteStatement(Connection connection, Object condition)}
+	 */
+	@SuppressWarnings("rawtypes")
+	public void prepareDeleteStatement(
+		Connection connection, Class clazz, Operator condition) throws Exception {
+		
+		prepareDeleteStatement(connection, clazz, "", condition);
+	}
+
 	
 	/**
 	 * {@inheritDoc}
@@ -858,10 +951,11 @@ public abstract class SQLExecute<T> {
 	 */
 	@SuppressWarnings("rawtypes")
 	public void prepareDeleteStatement(
-		Connection connection, Class clazz, Object condition) throws Exception {
+		Connection connection, Class clazz, Criteria<?> condition) throws Exception {
 		
-		prepareDeleteStatement(connection, clazz, "", condition);
+		prepareDeleteStatement(connection, clazz, "", new AndOperator(condition));
 	}
+
 	
 	/**
 	 * {@inheritDoc}
@@ -870,7 +964,18 @@ public abstract class SQLExecute<T> {
 	 */
 	@SuppressWarnings("rawtypes")
 	public void prepareDeleteStatement(
-		Connection connection, Class clazz, String tableAlias, Object condition) throws Exception {
+		Connection connection, Class clazz, String tableAlias, Criteria<?> condition) throws Exception {
+		prepareDeleteStatement(connection, clazz, tableAlias, new AndOperator(condition));
+	}
+
+	/**
+	 * {@inheritDoc}
+	 * @param tableAlias SQL table alias name
+	 * @see {@link SQLExecute#prepareDeleteStatement(Connection connection, Class clazz, Object condition)}
+	 */
+	@SuppressWarnings("rawtypes")
+	public void prepareDeleteStatement(
+		Connection connection, Class clazz, String tableAlias, Operator condition) throws Exception {
 						
 		Class localClass = clazz;
 		if (localClass == null)	localClass = this.clazz;
@@ -924,7 +1029,7 @@ public abstract class SQLExecute<T> {
 			throw new SQLException(CLASS_DOES_NOT_HAVE_ID_ANNOTATION);
 		}
 		
-		Object condition = new AndOperator(new EqualCriteria<OperandSource>(idColumn, new OperandSource("", ":"+idColumn, false)));
+		Operator condition = new AndOperator(new EqualCriteria<OperandSource>(idColumn, new OperandSource("", ":"+idColumn, false)));
 		
 		prepareDeleteStatement(connection, localClass, condition);
 	}
@@ -949,7 +1054,7 @@ public abstract class SQLExecute<T> {
 	public void prepareInsertSelectStatement(
 		Connection connection,
 		Class insertClass, String[] insertFields,
-		Class selectClass, String tableAlias, String[] selectFields, Object selectCondition)
+		Class selectClass, String tableAlias, String[] selectFields, Operator selectCondition)
 		throws java.sql.SQLException, SQLException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, QueryBuilderException{
 				
 		List<String> list1 = new ArrayList<String>(Arrays.asList(insertFields));
@@ -957,7 +1062,31 @@ public abstract class SQLExecute<T> {
 		
 		prepareInsertSelectStatement(connection, insertClass, list1, selectClass, tableAlias, list2, selectCondition);
 	}
-		
+
+	/**
+	 * Prepare a statement for insert entities into database. The result set mapped with bean's javax.persistence.Column annotations by default.
+	 * If an annotation is not found then the field name is the result set column name (The _ character are deleted).
+	 * 
+	 * @param connection SQL Connection
+	 * @param insertClass Class used by AnnotationHelper
+	 * @param insertFields list of fields used in SQL
+	 * @param selectClass Class used by AnnotationHelper
+	 * @param tableAlias SQL table alias name
+	 * @param selectFields list of fields used in SQL
+	 * @param selectCondition SQL condition
+	 * @throws Exception
+	 */
+	@SuppressWarnings("rawtypes")
+	public void prepareInsertSelectStatement(
+		Connection connection,
+		Class insertClass, String[] insertFields,
+		Class selectClass, String tableAlias, String[] selectFields, Criteria<?> selectCondition)
+		throws java.sql.SQLException, SQLException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, QueryBuilderException{
+				
+		prepareInsertSelectStatement(connection, insertClass, insertFields, selectClass, tableAlias, selectFields, new AndOperator(selectCondition));
+	}
+
+	
 	/**
 	 * {@inheritDoc}
 	 * @see {@link SQLExecute#prepareInsertSelectStatement(Connection connection, Class insertClass, String[] insertFields,	Class selectClass, String tableAlias, String[] selectFields, Object selectCondition)}
@@ -966,7 +1095,21 @@ public abstract class SQLExecute<T> {
 	public void prepareInsertSelectStatement(
 		Connection connection,
 		Class insertClass, List<String> insertFields,
-		Class selectClass, String tableAlias, List<String> selectFields, Object selectCondition)
+		Class selectClass, String tableAlias, List<String> selectFields, Criteria<?> selectCondition)
+		throws java.sql.SQLException, SQLException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, QueryBuilderException {
+		prepareInsertSelectStatement(connection, insertClass, insertFields, selectClass, tableAlias, selectFields, new AndOperator(selectCondition));
+	}
+
+	
+	/**
+	 * {@inheritDoc}
+	 * @see {@link SQLExecute#prepareInsertSelectStatement(Connection connection, Class insertClass, String[] insertFields,	Class selectClass, String tableAlias, String[] selectFields, Object selectCondition)}
+	 */
+	@SuppressWarnings("rawtypes")
+	public void prepareInsertSelectStatement(
+		Connection connection,
+		Class insertClass, List<String> insertFields,
+		Class selectClass, String tableAlias, List<String> selectFields, Operator selectCondition)
 		throws java.sql.SQLException, SQLException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, QueryBuilderException{
 			
 		Class localClassInsert = insertClass;
@@ -1757,7 +1900,7 @@ public abstract class SQLExecute<T> {
 	 * @throws Exception
 	 */
 	public void updateEntities(
-		Connection connection, T entity, List<String> fields, Object condition) throws Exception {
+		Connection connection, T entity, List<String> fields, Operator condition) throws Exception {
 		
 		updateEntities(connection, entity, "", fields, condition);
 	}
@@ -1767,7 +1910,7 @@ public abstract class SQLExecute<T> {
 	 * @see {@link SQLExecute#updateEntities(Connection connection, T entity, List<String> fields, Object condition)}
 	*/
 	public void updateEntities
-		(Connection connection, T entity, String[] fields, Object condition) throws Exception {
+		(Connection connection, T entity, String[] fields, Operator condition) throws Exception {
 		
 		List<String> list = new ArrayList<String>(Arrays.asList(fields));
 		updateEntities(connection, entity, "", list, condition);
@@ -1779,7 +1922,7 @@ public abstract class SQLExecute<T> {
 	 * @see {@link SQLExecute#updateEntities(Connection connection, T entity, List<String> fields, Object condition)}
 	 */
 	public void updateEntities(
-		Connection connection,T entity, String tableAlias, String[] fields, Object condition) throws Exception {
+		Connection connection,T entity, String tableAlias, String[] fields, Operator condition) throws Exception {
 		
 		List<String> list = new ArrayList<String>(Arrays.asList(fields));
 		updateEntities(connection, entity, tableAlias, list, condition);
@@ -1791,7 +1934,7 @@ public abstract class SQLExecute<T> {
 	 * @see {@link SQLExecute#updateEntities(Connection connection, T entity, List<String> fields, Object condition)}
 	 */
 	public void updateEntities(
-		Connection connection,T entity, String tableAlias, List<String> fields, Object condition) throws Exception {
+		Connection connection,T entity, String tableAlias, List<String> fields, Operator condition) throws Exception {
 		
 		updateEntities(connection, entity, tableAlias, fields, condition, null);
 	}
@@ -1801,7 +1944,7 @@ public abstract class SQLExecute<T> {
 	 * @param params Parameters for SQL conditions
 	 * @see {@link updateEntities#updateEntity(Connection connection, T entity, List<String> fields, Object condition)}
 	 */
-	public void updateEntities(Connection connection,T entity, String tableAlias, List<String> fields, Object condition, Map<String, Object> params) throws Exception {
+	public void updateEntities(Connection connection,T entity, String tableAlias, List<String> fields, Operator condition, Map<String, Object> params) throws Exception {
 		
 		clearLastStatement();
 		prepareUpdateStatement(connection, entity.getClass(), tableAlias, fields, condition);
@@ -1849,7 +1992,7 @@ public abstract class SQLExecute<T> {
 		}
 		Map<String, Object> objs = AnnotationHelper.getObjectAsMap(entity);
 		
-		Object condition = new AndOperator(new EqualCriteria<Object>(idColumn, objs.get(idColumn)));
+		Operator condition = new AndOperator(new EqualCriteria<Object>(idColumn, objs.get(idColumn)));
 		
 		updateEntities(connection, entity, "", fields, condition);
 	}
@@ -1867,14 +2010,14 @@ public abstract class SQLExecute<T> {
 	 * @throws Exception
 	 */
 	public void deleteEntities(
-		Connection connection, Object condition) throws Exception {
+		Connection connection, Operator condition) throws Exception {
 		
 		deleteEntities(connection, null, condition);
 	}
 	
 	@SuppressWarnings("rawtypes")
 	public void deleteEntities(
-		Connection connection, Class clazz, Object condition) throws Exception {
+		Connection connection, Class clazz, Operator condition) throws Exception {
 		
 		deleteEntities(connection, clazz, "",  condition);
 	}
@@ -1887,7 +2030,7 @@ public abstract class SQLExecute<T> {
 	 */
 	@SuppressWarnings("rawtypes")
 	public void deleteEntities(
-		Connection connection,Class clazz, String tableAlias, Object condition) throws Exception {
+		Connection connection,Class clazz, String tableAlias, Operator condition) throws Exception {
 		
 		deleteEntities(connection, clazz, tableAlias, condition, null);
 	}
@@ -1898,7 +2041,7 @@ public abstract class SQLExecute<T> {
 	 * @see {@link DeleteEntities#DeleteEntity(Connection connection, T entity, List<String> fields, Object condition)}
 	 */
 	@SuppressWarnings("rawtypes")
-	public void deleteEntities(Connection connection,Class clazz, String tableAlias, Object condition, Map<String, Object> params) throws Exception {
+	public void deleteEntities(Connection connection,Class clazz, String tableAlias, Operator condition, Map<String, Object> params) throws Exception {
 		
 		clearLastStatement();
 		prepareDeleteStatement(connection, clazz, tableAlias, condition);
@@ -1923,7 +2066,7 @@ public abstract class SQLExecute<T> {
 		}
 		Map<String, Object> objs = AnnotationHelper.getObjectAsMap(entity);
 		
-		Object condition = new AndOperator(new EqualCriteria<Object>(idColumn, objs.get(idColumn)));
+		Operator condition = new AndOperator(new EqualCriteria<Object>(idColumn, objs.get(idColumn)));
 		
 		deleteEntities(connection, entity.getClass(), condition);
 	}
@@ -1949,7 +2092,7 @@ public abstract class SQLExecute<T> {
 	public void insertSelect(
 		Connection connection,
 		Class insertClass, String[] insertFields,
-		Class selectClass, String tableAlias, String[] selectFields, Object selectCondition,
+		Class selectClass, String tableAlias, String[] selectFields, Operator selectCondition,
 		Map<String, Object> params)
 		throws Exception{
 				
@@ -1968,7 +2111,7 @@ public abstract class SQLExecute<T> {
 	public void insertSelect(
 		Connection connection,
 		Class insertClass, List<String> insertFields,
-		Class selectClass, String tableAlias, List<String> selectFields, Object selectCondition,
+		Class selectClass, String tableAlias, List<String> selectFields, Operator selectCondition,
 		Map<String, Object> params)
 		throws Exception{
 		
