@@ -3,8 +3,9 @@ package org.liveSense.api.sql;
 import java.util.List;
 
 import org.liveSense.api.sql.exceptions.SQLException;
-import org.liveSense.misc.queryBuilder.clauses.LimitClause;
-import org.liveSense.misc.queryBuilder.clauses.OrderByClause;
+import org.liveSense.misc.queryBuilder.clauses.DefaultLimitClause;
+import org.liveSense.misc.queryBuilder.domains.LimitClause;
+import org.liveSense.misc.queryBuilder.domains.OrderByClause;
 import org.liveSense.misc.queryBuilder.exceptions.QueryBuilderException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,7 +71,7 @@ public class FirebirdExecute<T> extends SQLExecute<T> {
 	public ClauseHelper addLimitClause(ClauseHelper helper, String tableAlias) throws SQLException {
 		LimitClause limit = builder.getLimit();
 		if (limit == null) 
-			limit = new LimitClause(maxSize, 0);
+			limit = new DefaultLimitClause(maxSize, 0);
 		
 		if (maxSize > 0 && limit.getLimit() > maxSize && limit.getLimit() > 0) {
 			limit.setLimit(maxSize);			

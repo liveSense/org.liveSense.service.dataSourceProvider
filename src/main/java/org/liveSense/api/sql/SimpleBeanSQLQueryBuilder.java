@@ -4,9 +4,9 @@ import java.util.List;
 
 import org.liveSense.api.sql.exceptions.SQLException;
 import org.liveSense.misc.queryBuilder.QueryBuilder;
-import org.liveSense.misc.queryBuilder.clauses.LimitClause;
-import org.liveSense.misc.queryBuilder.clauses.OrderByClause;
+import org.liveSense.misc.queryBuilder.domains.LimitClause;
 import org.liveSense.misc.queryBuilder.domains.Operator;
+import org.liveSense.misc.queryBuilder.domains.OrderByClause;
 
 
 public class SimpleBeanSQLQueryBuilder  extends QueryBuilder {

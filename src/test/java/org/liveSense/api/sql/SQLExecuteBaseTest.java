@@ -28,7 +28,7 @@ import org.liveSense.api.beanprocessors.TestBean2;
 import org.liveSense.api.sql.SQLExecute.StatementType;
 import org.liveSense.misc.queryBuilder.QueryBuilder;
 import org.liveSense.misc.queryBuilder.SimpleSQLQueryBuilder;
-import org.liveSense.misc.queryBuilder.clauses.OrderByClause;
+import org.liveSense.misc.queryBuilder.clauses.DefaultOrderByClause;
 import org.liveSense.misc.queryBuilder.criterias.BetweenCriteria;
 import org.liveSense.misc.queryBuilder.criterias.EqualCriteria;
 import org.liveSense.misc.queryBuilder.criterias.GreaterCriteria;
@@ -901,7 +901,7 @@ public abstract class SQLExecuteBaseTest {
 		);
 		
 		builder2.setWhere(new AndOperator(new EqualCriteria("floatField", new DefaultOperand(2.0))));
-		builder2.setOrderBy(new OrderByClause("id", false));
+		builder2.setOrderBy(new DefaultOrderByClause("id", false));
 		beans = exec2.queryEntities(connection, builder2);
 		assertTrue(beans.size() == 2);
 		assertTestBeanID1(beans.get(0), 2.0);
@@ -965,7 +965,7 @@ public abstract class SQLExecuteBaseTest {
 		);
 		
 		builder2.setWhere(new AndOperator(new EqualCriteria("floatField", new DefaultOperand(2.0))));
-		builder2.setOrderBy(new OrderByClause("id", false));
+		builder2.setOrderBy(new DefaultOrderByClause("id", false));
 		beans = exec2.queryEntities(connection, builder2);
 		assertTrue(beans.size() == 2);
 		assertTestBeanID1(beans.get(0), 2.0);
@@ -1135,7 +1135,7 @@ public abstract class SQLExecuteBaseTest {
 			new ArrayList<Object>() {{ add(new Float(0.0)); }});
 		
 		builder2.setWhere(new AndOperator(new EqualCriteria("floatField", new DefaultOperand(2.0))));
-		builder2.setOrderBy(new OrderByClause("id", false));
+		builder2.setOrderBy(new DefaultOrderByClause("id", false));
 		beans = exec2.queryEntities(connection, builder2);
 		assertTrue(beans.size() == 0);
 	}
@@ -1188,7 +1188,7 @@ public abstract class SQLExecuteBaseTest {
 		assertTrue(exec.getPreparedSQL().equals("DELETE FROM BeanTest1 t  WHERE (t.FLOAT_FIELD>?)"));
 		
 		builder2.setWhere(new AndOperator(new EqualCriteria("floatField", new DefaultOperand(2.0))));
-		builder2.setOrderBy(new OrderByClause("id", false));
+		builder2.setOrderBy(new DefaultOrderByClause("id", false));
 		beans = exec2.queryEntities(connection, builder2);
 		assertTrue(beans.size() == 0);
 	}
@@ -1345,7 +1345,7 @@ public abstract class SQLExecuteBaseTest {
 			TestBean.class, "", new String[] {"id", "idCustomer", "confirmationPassword", "fourPartColumnName", "blob", "floatField", "dateFieldWithAnnotation"}, new AndOperator(new BetweenCriteria("id", new DefaultOperand("",":from", false), new DefaultOperand("",":to", false))));
 		SQLExecute<TestBean2> exec2 = (SQLExecute<TestBean2>) SQLExecute.getExecuterByConnection(connection, TestBean2.class);
 		QueryBuilder builder = new SimpleBeanSQLQueryBuilder(TestBean2.class);
-		builder.setOrderBy(new OrderByClause("id", false));
+		builder.setOrderBy(new DefaultOrderByClause("id", false));
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("from", new Integer(1));
 		params.put("to", new Integer(2));
@@ -1383,7 +1383,7 @@ public abstract class SQLExecuteBaseTest {
 		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		SQLExecute<TestBean2> exec2 = (SQLExecute<TestBean2>) SQLExecute.getExecuterByConnection(connection, TestBean2.class);
 		QueryBuilder builder = new SimpleBeanSQLQueryBuilder(TestBean2.class);
-		builder.setOrderBy(new OrderByClause("id", false));
+		builder.setOrderBy(new DefaultOrderByClause("id", false));
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("from", new Integer(1));
 		params.put("to", new Integer(2));
