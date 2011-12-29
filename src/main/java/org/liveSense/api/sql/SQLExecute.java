@@ -34,13 +34,14 @@ import org.liveSense.api.beanprocessors.DbStandardBeanProcessor;
 import org.liveSense.api.sql.exceptions.SQLException;
 import org.liveSense.misc.queryBuilder.QueryBuilder;
 import org.liveSense.misc.queryBuilder.SimpleSQLQueryBuilder;
-import org.liveSense.misc.queryBuilder.criterias.Criteria;
 import org.liveSense.misc.queryBuilder.criterias.EqualCriteria;
+import org.liveSense.misc.queryBuilder.domains.Criteria;
+import org.liveSense.misc.queryBuilder.domains.Operand;
+import org.liveSense.misc.queryBuilder.domains.Operator;
 import org.liveSense.misc.queryBuilder.exceptions.QueryBuilderException;
 import org.liveSense.misc.queryBuilder.jdbcDriver.JdbcDrivers;
-import org.liveSense.misc.queryBuilder.operands.OperandSource;
+import org.liveSense.misc.queryBuilder.operands.DefaultOperand;
 import org.liveSense.misc.queryBuilder.operators.AndOperator;
-import org.liveSense.misc.queryBuilder.operators.Operator;
 
 
 /**
@@ -507,7 +508,7 @@ public abstract class SQLExecute<T> {
 		}
 		
 		QueryBuilder builder = new SimpleBeanSQLQueryBuilder(localClass);
-		builder.setWhere(new AndOperator(new EqualCriteria<OperandSource>(idColumn, new OperandSource("", ":"+idColumn, false))));
+		builder.setWhere(new AndOperator(new EqualCriteria(idColumn, new DefaultOperand("", ":"+idColumn, false))));
 		
 		prepareQueryStatement(connection, localClass, "", builder);
 	}
@@ -598,7 +599,7 @@ public abstract class SQLExecute<T> {
 		}
 		
 		QueryBuilder builder = new SimpleBeanSQLQueryBuilder(localClass);
-		builder.setWhere(new AndOperator(new EqualCriteria<OperandSource>(idColumn, new OperandSource("", ":"+idColumn, false))));
+		builder.setWhere(new AndOperator(new EqualCriteria(idColumn, new DefaultOperand("", ":"+idColumn, false))));
 		
 		prepareLockStatement(connection, localClass, "", builder);
 	}
@@ -707,7 +708,7 @@ public abstract class SQLExecute<T> {
 	 * @throws Exception
 	 */
 	public void prepareUpdateStatement(
-		Connection connection, Criteria<?> condition) throws Exception {
+		Connection connection, Criteria condition) throws Exception {
 		
 		prepareUpdateStatement(connection, null, new AndOperator(condition));
 	}
@@ -733,7 +734,7 @@ public abstract class SQLExecute<T> {
 	 */
 	@SuppressWarnings("rawtypes")
 	public void prepareUpdateStatement(
-		Connection connection, Class clazz, Criteria<?> condition) throws Exception {
+		Connection connection, Class clazz, Criteria condition) throws Exception {
 		
 		prepareUpdateStatement(connection, clazz, (List<String>)null, new AndOperator(condition));
 	}
@@ -758,7 +759,7 @@ public abstract class SQLExecute<T> {
 	 */
 	@SuppressWarnings("rawtypes")
 	public void prepareUpdateStatement(
-		Connection connection, Class clazz, String[] fields, Criteria<?> condition) throws Exception {
+		Connection connection, Class clazz, String[] fields, Criteria condition) throws Exception {
 		
 		List<String> list = new ArrayList<String>(Arrays.asList(fields));
 		prepareUpdateStatement(connection, clazz, list, new AndOperator(condition));
@@ -783,7 +784,7 @@ public abstract class SQLExecute<T> {
 	 */
 	@SuppressWarnings("rawtypes")
 	public void prepareUpdateStatement(
-		Connection connection, Class clazz, List<String> fields, Criteria<?> condition) throws Exception {
+		Connection connection, Class clazz, List<String> fields, Criteria condition) throws Exception {
 		
 		prepareUpdateStatement(connection, clazz, "", fields, new AndOperator(condition));
 	}
@@ -796,7 +797,7 @@ public abstract class SQLExecute<T> {
 	 */
 	@SuppressWarnings("rawtypes")
 	public void prepareUpdateStatement(
-		Connection connection, Class clazz, String tableAlias, List<String> fields, Criteria<?> condition) throws Exception {
+		Connection connection, Class clazz, String tableAlias, List<String> fields, Criteria condition) throws Exception {
 		prepareUpdateStatement(connection, clazz, tableAlias, fields, new AndOperator(condition));
 	}
 
@@ -896,7 +897,7 @@ public abstract class SQLExecute<T> {
 			throw new SQLException(CLASS_DOES_NOT_HAVE_ID_ANNOTATION);
 		}
 		
-		Operator condition = new AndOperator(new EqualCriteria<OperandSource>(idColumn, new OperandSource("", ":"+idColumn, false)));
+		Operator condition = new AndOperator(new EqualCriteria(idColumn, new DefaultOperand("", ":"+idColumn, false)));
 		
 		prepareUpdateStatement(connection, localClass, fields, condition);
 	}
@@ -926,7 +927,7 @@ public abstract class SQLExecute<T> {
 	 * @throws Exception
 	 */
 	public void prepareDeleteStatement(
-		Connection connection, Criteria<?> condition) throws Exception {
+		Connection connection, Criteria condition) throws Exception {
 		
 		prepareDeleteStatement(connection, null, new AndOperator(condition));
 	}
@@ -951,7 +952,7 @@ public abstract class SQLExecute<T> {
 	 */
 	@SuppressWarnings("rawtypes")
 	public void prepareDeleteStatement(
-		Connection connection, Class clazz, Criteria<?> condition) throws Exception {
+		Connection connection, Class clazz, Criteria condition) throws Exception {
 		
 		prepareDeleteStatement(connection, clazz, "", new AndOperator(condition));
 	}
@@ -964,7 +965,7 @@ public abstract class SQLExecute<T> {
 	 */
 	@SuppressWarnings("rawtypes")
 	public void prepareDeleteStatement(
-		Connection connection, Class clazz, String tableAlias, Criteria<?> condition) throws Exception {
+		Connection connection, Class clazz, String tableAlias, Criteria condition) throws Exception {
 		prepareDeleteStatement(connection, clazz, tableAlias, new AndOperator(condition));
 	}
 
@@ -1029,7 +1030,7 @@ public abstract class SQLExecute<T> {
 			throw new SQLException(CLASS_DOES_NOT_HAVE_ID_ANNOTATION);
 		}
 		
-		Operator condition = new AndOperator(new EqualCriteria<OperandSource>(idColumn, new OperandSource("", ":"+idColumn, false)));
+		Operator condition = new AndOperator(new EqualCriteria(idColumn, new DefaultOperand("", ":"+idColumn, false)));
 		
 		prepareDeleteStatement(connection, localClass, condition);
 	}
@@ -1080,7 +1081,7 @@ public abstract class SQLExecute<T> {
 	public void prepareInsertSelectStatement(
 		Connection connection,
 		Class insertClass, String[] insertFields,
-		Class selectClass, String tableAlias, String[] selectFields, Criteria<?> selectCondition)
+		Class selectClass, String tableAlias, String[] selectFields, Criteria selectCondition)
 		throws java.sql.SQLException, SQLException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, QueryBuilderException{
 				
 		prepareInsertSelectStatement(connection, insertClass, insertFields, selectClass, tableAlias, selectFields, new AndOperator(selectCondition));
@@ -1095,7 +1096,7 @@ public abstract class SQLExecute<T> {
 	public void prepareInsertSelectStatement(
 		Connection connection,
 		Class insertClass, List<String> insertFields,
-		Class selectClass, String tableAlias, List<String> selectFields, Criteria<?> selectCondition)
+		Class selectClass, String tableAlias, List<String> selectFields, Criteria selectCondition)
 		throws java.sql.SQLException, SQLException, IllegalAccessException, InvocationTargetException, NoSuchMethodException, QueryBuilderException {
 		prepareInsertSelectStatement(connection, insertClass, insertFields, selectClass, tableAlias, selectFields, new AndOperator(selectCondition));
 	}
@@ -1730,7 +1731,7 @@ public abstract class SQLExecute<T> {
 		Map<String, Object> objs = AnnotationHelper.getObjectAsMap(entity);
 		
 		QueryBuilder builder = new SimpleBeanSQLQueryBuilder(entity.getClass());
-		builder.setWhere(new AndOperator(new EqualCriteria<Object>(idColumn, objs.get(idColumn))));
+		builder.setWhere(new AndOperator(new EqualCriteria(idColumn, objs.get(idColumn))));
 		
 		List<T> beans = queryEntities(connection, entity.getClass(), builder);
 		
@@ -1845,7 +1846,7 @@ public abstract class SQLExecute<T> {
 		Map<String, Object> objs = AnnotationHelper.getObjectAsMap(entity);
 		
 		QueryBuilder builder = new SimpleBeanSQLQueryBuilder(entity.getClass());
-		builder.setWhere(new AndOperator(new EqualCriteria<Object>(idColumn, objs.get(idColumn))));
+		builder.setWhere(new AndOperator(new EqualCriteria(idColumn, objs.get(idColumn))));
 		
 		List<T> beans = lockEntities(connection, entity.getClass(), builder);
 		
@@ -1992,7 +1993,7 @@ public abstract class SQLExecute<T> {
 		}
 		Map<String, Object> objs = AnnotationHelper.getObjectAsMap(entity);
 		
-		Operator condition = new AndOperator(new EqualCriteria<Object>(idColumn, objs.get(idColumn)));
+		Operator condition = new AndOperator(new EqualCriteria(idColumn, objs.get(idColumn)));
 		
 		updateEntities(connection, entity, "", fields, condition);
 	}
@@ -2066,7 +2067,7 @@ public abstract class SQLExecute<T> {
 		}
 		Map<String, Object> objs = AnnotationHelper.getObjectAsMap(entity);
 		
-		Operator condition = new AndOperator(new EqualCriteria<Object>(idColumn, objs.get(idColumn)));
+		Operator condition = new AndOperator(new EqualCriteria(idColumn, objs.get(idColumn)));
 		
 		deleteEntities(connection, entity.getClass(), condition);
 	}

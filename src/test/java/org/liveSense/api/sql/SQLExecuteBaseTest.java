@@ -32,10 +32,10 @@ import org.liveSense.misc.queryBuilder.clauses.OrderByClause;
 import org.liveSense.misc.queryBuilder.criterias.BetweenCriteria;
 import org.liveSense.misc.queryBuilder.criterias.EqualCriteria;
 import org.liveSense.misc.queryBuilder.criterias.GreaterCriteria;
+import org.liveSense.misc.queryBuilder.domains.Operator;
 import org.liveSense.misc.queryBuilder.jdbcDriver.JdbcDrivers;
-import org.liveSense.misc.queryBuilder.operands.OperandSource;
+import org.liveSense.misc.queryBuilder.operands.DefaultOperand;
 import org.liveSense.misc.queryBuilder.operators.AndOperator;
-import org.liveSense.misc.queryBuilder.operators.Operator;
 
 @Ignore
 public abstract class SQLExecuteBaseTest {
@@ -246,7 +246,7 @@ public abstract class SQLExecuteBaseTest {
 		//prepare
 		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		SimpleSQLQueryBuilder builder = new SimpleSQLQueryBuilder("SELECT * FROM BeanTest1");
-		builder.setWhere(new AndOperator(new EqualCriteria<OperandSource>("id", new OperandSource("", ":id", false))));
+		builder.setWhere(new AndOperator(new EqualCriteria("id", new DefaultOperand("", ":id", false))));
 		
 		//tested method
 		exec.prepareQueryStatement(connection, builder);
@@ -270,7 +270,7 @@ public abstract class SQLExecuteBaseTest {
 		//prepare
 		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		SimpleSQLQueryBuilder builder = new SimpleSQLQueryBuilder("SELECT * FROM BeanTest1");
-		builder.setWhere(new AndOperator(new EqualCriteria<OperandSource>("id", new OperandSource("", ":id", false))));
+		builder.setWhere(new AndOperator(new EqualCriteria("id", new DefaultOperand("", ":id", false))));
 		exec.prepareQueryStatement(connection, builder);
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("id", new Integer(1));
@@ -315,7 +315,7 @@ public abstract class SQLExecuteBaseTest {
 		//prepare
 		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		SimpleSQLQueryBuilder builder = new SimpleSQLQueryBuilder("SELECT * FROM BeanTest1");
-		builder.setWhere(new AndOperator(new EqualCriteria<OperandSource>("id", new OperandSource("", ":id", false))));
+		builder.setWhere(new AndOperator(new EqualCriteria("id", new DefaultOperand("", ":id", false))));
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("id", new Integer(1));
 		
@@ -433,7 +433,7 @@ public abstract class SQLExecuteBaseTest {
 		//prepare
 		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		SimpleSQLQueryBuilder builder = new SimpleSQLQueryBuilder("SELECT * FROM BeanTest1");
-		builder.setWhere(new AndOperator(new EqualCriteria<OperandSource>("id", new OperandSource("", ":id", false))));
+		builder.setWhere(new AndOperator(new EqualCriteria("id", new DefaultOperand("", ":id", false))));
 		
 		//tested method
 		exec.prepareLockStatement(connection, builder);
@@ -457,7 +457,7 @@ public abstract class SQLExecuteBaseTest {
 		//prepare
 		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		SimpleSQLQueryBuilder builder = new SimpleSQLQueryBuilder("SELECT * FROM BeanTest1");
-		builder.setWhere(new AndOperator(new EqualCriteria<OperandSource>("id", new OperandSource("", ":id", false))));
+		builder.setWhere(new AndOperator(new EqualCriteria("id", new DefaultOperand("", ":id", false))));
 		exec.prepareLockStatement(connection, builder);
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("id", new Integer(1));
@@ -525,7 +525,7 @@ public abstract class SQLExecuteBaseTest {
 		//prepare
 		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		SimpleSQLQueryBuilder builder = new SimpleSQLQueryBuilder("SELECT * FROM BeanTest1");
-		builder.setWhere(new AndOperator(new EqualCriteria<OperandSource>("id", new OperandSource("", ":id", false))));
+		builder.setWhere(new AndOperator(new EqualCriteria("id", new DefaultOperand("", ":id", false))));
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("id", new Integer(1));
 		
@@ -587,7 +587,7 @@ public abstract class SQLExecuteBaseTest {
 		//prepare
 		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		SimpleSQLQueryBuilder builder = new SimpleSQLQueryBuilder("SELECT * FROM BeanTest1");
-		builder.setWhere(new AndOperator(new EqualCriteria<OperandSource>("id", new OperandSource("", ":id", false))));
+		builder.setWhere(new AndOperator(new EqualCriteria("id", new DefaultOperand("", ":id", false))));
 		exec.prepareLockStatement(connection);
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("id", new Integer(1));
@@ -828,7 +828,7 @@ public abstract class SQLExecuteBaseTest {
 	
 		//prepare
 		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
-		Operator condition = new AndOperator(new GreaterCriteria<OperandSource>("t", "id", new OperandSource("", ":id", false)));
+		Operator condition = new AndOperator(new GreaterCriteria("t", "id", new DefaultOperand("", ":id", false)));
 		
 		//tested method
 		exec.prepareUpdateStatement(connection, null, "t", Arrays.asList(new String[]{"floatField"}), condition);
@@ -851,14 +851,14 @@ public abstract class SQLExecuteBaseTest {
 		
 		//prepare
 		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
-		Operator condition = new AndOperator(new GreaterCriteria<OperandSource>("t", "floatField", new OperandSource("", ":floatfield", false)));
+		Operator condition = new AndOperator(new GreaterCriteria("t", "floatField", new DefaultOperand("", ":floatfield", false)));
 		exec.prepareUpdateStatement(connection, null, "t", Arrays.asList(new String[]{"floatField"}), condition);
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("floatfield", new Float(0.5));
 		TestBean bean = new TestBean();
 		bean.setFloatField(1.0);
 		SimpleBeanSQLQueryBuilder builder2 = new SimpleBeanSQLQueryBuilder(TestBean.class);
-		builder2.setWhere(new AndOperator(new EqualCriteria<OperandSource>("floatField", new OperandSource(1.0))));
+		builder2.setWhere(new AndOperator(new EqualCriteria("floatField", new DefaultOperand(1.0))));
 		
 		SQLExecute<TestBean> exec2 = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		
@@ -900,7 +900,7 @@ public abstract class SQLExecuteBaseTest {
 				add(new Float(0.0)); }}
 		);
 		
-		builder2.setWhere(new AndOperator(new EqualCriteria<OperandSource>("floatField", new OperandSource(2.0))));
+		builder2.setWhere(new AndOperator(new EqualCriteria("floatField", new DefaultOperand(2.0))));
 		builder2.setOrderBy(new OrderByClause("id", false));
 		beans = exec2.queryEntities(connection, builder2);
 		assertTrue(beans.size() == 2);
@@ -915,14 +915,14 @@ public abstract class SQLExecuteBaseTest {
 		
 		//prepare
 		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
-		Operator condition = new AndOperator(new GreaterCriteria<OperandSource>("t", "floatField", new OperandSource("", ":floatfield", false)));
+		Operator condition = new AndOperator(new GreaterCriteria("t", "floatField", new DefaultOperand("", ":floatfield", false)));
 		exec.prepareUpdateStatement(connection, null, "t", Arrays.asList(new String[]{"floatField"}), condition);
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("floatfield", new Float(0.5));
 		TestBean bean = new TestBean();
 		bean.setFloatField(1.0);
 		SimpleBeanSQLQueryBuilder builder2 = new SimpleBeanSQLQueryBuilder(TestBean.class);
-		builder2.setWhere(new AndOperator(new EqualCriteria<OperandSource>("floatField", new OperandSource(1.0))));
+		builder2.setWhere(new AndOperator(new EqualCriteria("floatField", new DefaultOperand(1.0))));
 		
 		SQLExecute<TestBean> exec2 = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		
@@ -964,7 +964,7 @@ public abstract class SQLExecuteBaseTest {
 				add(new Float(0.0)); }}
 		);
 		
-		builder2.setWhere(new AndOperator(new EqualCriteria<OperandSource>("floatField", new OperandSource(2.0))));
+		builder2.setWhere(new AndOperator(new EqualCriteria("floatField", new DefaultOperand(2.0))));
 		builder2.setOrderBy(new OrderByClause("id", false));
 		beans = exec2.queryEntities(connection, builder2);
 		assertTrue(beans.size() == 2);
@@ -1006,7 +1006,7 @@ public abstract class SQLExecuteBaseTest {
 		bean.setId(2);
 		bean.setFloatField(1.0);
 		SimpleBeanSQLQueryBuilder builder2 = new SimpleBeanSQLQueryBuilder(TestBean.class);
-		builder2.setWhere(new AndOperator(new EqualCriteria<OperandSource>("floatField", new OperandSource(1.0))));
+		builder2.setWhere(new AndOperator(new EqualCriteria("floatField", new DefaultOperand(1.0))));
 		
 		SQLExecute<TestBean> exec2 = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		
@@ -1042,7 +1042,7 @@ public abstract class SQLExecuteBaseTest {
 		bean.setId(2);
 		bean.setFloatField(1.0);
 		SimpleBeanSQLQueryBuilder builder2 = new SimpleBeanSQLQueryBuilder(TestBean.class);
-		builder2.setWhere(new AndOperator(new EqualCriteria<OperandSource>("floatField", new OperandSource(1.0))));
+		builder2.setWhere(new AndOperator(new EqualCriteria("floatField", new DefaultOperand(1.0))));
 		
 		SQLExecute<TestBean> exec2 = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		
@@ -1072,7 +1072,7 @@ public abstract class SQLExecuteBaseTest {
 	
 		//prepare
 		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
-		Operator condition = new AndOperator(new GreaterCriteria<OperandSource>("t", "floatField", new OperandSource("", ":floatfield", false)));
+		Operator condition = new AndOperator(new GreaterCriteria("t", "floatField", new DefaultOperand("", ":floatfield", false)));
 		
 		//tested method
 		exec.prepareDeleteStatement(connection, null, "t", condition);
@@ -1095,12 +1095,12 @@ public abstract class SQLExecuteBaseTest {
 		
 		//prepare
 		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
-		Operator condition = new AndOperator(new GreaterCriteria<OperandSource>("t", "floatField", new OperandSource("", ":floatfield", false)));
+		Operator condition = new AndOperator(new GreaterCriteria("t", "floatField", new DefaultOperand("", ":floatfield", false)));
 		exec.prepareDeleteStatement(connection, null, "t", condition);
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("floatfield", new Float(0.5));
 		SimpleBeanSQLQueryBuilder builder2 = new SimpleBeanSQLQueryBuilder(TestBean.class);
-		builder2.setWhere(new AndOperator(new EqualCriteria<OperandSource>("floatField", new OperandSource(1.0))));
+		builder2.setWhere(new AndOperator(new EqualCriteria("floatField", new DefaultOperand(1.0))));
 		
 		SQLExecute<TestBean> exec2 = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		
@@ -1134,7 +1134,7 @@ public abstract class SQLExecuteBaseTest {
 			new HashMap<String, Object>() {{ put("floatfield", new Float(0.0)); }},
 			new ArrayList<Object>() {{ add(new Float(0.0)); }});
 		
-		builder2.setWhere(new AndOperator(new EqualCriteria<OperandSource>("floatField", new OperandSource(2.0))));
+		builder2.setWhere(new AndOperator(new EqualCriteria("floatField", new DefaultOperand(2.0))));
 		builder2.setOrderBy(new OrderByClause("id", false));
 		beans = exec2.queryEntities(connection, builder2);
 		assertTrue(beans.size() == 0);
@@ -1147,12 +1147,12 @@ public abstract class SQLExecuteBaseTest {
 		
 		//prepare
 		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
-		Operator condition = new AndOperator(new GreaterCriteria<OperandSource>("t", "floatField", new OperandSource("", ":floatfield", false)));
+		Operator condition = new AndOperator(new GreaterCriteria("t", "floatField", new DefaultOperand("", ":floatfield", false)));
 		exec.prepareDeleteStatement(connection, null, "t", condition);
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("floatfield", new Float(0.5));
 		SimpleBeanSQLQueryBuilder builder2 = new SimpleBeanSQLQueryBuilder(TestBean.class);
-		builder2.setWhere(new AndOperator(new EqualCriteria<OperandSource>("floatField", new OperandSource(1.0))));
+		builder2.setWhere(new AndOperator(new EqualCriteria("floatField", new DefaultOperand(1.0))));
 		
 		SQLExecute<TestBean> exec2 = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		
@@ -1187,7 +1187,7 @@ public abstract class SQLExecuteBaseTest {
 			new ArrayList<Object>() {{ add(new Float(0.0)); }});
 		assertTrue(exec.getPreparedSQL().equals("DELETE FROM BeanTest1 t  WHERE (t.FLOAT_FIELD>?)"));
 		
-		builder2.setWhere(new AndOperator(new EqualCriteria<OperandSource>("floatField", new OperandSource(2.0))));
+		builder2.setWhere(new AndOperator(new EqualCriteria("floatField", new DefaultOperand(2.0))));
 		builder2.setOrderBy(new OrderByClause("id", false));
 		beans = exec2.queryEntities(connection, builder2);
 		assertTrue(beans.size() == 0);
@@ -1226,7 +1226,7 @@ public abstract class SQLExecuteBaseTest {
 		TestBean bean = new TestBean();
 		bean.setId(2);
 		SimpleBeanSQLQueryBuilder builder2 = new SimpleBeanSQLQueryBuilder(TestBean.class);
-		builder2.setWhere(new AndOperator(new EqualCriteria<OperandSource>("floatField", new OperandSource(1.0))));
+		builder2.setWhere(new AndOperator(new EqualCriteria("floatField", new DefaultOperand(1.0))));
 		
 		SQLExecute<TestBean> exec2 = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		
@@ -1257,7 +1257,7 @@ public abstract class SQLExecuteBaseTest {
 		TestBean bean = new TestBean();
 		bean.setId(2);
 		SimpleBeanSQLQueryBuilder builder2 = new SimpleBeanSQLQueryBuilder(TestBean.class);
-		builder2.setWhere(new AndOperator(new EqualCriteria<OperandSource>("floatField", new OperandSource(1.0))));
+		builder2.setWhere(new AndOperator(new EqualCriteria("floatField", new DefaultOperand(1.0))));
 		
 		SQLExecute<TestBean> exec2 = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		
@@ -1289,7 +1289,7 @@ public abstract class SQLExecuteBaseTest {
 		//tested method
 		exec.prepareInsertSelectStatement(connection,
 			TestBean2.class, new String[] {"id", "idCustomer"},
-			TestBean.class, "", new String[] {"id", "idCustomer"}, new AndOperator(new BetweenCriteria<OperandSource>("id", new OperandSource("",":from", false), new OperandSource("",":to", false))));
+			TestBean.class, "", new String[] {"id", "idCustomer"}, new AndOperator(new BetweenCriteria("id", new DefaultOperand("",":from", false), new DefaultOperand("",":to", false))));
 		//tests
 		assertExec(
 			exec,
@@ -1313,7 +1313,7 @@ public abstract class SQLExecuteBaseTest {
 		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		QueryBuilder builder = new SimpleSQLQueryBuilder("SELECT ID,ID_CUSTOMER FROM BeanTest1");
 		builder.setClazz(TestBean.class);
-		builder.setWhere(new AndOperator(new BetweenCriteria<OperandSource>("id", new OperandSource("",":from", false), new OperandSource("",":to", false))));
+		builder.setWhere(new AndOperator(new BetweenCriteria("id", new DefaultOperand("",":from", false), new DefaultOperand("",":to", false))));
 				
 		//tested method
 		exec.prepareInsertSelectStatement(connection,
@@ -1342,7 +1342,7 @@ public abstract class SQLExecuteBaseTest {
 		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		exec.prepareInsertSelectStatement(connection,
 			TestBean2.class, new String[] {"id", "idCustomer", "confirmationPassword", "fourPartColumnName", "blob", "floatField", "dateFieldWithAnnotation"},
-			TestBean.class, "", new String[] {"id", "idCustomer", "confirmationPassword", "fourPartColumnName", "blob", "floatField", "dateFieldWithAnnotation"}, new AndOperator(new BetweenCriteria<OperandSource>("id", new OperandSource("",":from", false), new OperandSource("",":to", false))));
+			TestBean.class, "", new String[] {"id", "idCustomer", "confirmationPassword", "fourPartColumnName", "blob", "floatField", "dateFieldWithAnnotation"}, new AndOperator(new BetweenCriteria("id", new DefaultOperand("",":from", false), new DefaultOperand("",":to", false))));
 		SQLExecute<TestBean2> exec2 = (SQLExecute<TestBean2>) SQLExecute.getExecuterByConnection(connection, TestBean2.class);
 		QueryBuilder builder = new SimpleBeanSQLQueryBuilder(TestBean2.class);
 		builder.setOrderBy(new OrderByClause("id", false));
@@ -1391,7 +1391,7 @@ public abstract class SQLExecuteBaseTest {
 		//tested method
 		exec.insertSelect(connection,
 			TestBean2.class, new String[] {"id", "idCustomer", "confirmationPassword", "fourPartColumnName", "blob", "floatField", "dateFieldWithAnnotation"},
-			TestBean.class, "", new String[] {"id", "idCustomer", "confirmationPassword", "fourPartColumnName", "blob", "floatField", "dateFieldWithAnnotation"}, new AndOperator(new BetweenCriteria<OperandSource>("id", new OperandSource("",":from", false), new OperandSource("",":to", false))), params);
+			TestBean.class, "", new String[] {"id", "idCustomer", "confirmationPassword", "fourPartColumnName", "blob", "floatField", "dateFieldWithAnnotation"}, new AndOperator(new BetweenCriteria("id", new DefaultOperand("",":from", false), new DefaultOperand("",":to", false))), params);
 		//tests
 		assertExec(
 			exec,

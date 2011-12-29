@@ -6,7 +6,7 @@ import org.liveSense.api.sql.exceptions.SQLException;
 import org.liveSense.misc.queryBuilder.QueryBuilder;
 import org.liveSense.misc.queryBuilder.clauses.LimitClause;
 import org.liveSense.misc.queryBuilder.clauses.OrderByClause;
-import org.liveSense.misc.queryBuilder.operators.Operator;
+import org.liveSense.misc.queryBuilder.domains.Operator;
 
 
 public class SimpleBeanSQLQueryBuilder  extends QueryBuilder {
