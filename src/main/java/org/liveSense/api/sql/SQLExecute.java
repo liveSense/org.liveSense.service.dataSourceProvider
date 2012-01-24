@@ -2310,9 +2310,11 @@ public abstract class SQLExecute<T> {
 	        			record.put(columnName, rs.getDate(i+1));
 	        		} else if (Types.BOOLEAN == columnType) {
 	        			record.put(columnName, rs.getBoolean(i+1));
-	        		} else if (Types.FLOAT == columnType || Types.DECIMAL == columnType || Types.DOUBLE == columnType || Types.NUMERIC == columnType) {
+	        		} else if (Types.FLOAT == columnType || Types.DOUBLE == columnType) {
 	        			record.put(columnName, rs.getDouble(i+1));
-	        		} else if (Types.INTEGER == columnType || Types.BIGINT == columnType) {
+	        		} else if (Types.DECIMAL == columnType || Types.NUMERIC == columnType) {
+	        			record.put(columnName, rs.getBigDecimal(i+1));	        			
+	        		} else if (Types.INTEGER == columnType || Types.BIGINT == columnType) {	        			
 	        			record.put(columnName, rs.getInt(i+1));
 	        		} else if (Types.BLOB == columnType) {
 	        			try {

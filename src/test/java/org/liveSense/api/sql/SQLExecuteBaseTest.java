@@ -207,7 +207,7 @@ public abstract class SQLExecuteBaseTest {
 		else assertTrue(exec.getLastSQLParameters().size() == 0);
 	}
 		
-	private void assertTestBeanID1(TestBean bean, Double val) throws ParseException {
+	private void assertTestBeanID1(TestBean bean, BigDecimal val) throws ParseException {
 		assertTrue(bean.getId() == 1);
 		assertTrue(bean.getIdCustomer() == 1);
 		assertTrue("password".equals(bean.getConfirmationPassword()));
@@ -217,7 +217,7 @@ public abstract class SQLExecuteBaseTest {
 		assertTrue(bean.getFloatField().equals(val));
 	}
 	
-	private void assertTestBeanID2(TestBean bean, Double val) throws ParseException {
+	private void assertTestBeanID2(TestBean bean, BigDecimal val) throws ParseException {
 		assertTrue(bean.getId() == 2);
 		assertTrue(bean.getIdCustomer() == 3);
 		assertTrue("password2".equals(bean.getConfirmationPassword()));
@@ -234,7 +234,7 @@ public abstract class SQLExecuteBaseTest {
 		assertTrue(!bean.getFourPartColumnName());
 		assertTrue(bean.getDateFieldWithAnnotation().equals(new SimpleDateFormat("yyyy.MM.dd").parse("2011.09.01")));
 		assertTrue(bean.getBlob().equals(StringUtils.repeat(STRING_UTF8+STRING_LOREM_IPSUM, 1000)));
-		assertTrue(bean.getFloatField() == 0.7);
+		assertTrue(bean.getFloatField().equals(new BigDecimal("0.70")));
 	}
 	
 	//TESTS
@@ -288,7 +288,7 @@ public abstract class SQLExecuteBaseTest {
 			new HashMap<String, Object>() {{put("id", new Integer(1));}},
 			new ArrayList<Object>() {{add(new Integer(1));}});
 		assertTrue(beans.size() == 1);
-		assertTestBeanID1(beans.get(0), 0.3);
+		assertTestBeanID1(beans.get(0), new BigDecimal("0.30"));
 		
 		//tested method
 		params.put("id", new Integer(2));
@@ -304,7 +304,7 @@ public abstract class SQLExecuteBaseTest {
 			new HashMap<String, Object>() {{put("id", new Integer(2));}},
 			new ArrayList<Object>() {{add(new Integer(2));}});
 		assertTrue(beans.size() == 1);
-		assertTestBeanID2(beans.get(0), 0.6);
+		assertTestBeanID2(beans.get(0), new BigDecimal("0.60"));
 	}
 	
 	@Test
@@ -332,7 +332,7 @@ public abstract class SQLExecuteBaseTest {
 			params,
 			new ArrayList<Object>() {{add(new Integer(1));}});
 		assertTrue(beans.size() == 1);
-		assertTestBeanID1(beans.get(0), 0.3);
+		assertTestBeanID1(beans.get(0), new BigDecimal("0.30"));
 	}
 	
 	@Test
@@ -381,7 +381,7 @@ public abstract class SQLExecuteBaseTest {
 			new HashMap<String, Object>() {{put("ID", new Integer(1));}},
 			new ArrayList<Object>() {{add(new Integer(1));}});
 		assertTrue(res != null);
-		assertTestBeanID1(res, 0.3);
+		assertTestBeanID1(res, new BigDecimal("0.30"));
 		
 		//tested method
 		bean.setId(2);
@@ -397,7 +397,7 @@ public abstract class SQLExecuteBaseTest {
 			new HashMap<String, Object>() {{put("ID", new Integer(2));}},
 			new ArrayList<Object>() {{add(new Integer(2));}});
 		assertTrue(res != null);
-		assertTestBeanID2(res, 0.6);
+		assertTestBeanID2(res, new BigDecimal("0.60"));
 	}
 	
 	@Test
@@ -422,7 +422,7 @@ public abstract class SQLExecuteBaseTest {
 			"SELECT * FROM (SELECT * FROM BeanTest1 )  WHERE (ID=1)",
 			null,
 			null);
-		assertTestBeanID1(bean2, 0.3);
+		assertTestBeanID1(bean2, new BigDecimal("0.30"));
 	}
 	
 	@Test
@@ -478,7 +478,7 @@ public abstract class SQLExecuteBaseTest {
 			new HashMap<String, Object>() {{ put("id", new Integer(1));}},
 			new ArrayList<Object>() {{ add(new Integer(1));}});
 		assertTrue(beans.size() == 1);
-		assertTestBeanID1(beans.get(0), 0.3);
+		assertTestBeanID1(beans.get(0), new BigDecimal("0.30"));
 		
 		try {
 			exec2.lockEntitiesWithPreparedStatement(params);
@@ -504,7 +504,7 @@ public abstract class SQLExecuteBaseTest {
 			new HashMap<String, Object>() {{ put("id", new Integer(2));}},
 			new ArrayList<Object>() {{ add(new Integer(2));}});
 		assertTrue(beans.size() == 1);
-		assertTestBeanID2(beans.get(0), 0.6);
+		assertTestBeanID2(beans.get(0), new BigDecimal("0.60"));
 		
 		try {
 			exec2.lockEntitiesWithPreparedStatement(params);
@@ -544,7 +544,7 @@ public abstract class SQLExecuteBaseTest {
 			new HashMap<String, Object>() {{ put("id", new Integer(1));}},
 			new ArrayList<Object>() {{add(new Integer(1));}});
 		assertTrue(beans.size() == 1);
-		assertTestBeanID1(beans.get(0), 0.3);
+		assertTestBeanID1(beans.get(0), new BigDecimal("0.30"));
 		
 		try {
 			exec2.lockEntities(connection2, builder, params);
@@ -610,7 +610,7 @@ public abstract class SQLExecuteBaseTest {
 			new HashMap<String, Object>() {{put("ID", new Integer(1));}},
 			new ArrayList<Object>() {{add(new Integer(1));}});
 		assertTrue(res != null);
-		assertTestBeanID1(res, 0.3);
+		assertTestBeanID1(res, new BigDecimal("0.30"));
 		
 		try {
 			exec2.lockEntitiesWithPreparedStatement(params);
@@ -637,7 +637,7 @@ public abstract class SQLExecuteBaseTest {
 			new HashMap<String, Object>() {{put("ID", new Integer(2));}},
 			new ArrayList<Object>() {{add(new Integer(2));}});
 		assertTrue(res != null);
-		assertTestBeanID2(res, 0.6);
+		assertTestBeanID2(res, new BigDecimal("0.60"));
 		
 		try {
 			exec2.lockEntitiesWithPreparedStatement(params);
@@ -674,7 +674,7 @@ public abstract class SQLExecuteBaseTest {
 			"SELECT * FROM BeanTest1  WHERE (ID=1) WITH LOCK",
 			null,
 			null);
-		assertTestBeanID1(bean2, 0.3);
+		assertTestBeanID1(bean2, new BigDecimal("0.30"));
 		
 		try {
 			exec2.lockEntity(connection2, bean);
@@ -730,7 +730,7 @@ public abstract class SQLExecuteBaseTest {
 		bean.setFourPartColumnName(false);
 		bean.setDateFieldWithAnnotation(new SimpleDateFormat("yyyy.MM.dd").parse("2011.09.01"));
 		bean.setBlob(StringUtils.repeat(STRING_UTF8+STRING_LOREM_IPSUM, 1000));
-		bean.setFloatField(0.7);
+		bean.setFloatField(new BigDecimal("0.70"));
 		exec.prepareInsertStatement(connection);
 		
 		SQLExecute<TestBean> exec2 = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
@@ -779,7 +779,7 @@ public abstract class SQLExecuteBaseTest {
 		bean.setFourPartColumnName(false);
 		bean.setDateFieldWithAnnotation(new SimpleDateFormat("yyyy.MM.dd").parse("2011.09.01"));
 		bean.setBlob(StringUtils.repeat(STRING_UTF8+STRING_LOREM_IPSUM, 1000));
-		bean.setFloatField(0.7);
+		bean.setFloatField(new BigDecimal("0.70"));
 		List<String> fields = new ArrayList<String>();
 		fields.add("id"); 
 		fields.add("idCustomer");
@@ -854,9 +854,9 @@ public abstract class SQLExecuteBaseTest {
 		Operator condition = new AndOperator(new GreaterCriteria("t", "floatField", new DefaultOperand("", ":floatfield", false)));
 		exec.prepareUpdateStatement(connection, null, "t", Arrays.asList(new String[]{"floatField"}), condition);
 		Map<String, Object> params = new HashMap<String, Object>();
-		params.put("floatfield", new Float(0.5));
+		params.put("floatfield", new BigDecimal("0.50"));
 		TestBean bean = new TestBean();
-		bean.setFloatField(1.0);
+		bean.setFloatField(new BigDecimal("1.00"));
 		SimpleBeanSQLQueryBuilder builder2 = new SimpleBeanSQLQueryBuilder(TestBean.class);
 		builder2.setWhere(new AndOperator(new EqualCriteria("floatField", new DefaultOperand(1.0))));
 		
@@ -872,19 +872,19 @@ public abstract class SQLExecuteBaseTest {
 			2,
 			new ArrayList<String>() {{ add("floatField"); }},
 			"UPDATE BeanTest1 t SET t.FLOAT_FIELD = ? WHERE (t.FLOAT_FIELD>?)",
-			new HashMap<String, Object>() {{ put("floatfield", new Float(0.5)); }},
+			new HashMap<String, Object>() {{ put("floatfield", new BigDecimal("0.50")); }},
 			new ArrayList<Object>() {{
-				add(new Double(1.0));
-				add(new Float(0.5)); }}
+				add(new BigDecimal("1.00"));
+				add(new BigDecimal("0.50")); }}
 		);
 		
 		List<TestBean> beans = exec2.queryEntities(connection, builder2);
 		assertTrue(beans.size() == 1);
-		assertTestBeanID2(beans.get(0), 1.0);
+		assertTestBeanID2(beans.get(0), new BigDecimal("1.00"));
 		
 		//tested method
-		params.put("floatfield", new Float(0.0));
-		bean.setFloatField(2.0);
+		params.put("floatfield", new BigDecimal("0.00"));
+		bean.setFloatField(new BigDecimal("2.00"));
 		exec.updateEntitiesWithPreparedStatement(bean, params);
 		//tests
 		assertExec(
@@ -894,18 +894,18 @@ public abstract class SQLExecuteBaseTest {
 			2,
 			new ArrayList<String>() {{ add("floatField"); }},
 			"UPDATE BeanTest1 t SET t.FLOAT_FIELD = ? WHERE (t.FLOAT_FIELD>?)",
-			new HashMap<String, Object>() {{ put("floatfield", new Float(0.0)); }},
+			new HashMap<String, Object>() {{ put("floatfield", new BigDecimal("0.00")); }},
 			new ArrayList<Object>() {{
-				add(new Double(2.0));
-				add(new Float(0.0)); }}
+				add(new BigDecimal("2.00"));
+				add(new BigDecimal("0.00")); }}
 		);
 		
 		builder2.setWhere(new AndOperator(new EqualCriteria("floatField", new DefaultOperand(2.0))));
 		builder2.setOrderBy(new DefaultOrderByClause("id", false));
 		beans = exec2.queryEntities(connection, builder2);
 		assertTrue(beans.size() == 2);
-		assertTestBeanID1(beans.get(0), 2.0);
-		assertTestBeanID2(beans.get(1), 2.0);
+		assertTestBeanID1(beans.get(0), new BigDecimal("2.00"));
+		assertTestBeanID2(beans.get(1), new BigDecimal("2.00"));
 	}
 	
 	@Test
@@ -918,9 +918,9 @@ public abstract class SQLExecuteBaseTest {
 		Operator condition = new AndOperator(new GreaterCriteria("t", "floatField", new DefaultOperand("", ":floatfield", false)));
 		exec.prepareUpdateStatement(connection, null, "t", Arrays.asList(new String[]{"floatField"}), condition);
 		Map<String, Object> params = new HashMap<String, Object>();
-		params.put("floatfield", new Float(0.5));
+		params.put("floatfield", new BigDecimal("0.50"));
 		TestBean bean = new TestBean();
-		bean.setFloatField(1.0);
+		bean.setFloatField(new BigDecimal("1.00"));
 		SimpleBeanSQLQueryBuilder builder2 = new SimpleBeanSQLQueryBuilder(TestBean.class);
 		builder2.setWhere(new AndOperator(new EqualCriteria("floatField", new DefaultOperand(1.0))));
 		
@@ -936,19 +936,19 @@ public abstract class SQLExecuteBaseTest {
 			2,
 			new ArrayList<String>() {{ add("floatField"); }},
 			"UPDATE BeanTest1 t SET t.FLOAT_FIELD = ? WHERE (t.FLOAT_FIELD>?)",
-			new HashMap<String, Object>() {{ put("floatfield", new Float(0.5)); }},
+			new HashMap<String, Object>() {{ put("floatfield", new BigDecimal("0.50")); }},
 			new ArrayList<Object>() {{
-				add(new Double(1.0));
-				add(new Float(0.5)); }}
+				add(new BigDecimal("1.00"));
+				add(new BigDecimal("0.50")); }}
 		);
 		
 		List<TestBean> beans = exec2.queryEntities(connection, builder2);
 		assertTrue(beans.size() == 1);
-		assertTestBeanID2(beans.get(0), 1.0);
+		assertTestBeanID2(beans.get(0), new BigDecimal("1.00"));
 		
 		//tested method
-		params.put("floatfield", new Float(0.0));
-		bean.setFloatField(2.0);
+		params.put("floatfield", new BigDecimal("0.00"));
+		bean.setFloatField(new BigDecimal("2.00"));
 		exec.updateEntities(connection, bean, "t", Arrays.asList(new String[]{"floatField"}), condition, params);
 		//tests
 		assertExec(
@@ -958,18 +958,18 @@ public abstract class SQLExecuteBaseTest {
 			2,
 			new ArrayList<String>() {{ add("floatField"); }},
 			"UPDATE BeanTest1 t SET t.FLOAT_FIELD = ? WHERE (t.FLOAT_FIELD>?)",
-			new HashMap<String, Object>() {{ put("floatfield", new Float(0.0)); }},
+			new HashMap<String, Object>() {{ put("floatfield", new BigDecimal("0.00")); }},
 			new ArrayList<Object>() {{
-				add(new Double(2.0));
-				add(new Float(0.0)); }}
+				add(new BigDecimal("2.00"));
+				add(new BigDecimal("0.00")); }}
 		);
 		
 		builder2.setWhere(new AndOperator(new EqualCriteria("floatField", new DefaultOperand(2.0))));
 		builder2.setOrderBy(new DefaultOrderByClause("id", false));
 		beans = exec2.queryEntities(connection, builder2);
 		assertTrue(beans.size() == 2);
-		assertTestBeanID1(beans.get(0), 2.0);
-		assertTestBeanID2(beans.get(1), 2.0);
+		assertTestBeanID1(beans.get(0), new BigDecimal("2.00"));
+		assertTestBeanID2(beans.get(1), new BigDecimal("2.00"));
 	}
 	
 	@Test
@@ -1004,7 +1004,7 @@ public abstract class SQLExecuteBaseTest {
 		exec.prepareUpdateStatement(connection, TestBean.class, Arrays.asList(new String[]{"floatField"}));
 		TestBean bean = new TestBean();
 		bean.setId(2);
-		bean.setFloatField(1.0);
+		bean.setFloatField(new BigDecimal("1.00"));
 		SimpleBeanSQLQueryBuilder builder2 = new SimpleBeanSQLQueryBuilder(TestBean.class);
 		builder2.setWhere(new AndOperator(new EqualCriteria("floatField", new DefaultOperand(1.0))));
 		
@@ -1022,13 +1022,13 @@ public abstract class SQLExecuteBaseTest {
 			"UPDATE BeanTest1  SET FLOAT_FIELD = ? WHERE (ID=?)",
 			new HashMap<String, Object>() {{ put("ID", new Integer(2)); }},
 			new ArrayList<Object>() {{
-				add(new Double(1.0));
+				add(new BigDecimal("1.00"));
 				add(new Integer(2)); }}
 		);
 		
 		List<TestBean> beans = exec2.queryEntities(connection, builder2);
 		assertTrue(beans.size() == 1);
-		assertTestBeanID2(beans.get(0), 1.0);
+		assertTestBeanID2(beans.get(0), new BigDecimal("1.00"));
 	}
 	
 	@Test
@@ -1040,7 +1040,7 @@ public abstract class SQLExecuteBaseTest {
 		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
 		TestBean bean = new TestBean();
 		bean.setId(2);
-		bean.setFloatField(1.0);
+		bean.setFloatField(new BigDecimal("1.00"));
 		SimpleBeanSQLQueryBuilder builder2 = new SimpleBeanSQLQueryBuilder(TestBean.class);
 		builder2.setWhere(new AndOperator(new EqualCriteria("floatField", new DefaultOperand(1.0))));
 		
@@ -1057,12 +1057,12 @@ public abstract class SQLExecuteBaseTest {
 			new ArrayList<String>() {{ add("floatField"); }},
 			"UPDATE BeanTest1  SET FLOAT_FIELD = ? WHERE (ID=2)",
 			null,
-			new ArrayList<Object>() {{ add(new Double(1.0)); }}
+			new ArrayList<Object>() {{ add(new BigDecimal("1.00")); }}
 		);
 		
 		List<TestBean> beans = exec2.queryEntities(connection, builder2);
 		assertTrue(beans.size() == 1);
-		assertTestBeanID2(beans.get(0), 1.0);
+		assertTestBeanID2(beans.get(0), new BigDecimal("1.00"));
 	}
 	
 	@Test
@@ -1370,8 +1370,8 @@ public abstract class SQLExecuteBaseTest {
 				
 		List<TestBean2> beans = exec2.queryEntities(connection, builder);
 		assertTrue(beans.size() == 2);
-		assertTestBeanID1(beans.get(0), 0.3);
-		assertTestBeanID2(beans.get(1), 0.6);
+		assertTestBeanID1(beans.get(0), new BigDecimal("0.30"));
+		assertTestBeanID2(beans.get(1), new BigDecimal("0.60"));
 	}
 	
 	@Test
@@ -1410,8 +1410,8 @@ public abstract class SQLExecuteBaseTest {
 				
 		List<TestBean2> beans = exec2.queryEntities(connection, builder);
 		assertTrue(beans.size() == 2);
-		assertTestBeanID1(beans.get(0), 0.3);
-		assertTestBeanID2(beans.get(1), 0.6);
+		assertTestBeanID1(beans.get(0), new BigDecimal("0.30"));
+		assertTestBeanID2(beans.get(1), new BigDecimal("0.60"));
 	}
 
 	@SuppressWarnings({ "rawtypes", "serial", "unchecked" })
@@ -1530,7 +1530,7 @@ public abstract class SQLExecuteBaseTest {
 		assertTrue((Integer)resMap.get(0).get("FOUR_PART_COLUMN_NAME") == 1);
 		assertTrue(resMap.get(0).get("BLOB_FIELD").equals(STRING_UTF8));
 		assertTrue(resMap.get(0).get("DATE_FIELD_WITH_ANNOTATION").equals(new SimpleDateFormat("yyyy.MM.dd").parse("2011.08.30")));
-		assertTrue((Double)resMap.get(0).get("FLOAT_FIELD") == 0.3);
+		assertTrue(resMap.get(0).get("FLOAT_FIELD").equals(new BigDecimal("0.30")));
 		
 		assertTrue((Integer)resMap.get(1).get("ID") == 2);
 		assertTrue((Integer)resMap.get(1).get("ID_CUSTOMER") == 3);
@@ -1538,7 +1538,7 @@ public abstract class SQLExecuteBaseTest {
 		assertTrue((Integer)resMap.get(1).get("FOUR_PART_COLUMN_NAME") == 0);
 		assertTrue(resMap.get(1).get("BLOB_FIELD").equals(STRING_LOREM_IPSUM));
 		assertTrue(resMap.get(1).get("DATE_FIELD_WITH_ANNOTATION").equals(new SimpleDateFormat("yyyy.MM.dd").parse("2011.08.31")));
-		assertTrue((Double)resMap.get(1).get("FLOAT_FIELD") == 0.6);
+		assertTrue(resMap.get(1).get("FLOAT_FIELD").equals(new BigDecimal("0.60")));
 	}
 	
 	@SuppressWarnings("unchecked")

@@ -1,5 +1,6 @@
 package org.liveSense.api.beanprocessors;
 
+import java.math.BigDecimal;
 import java.util.Date;
 
 import javax.jdo.annotations.Index;
@@ -37,8 +38,8 @@ public class TestBean {
 	@Column(name="BLOB_FIELD", columnDefinition="BLOB")
 	private String blob;
 
-	@Column(name="FLOAT_FIELD", columnDefinition="NUMERIC(15,2)")
-	private Double floatField;
+	@Column(name="FLOAT_FIELD", columnDefinition="NUMERIC(15, 2)")
+	private BigDecimal floatField;
 
 	@Column(name="DATE_FIELD_WITH_ANNOTATION", columnDefinition="DATE")
 	private Date dateFieldWithAnnotation;
@@ -81,10 +82,10 @@ public class TestBean {
 	public void setBlob(String blob) {
 		this.blob = blob;
 	}
-	public Double getFloatField() {
+	public BigDecimal getFloatField() {
 		return floatField;
 	}	
-	public void setFloatField(Double floatField) {
+	public void setFloatField(BigDecimal floatField) {
 		this.floatField = floatField;
 	}
 	public Date getDateFieldWithAnnotation() {	
