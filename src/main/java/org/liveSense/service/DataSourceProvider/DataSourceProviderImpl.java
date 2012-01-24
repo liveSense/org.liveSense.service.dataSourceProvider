@@ -70,13 +70,12 @@ import org.slf4j.LoggerFactory;
 
  @Component(label="%dataSourceProvider.name",
         description="%dataSourceProvider.description",
-        immediate=true,
         metatype=true,
         configurationFactory=true,
-        policy=ConfigurationPolicy.OPTIONAL,
-        createPid=false)
+        policy=ConfigurationPolicy.REQUIRE,
+        createPid=true)
         
-@Service(value=DataSourceProvider.class)
+@Service(value=DataSourceProvider.class,serviceFactory=true)
 
 @Properties(value = {
 		@Property(
@@ -143,16 +142,10 @@ public class DataSourceProviderImpl implements DataSourceProvider {
 	//private static HashMap<String, BasicDataSource> dataSources = new HashMap(); 
 	
 	private BasicDataSource ds;
-	private String dataSourceName;
-	private String pid = null;
+	private String dataSourceName = null;
 	
-	@Reference
-	private DataSourceStoreService dsService;
-    	
     @Activate
     protected void activate(BundleContext bundleContext, Map<?, ?> props) { 
-    	pid = (String)props.get("service.pid");
-    	if (pid == null) return;
 		String driverClassName = (String)props.get("driverClassName");
 		String url = (String)props.get("url");
 		String username = (String)props.get("username");
@@ -168,8 +161,7 @@ public class DataSourceProviderImpl implements DataSourceProvider {
 		String validationQuery = (String)props.get("validationQuery");
 		dataSourceName = (String)props.get("dataSourceName");
     	if (dataSourceName != null && !"".equalsIgnoreCase(dataSourceName)) {
-        	ds = new BasicDataSource();    	
-        	dsService.putDataSource(dataSourceName, ds);
+        	ds = new BasicDataSource();
         	log.info("Registering DataSource Name: "+dataSourceName+" PID: "+(String)props.get("service.pid"));
         	ds.setDriverClassName(driverClassName);
         	ds.setUrl(url);
@@ -187,19 +179,11 @@ public class DataSourceProviderImpl implements DataSourceProvider {
     	} else {
     		log.warn("No data source name is defined PID: "+ (String)props.get("service.pid"));
     	}
-    	
-
-		log.info("Available dataSources: ");
-    	for (String key : dsService.getDataSourceNames()) {
-    		log.info(key+" "+((BasicDataSource)dsService.getDataSource(key)).getUrl()+" "+((BasicDataSource)dsService.getDataSource(key)).getUsername());
-    	}
     }
     
     @Deactivate
     protected void deactivate() {
-    	if (pid == null) return;
     	try {
-    		dsService.removeDataSource(dataSourceName);
     		if (ds != null) {
     			ds.close();
     		}
@@ -207,30 +191,24 @@ public class DataSourceProviderImpl implements DataSourceProvider {
 			log.error("Deactivate data source: "+dataSourceName, e);
 		}
     }
-
-    private boolean isDataSource(String dataSource) {
-    	return dsService.getDataSourceNames().contains(dataSource);
-    }
     
-	public Connection getConnection(String dataSource) throws NoDataSourceFound, SQLException {
-		if (!isDataSource(dataSource)) throw new NoDataSourceFound("No datasource found: "+dataSource);
-		DataSource ds = dsService.getDataSource(dataSource);
+	public Connection getConnection() throws SQLException {
 		return ds.getConnection();
 	}
 	
-	public Connection getConnection(String dataSource, String userName, String password) throws NoDataSourceFound, SQLException {
-		if (!isDataSource(dataSource)) throw new NoDataSourceFound("No datasource found: "+dataSource);
-		DataSource ds = dsService.getDataSource(dataSource);
+	public Connection getConnection(String userName, String password) throws SQLException {
 		return ds.getConnection(userName, password);		
 	}
 	
-	public DataSource getDataSource(String dataSource) throws NoDataSourceFound {
-		if (!isDataSource(dataSource)) throw new NoDataSourceFound("No datasource found: "+dataSource);
-		return (DataSource)dsService.getDataSource(dataSource);
+	public QueryRunner getQueryRunner() {
+		return new QueryRunner(ds, false);
 	}
 
-	public QueryRunner getQueryRunner(String dataSource) throws NoDataSourceFound {
-		if (!isDataSource(dataSource)) throw new NoDataSourceFound("No datasource found: "+dataSource);
-		return new QueryRunner(getDataSource(dataSource), false);
+	public DataSource getDataSource() {
+		return ds;
+	}
+	
+	public String getName() {
+		return dataSourceName;
 	}
 }			
