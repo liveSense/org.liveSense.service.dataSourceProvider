@@ -130,12 +130,14 @@ public class OracleExecute<T> extends SQLExecute<T> {
 		}		
 						
 		boolean first = true;
-		StringBuffer sb = new StringBuffer("ORDER BY ");
+		StringBuffer sb = new StringBuffer(" ORDER BY ");
 		for (OrderByClause orderByClause : orderby) {
 			if (first) { first = false;	} 
 			else { sb.append(","); }
 			sb.append(orderByClause.getFieldName());
-			sb.append(orderByClause.getSortDesc() ? " DESC" : " ASC");			
+			if (orderByClause.getSortDesc() != null) { 
+				sb.append(orderByClause.getSortDesc() ? " DESC" : " ASC");
+			}
 		}
 		helper.setQuery(helper.getQuery() + sb.toString());		
 		
