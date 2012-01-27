@@ -87,7 +87,7 @@ public class FirebirdExecute<T> extends SQLExecute<T> {
 		}
 		
 		if (l > 0 && o > 0) {
-			helper.setQuery(helper.getQuery()+ " ROWS "+o+1+" TO "+l+o);
+			helper.setQuery(helper.getQuery()+ " ROWS "+(o+1)+" TO "+(l+o));
 		} else if (l > 0 && o < 1) {
 			helper.setQuery(helper.getQuery()+ " ROWS "+l);			
 		} else if (l < 1 || o > 0){
