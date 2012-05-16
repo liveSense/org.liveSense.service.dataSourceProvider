@@ -9,7 +9,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 
-@Ignore
 public class SQLExecuteOracleTest
 	extends SQLExecuteBaseTest {
 	
@@ -18,16 +17,20 @@ public class SQLExecuteOracleTest
 	@Before
 	public void before() 
 		throws Exception {
-		
-		connect();
-		init("clob");
+		try {
+			connect();
+			init("clob");
+		} catch (Exception e) {
+			connection = null;
+			org.junit.Assume.assumeNoException(e);
+		}
 	}
 	
 	@After
 	public void after() 
 		throws SQLException {
 		
-		disconnect();
+		if (connection != null) disconnect();
 	}
 	
 	

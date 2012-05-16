@@ -9,7 +9,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
 
-@Ignore
 public class SQLExecuteMySQLTest
 	extends SQLExecuteBaseTest {
 	
@@ -19,15 +18,20 @@ public class SQLExecuteMySQLTest
 	public void before() 
 		throws Exception {
 		
-		connect();
-		init("longtext");
+		try {
+			connect();
+			init("longtext");
+		} catch (Exception e) {
+			connection = null;
+			org.junit.Assume.assumeNoException(e);
+		}
 	}
 	
 	@After
 	public void after() 
 		throws SQLException {
 		
-		disconnect();
+		if (connection != null) disconnect();
 	}
 	
 	//METHODS - abstract

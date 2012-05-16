@@ -37,6 +37,9 @@ import org.liveSense.misc.queryBuilder.jdbcDriver.JdbcDrivers;
 import org.liveSense.misc.queryBuilder.operands.DefaultOperand;
 import org.liveSense.misc.queryBuilder.operators.AndOperator;
 
+import com.googlecode.junit.ext.RunIf;
+import com.googlecode.junit.ext.checkers.Checker;
+
 @Ignore
 public abstract class SQLExecuteBaseTest {
 
@@ -51,6 +54,12 @@ public abstract class SQLExecuteBaseTest {
 	protected Connection connection;
 	protected Connection connection2;
 
+	
+	class DatabaseIsConnected implements Checker {
+		public boolean satisfy() {
+	        return connection != null;
+		}
+	}
 	
 	//METHODS - abstract
 	protected abstract void createTestProcedure() throws Exception;
@@ -239,6 +248,7 @@ public abstract class SQLExecuteBaseTest {
 	
 	//TESTS
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	@SuppressWarnings({ "unchecked", "serial" })
 	public void testPrepareQueryMulti()
 		throws Exception {
@@ -263,6 +273,7 @@ public abstract class SQLExecuteBaseTest {
 	}
 	
 	@Test
+	@RunIf(DatabaseIsConnected.class)	
 	@SuppressWarnings({ "unchecked", "serial" })
 	public void testRunPreparedQueryMulti()
 		throws Exception {
@@ -308,6 +319,7 @@ public abstract class SQLExecuteBaseTest {
 	}
 	
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	@SuppressWarnings({ "unchecked", "serial" })
 	public void testRunQueryMulti()
 		throws Exception {
@@ -336,6 +348,7 @@ public abstract class SQLExecuteBaseTest {
 	}
 	
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	@SuppressWarnings({ "unchecked", "serial" })
 	public void testPrepareQuerySingle()
 		throws Exception {
@@ -358,6 +371,7 @@ public abstract class SQLExecuteBaseTest {
 	}
 		
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	@SuppressWarnings({ "unchecked", "serial" })
 	public void testRunPreparedQuerySingle()
 		throws Exception {
@@ -401,6 +415,7 @@ public abstract class SQLExecuteBaseTest {
 	}
 	
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	@SuppressWarnings({ "unchecked" })
 	public void testRunQuerySingle()
 		throws Exception {
@@ -426,6 +441,7 @@ public abstract class SQLExecuteBaseTest {
 	}
 	
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	@SuppressWarnings({ "unchecked", "serial" })
 	public void testPrepareLockMulti()
 		throws Exception {
@@ -450,6 +466,7 @@ public abstract class SQLExecuteBaseTest {
 	}
 	
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	@SuppressWarnings({ "unchecked", "serial" })
 	public void testRunPreparedLockMulti()
 		throws Exception {
@@ -518,6 +535,7 @@ public abstract class SQLExecuteBaseTest {
 	}
 	
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	@SuppressWarnings({ "unchecked", "serial" })
 	public void testRunLockMulti()
 		throws Exception {
@@ -558,6 +576,7 @@ public abstract class SQLExecuteBaseTest {
 	}
 	
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	@SuppressWarnings({ "unchecked", "serial" })
 	public void testPrepareLockSingle()
 		throws Exception {
@@ -580,6 +599,7 @@ public abstract class SQLExecuteBaseTest {
 	}
 	
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	@SuppressWarnings({ "unchecked", "serial" })
 	public void testRunPreparedLockSingle()
 		throws Exception {
@@ -651,6 +671,7 @@ public abstract class SQLExecuteBaseTest {
 	}
 	
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	@SuppressWarnings("unchecked")
 	public void testRunLockSingle()
 		throws Exception {
@@ -688,6 +709,7 @@ public abstract class SQLExecuteBaseTest {
 	}
 	
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	@SuppressWarnings({ "unchecked", "serial" })
 	public void testPrepareInsertSingle()
 		throws Exception {
@@ -717,6 +739,7 @@ public abstract class SQLExecuteBaseTest {
 	}
 	
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	@SuppressWarnings({ "unchecked", "serial" })
 	public void testRunPreparedInsertSingle()
 		throws Exception {
@@ -766,6 +789,7 @@ public abstract class SQLExecuteBaseTest {
 	}
 	
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	@SuppressWarnings({ "unchecked", "serial" })
 	public void testRunInsertSingle()
 		throws Exception {
@@ -822,6 +846,7 @@ public abstract class SQLExecuteBaseTest {
 	}
 	
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	@SuppressWarnings({ "unchecked", "serial" })
 	public void testPrepareUpdateMulti()
 		throws Exception {
@@ -845,6 +870,7 @@ public abstract class SQLExecuteBaseTest {
 	}
 	
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	@SuppressWarnings({ "unchecked", "serial" })
 	public void testRunPreparedUpdateMulti()
 		throws Exception {
@@ -909,6 +935,7 @@ public abstract class SQLExecuteBaseTest {
 	}
 	
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	@SuppressWarnings({ "unchecked", "serial" })
 	public void testRunUpdateMulti()
 		throws Exception {
@@ -973,6 +1000,7 @@ public abstract class SQLExecuteBaseTest {
 	}
 	
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	@SuppressWarnings({ "unchecked", "serial" })
 	public void testPrepareUpdateSingle()
 		throws Exception {
@@ -995,6 +1023,7 @@ public abstract class SQLExecuteBaseTest {
 	}
 
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	@SuppressWarnings({ "unchecked", "serial" })
 	public void testRunPreparedUpdateSingle()
 		throws Exception {
@@ -1032,6 +1061,7 @@ public abstract class SQLExecuteBaseTest {
 	}
 	
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	@SuppressWarnings({ "unchecked", "serial" })
 	public void testRunUpdateSingle()
 		throws Exception {
@@ -1066,6 +1096,7 @@ public abstract class SQLExecuteBaseTest {
 	}
 	
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	@SuppressWarnings({ "unchecked", "serial" })
 	public void testPrepareDeleteMulti()
 		throws Exception {
@@ -1089,6 +1120,7 @@ public abstract class SQLExecuteBaseTest {
 	}
 	
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	@SuppressWarnings({ "unchecked", "serial" })
 	public void testRunPreparedDeleteMulti()
 		throws Exception {
@@ -1141,6 +1173,7 @@ public abstract class SQLExecuteBaseTest {
 	}
 	
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	@SuppressWarnings({ "unchecked", "serial" })
 	public void testRunDeleteMulti()
 		throws Exception {
@@ -1194,6 +1227,7 @@ public abstract class SQLExecuteBaseTest {
 	}
 	
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	@SuppressWarnings({ "unchecked", "serial" })
 	public void testPrepareDeleteSingle()
 		throws Exception {
@@ -1216,6 +1250,7 @@ public abstract class SQLExecuteBaseTest {
 	}
 
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	@SuppressWarnings({ "unchecked", "serial" })
 	public void testRunPreparedDeleteSingle()
 		throws Exception {
@@ -1248,6 +1283,7 @@ public abstract class SQLExecuteBaseTest {
 	}
 	
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	@SuppressWarnings("unchecked")
 	public void testRunDeleteSingle()
 		throws Exception {
@@ -1279,6 +1315,7 @@ public abstract class SQLExecuteBaseTest {
 	}
 	
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	@SuppressWarnings({ "unchecked", "serial" })
 	public void testPrepareInsertSelect()
 		throws Exception {
@@ -1305,6 +1342,7 @@ public abstract class SQLExecuteBaseTest {
 	}
 	
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	@SuppressWarnings({ "unchecked", "serial" })
 	public void testPrepareInsertSelect2()
 		throws Exception {
@@ -1334,6 +1372,7 @@ public abstract class SQLExecuteBaseTest {
 	}
 	
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	@SuppressWarnings({ "unchecked", "serial" })
 	public void testRunPreparedInsertSelect()
 		throws Exception {
@@ -1375,6 +1414,7 @@ public abstract class SQLExecuteBaseTest {
 	}
 	
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	@SuppressWarnings({ "unchecked", "serial" })
 	public void testRunInsertSelect()
 		throws Exception {
@@ -1416,6 +1456,7 @@ public abstract class SQLExecuteBaseTest {
 
 	@SuppressWarnings({ "rawtypes", "serial", "unchecked" })
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	public void testPrepareExecuteProcedure()
 		throws Exception {
 		
@@ -1440,6 +1481,7 @@ public abstract class SQLExecuteBaseTest {
 	
 	@SuppressWarnings({ "rawtypes", "unchecked", "serial" })
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	public void testRunPreparedExecuteProcedure()
 		throws Exception {
 		
@@ -1476,6 +1518,7 @@ public abstract class SQLExecuteBaseTest {
 	
 	@SuppressWarnings({ "rawtypes", "unchecked", "serial" })
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	public void testRunExecuteProcedure()
 		throws Exception {
 		
@@ -1511,6 +1554,7 @@ public abstract class SQLExecuteBaseTest {
 	
 	@SuppressWarnings("unchecked")
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	public void testQueryToMap()
 		throws Exception {
 
@@ -1543,6 +1587,7 @@ public abstract class SQLExecuteBaseTest {
 	
 	@SuppressWarnings("unchecked")
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	public void testExecuteScript()
 		throws org.liveSense.api.sql.exceptions.SQLException, SQLException{
 		
@@ -1606,6 +1651,7 @@ public abstract class SQLExecuteBaseTest {
 	
 	@SuppressWarnings("unchecked")
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	public void testCreateTable()
 		throws Exception{
 		
@@ -1625,6 +1671,7 @@ public abstract class SQLExecuteBaseTest {
 	
 	@SuppressWarnings("unchecked")
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	public void testDropTable()
 		throws Exception{
 		
@@ -1642,6 +1689,7 @@ public abstract class SQLExecuteBaseTest {
 	
 	@SuppressWarnings("unchecked")
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	public void testExistsTable()
 		throws Exception{
 		

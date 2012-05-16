@@ -15,18 +15,21 @@ public class SQLExecuteFirebirdTest
 	
 	//TEST - init/fina
 	@Before
-	public void before()
-		throws Exception {
-		
-		connect();
-		init("blob");
+	public void before()  {
+		try {
+			connect();
+			init("blob");
+		} catch (Exception e) {
+			connection = null;
+			org.junit.Assume.assumeNoException(e);
+		}
 	}
 	
 	@After
 	public void after()
 		throws SQLException {
 		
-		disconnect();
+		if (connection != null) disconnect();
 	}
 	
 	//METHODS - abstract

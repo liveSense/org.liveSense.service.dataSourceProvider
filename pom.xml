@@ -69,6 +69,7 @@
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
+			<version>4.4</version>
 			<scope>test</scope>
 		</dependency>
 		<dependency>
@@ -182,5 +183,15 @@
   		  	<version>10.2.0.4.0</version>
 		  	<scope>test</scope>
 		</dependency>
+
+
+		<dependency>
+		  	<groupId>junit-ext</groupId>
+  		  	<artifactId>junit-ext</artifactId>
+  		  	<version>1.0</version>
+  		  	<systemPath>${basedir}/lib/junit-ext-1.0-junit-4.4-RC-3.jar</systemPath>
+		  	<scope>system</scope>
+		</dependency>
+
 	</dependencies>
 </project>

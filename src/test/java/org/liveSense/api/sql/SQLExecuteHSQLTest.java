@@ -10,6 +10,9 @@ import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+import org.liveSense.api.sql.SQLExecuteBaseTest.DatabaseIsConnected;
+
+import com.googlecode.junit.ext.RunIf;
 
 
 public class SQLExecuteHSQLTest
@@ -104,47 +107,56 @@ public class SQLExecuteHSQLTest
 	//TESTS 
 	//record level lock unsupported by HSQL
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	public void testPrepareLockMulti() 
 		throws Exception {
 	}
 	
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	public void testRunPreparedLockMulti() 
 		throws Exception {
 	}
 	
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	public void testRunLockMulti() 
 		throws Exception {
 	}
 	
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	public void testPrepareLockSingle() 
 		throws Exception {
 	}
 	
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	public void testRunPreparedLockSingle() 
 		throws Exception {
 	}
 	
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	public void testRunLockSingle() 
 		throws Exception {
 	}
 	
 	//VERY unique storedproc support by HSQL
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	public void testPrepareExecuteProcedure() 
 		throws Exception {
 	}
 	
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	public void testRunPreparedExecuteProcedure() 
 		throws Exception {
 	}
 	
 	@Test
+	@RunIf(DatabaseIsConnected.class)
 	public void testRunExecuteProcedure() 
 		throws Exception {
 	}
