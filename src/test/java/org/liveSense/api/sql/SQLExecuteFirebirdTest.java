@@ -40,12 +40,15 @@ public class SQLExecuteFirebirdTest
 		String sql =
 			"CREATE OR ALTER PROCEDURE testproc(\n"+
 			"    param1 VARCHAR(20),\n"+
-			"    param2 INTEGER)\n"+
+			"    param2 INTEGER,\n"+
+			"    param3 DATE)\n"+
 			"RETURNS(\n" +
-			"    param3 NUMERIC(15,2))\n"+
+			"    param_out1 NUMERIC(15,2),\n"+
+			"    param_out2 DATE)\n"+
 			"AS\n"+
 			"BEGIN\n" +
-			"    param3 = CAST(param1 AS NUMERIC(15,2)) + param2;\n"+
+			"    param_out1 = CAST(param1 AS NUMERIC(15,2)) + param2;\n"+
+			"    param_out2 = param3;\n"+
 			"END";
 		executeSql(connection, sql);
 		connection.commit();

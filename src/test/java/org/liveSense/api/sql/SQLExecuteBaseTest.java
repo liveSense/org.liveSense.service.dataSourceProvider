@@ -14,6 +14,7 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -1471,15 +1472,15 @@ public abstract class SQLExecuteBaseTest {
 		assertExec(
 			exec,
 			StatementType.PROCEDURE,
-			new ArrayList<String>() {{ add("PARAM1"); add("PARAM2"); }} ,			
-			2,
+			new ArrayList<String>() {{ add("PARAM1"); add("PARAM2"); add("PARAM3");}} ,			
+			3,
 			null,
-			"EXECUTE PROCEDURE testproc(?,?)",
+			"EXECUTE PROCEDURE testproc(?,?,?)",
 			null,
 			null);
 	}
 	
-	@SuppressWarnings({ "rawtypes", "unchecked", "serial" })
+	@SuppressWarnings({ "rawtypes", "unchecked", "serial", "deprecation" })
 	@Test
 	@RunIf(DatabaseIsConnected.class)
 	public void testRunPreparedExecuteProcedure()
@@ -1492,6 +1493,7 @@ public abstract class SQLExecuteBaseTest {
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("PARAM1", "10.5");
 		params.put("param2", 20);
+		params.put("param3", new Date(2012,5,16));
 		
 		//tested method
 		Map<String, Object> res = exec.executeProcedureWithPreparedStatement(params);
@@ -1500,23 +1502,26 @@ public abstract class SQLExecuteBaseTest {
 		assertExec(
 			exec,
 			StatementType.PROCEDURE,
-			new ArrayList<String>() {{ add("PARAM1"); add("PARAM2"); }} ,			
-			2,
+			new ArrayList<String>() {{ add("PARAM1"); add("PARAM2"); add("PARAM3"); }} ,			
+			3,
 			null,
-			"EXECUTE PROCEDURE testproc(?,?)",
+			"EXECUTE PROCEDURE testproc(?,?,?)",
 			new HashMap<String, Object>() {{ 
 				put("PARAM1", "10.5"); 
-				put("param2", new Integer(20)); }},
+				put("param2", new Integer(20));
+				put("param3", new Date(2012,5,16)); }},
 			new ArrayList<Object>() {{
 				add("10.5");
-				add(new Integer(20)); }}
+				add(new Integer(20));
+				add(new Date(2012,5,16)); }}
 		);
 		
-		assertTrue(res.size() == 1);
-		assertTrue(res.get("PARAM3").equals(new BigDecimal(new BigInteger("3050"), 2)));
+		assertTrue(res.size() == 2);
+		assertTrue(res.get("PARAM_OUT1").equals(new BigDecimal(new BigInteger("3050"), 2)));
+		assertTrue(res.get("PARAM_OUT2").equals(new Date(2012,5,16)));
 	}
 	
-	@SuppressWarnings({ "rawtypes", "unchecked", "serial" })
+	@SuppressWarnings({ "rawtypes", "unchecked", "serial", "deprecation" })
 	@Test
 	@RunIf(DatabaseIsConnected.class)
 	public void testRunExecuteProcedure()
@@ -1528,6 +1533,7 @@ public abstract class SQLExecuteBaseTest {
 		Map<String, Object> params = new HashMap<String, Object>();
 		params.put("PARAM1", "10.5");
 		params.put("param2", 20);
+		params.put("param3", new Date(2012,5,16));
 		
 		//tested method
 		Map<String, Object> res = exec.executeProcedure(connection, "testproc", params);
@@ -1536,20 +1542,23 @@ public abstract class SQLExecuteBaseTest {
 		assertExec(
 			exec,
 			StatementType.PROCEDURE,
-			new ArrayList<String>() {{ add("PARAM1"); add("PARAM2"); }} ,			
-			2,
+			new ArrayList<String>() {{ add("PARAM1"); add("PARAM2"); add("PARAM3"); }} ,			
+			3,
 			null,
-			"EXECUTE PROCEDURE testproc(?,?)",
+			"EXECUTE PROCEDURE testproc(?,?,?)",
 			new HashMap<String, Object>() {{ 
 				put("PARAM1", "10.5"); 
-				put("param2", new Integer(20)); }},
+				put("param2", new Integer(20));
+				put("param3", new Date(2012,5,16)); }},
 			new ArrayList<Object>() {{
 				add("10.5");
-				add(new Integer(20)); }}
+				add(new Integer(20));
+				add(new Date(2012,5,16)); }}
 		);
 		
-		assertTrue(res.size() == 1);
-		assertTrue(res.get("PARAM3").equals(new BigDecimal(new BigInteger("3050"), 2)));
+		assertTrue(res.size() == 2);
+		assertTrue(res.get("PARAM_OUT1").equals(new BigDecimal(new BigInteger("3050"), 2)));
+		assertTrue(res.get("PARAM_OUT2").equals(new Date(2012,5,16)));
 	}
 	
 	@SuppressWarnings("unchecked")

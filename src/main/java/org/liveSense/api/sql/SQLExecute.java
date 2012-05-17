@@ -421,6 +421,15 @@ public abstract class SQLExecute<T> {
 		}
 	}
 	
+	private void preparedStatementSetObject(int idx, Object value) throws java.sql.SQLException {
+		
+		if (value instanceof java.util.Date) {
+			java.sql.Date valueD = new java.sql.Date(((java.util.Date)value).getTime());
+			value = valueD;
+		}
+		preparedStatement.setObject(idx, value);		
+	}
+	
 	
 	
 	//METHODS - public
@@ -1448,11 +1457,7 @@ public abstract class SQLExecute<T> {
 		int idx = 1;
 		for (String field : preparedFields) {
 			Object param = objs.get(field);
-			if (param instanceof java.util.Date) {
-				java.sql.Date paramD = new java.sql.Date(((java.util.Date)param).getTime());
-				param = paramD;
-			}
-			preparedStatement.setObject(idx, param);
+			preparedStatementSetObject(idx, param);
 			lastSQLParameters.add(param);
 			idx++;
 		}
@@ -1484,16 +1489,12 @@ public abstract class SQLExecute<T> {
 		int idx = 1;
 		for (String key : preparedFields) {
 			Object param = objs.get(key);
-			if (param instanceof java.util.Date) {
-				java.sql.Date paramD = new java.sql.Date(((java.util.Date)param).getTime());
-				param = paramD;
-			}
-			preparedStatement.setObject(idx, param);
+			preparedStatementSetObject(idx, param);
 			lastSQLParameters.add(param);
 			idx++;
 		}
 		for (Object object : paramValues) {
-			preparedStatement.setObject(idx, object);
+			preparedStatementSetObject(idx, object);
 			idx++;
 		}
 		
@@ -1543,8 +1544,8 @@ public abstract class SQLExecute<T> {
 		lastSQLParameters.addAll(paramValues);
 		
 		int idx = 1;
-		for (Object object : paramValues) {
-			preparedStatement.setObject(idx, object);
+		for (Object value : paramValues) {
+			preparedStatementSetObject(idx, value);
 			idx++;
 		}
 						
@@ -1593,7 +1594,7 @@ public abstract class SQLExecute<T> {
 		
 		int idx = 1;
 		for (Object object : paramValues) {
-			preparedStatement.setObject(idx, object);
+			preparedStatementSetObject(idx, object);
 			idx++;
 		}
 				
@@ -1615,8 +1616,8 @@ public abstract class SQLExecute<T> {
 		lastSQLParameters.addAll(paramValues);
 		
 		int idx = 1;
-		for (Object value : lastSQLParameters) {
-			preparedStatement.setObject(idx, value);
+		for (Object value : lastSQLParameters) {		
+			preparedStatementSetObject(idx, value);
 			idx++;
 		}
 		
@@ -1624,7 +1625,12 @@ public abstract class SQLExecute<T> {
 		
 		Map<String, Object> out = new HashMap<String, Object>();
 		for (Entry<String, Integer> entry : preparedProcedureOutputParams.entrySet()) {
-			out.put(entry.getKey(), ((CallableStatement)preparedStatement).getObject(entry.getValue()));
+			Object value = ((CallableStatement)preparedStatement).getObject(entry.getValue());
+			if (value instanceof java.sql.Date) {
+				java.util.Date valueD = new java.util.Date(((java.sql.Date)value).getTime());
+				value = valueD;
+			}
+			out.put(entry.getKey(), value);
 		}
 
 		return out;
