@@ -44,13 +44,6 @@
 							org.liveSense.service.DataSourceProvider.*;version=${project.version},
 							org.liveSense.api.*;version=${project.version}
                         </Export-Package>
-						<Embed-Dependency>
-							commons-dbcp;inline=true,
-							commons-pool;inline=true,
-							commons-beanutils;inline=true,
-							commons-dbutils;inline=true,
-							commons-lang;inline=true
-                        </Embed-Dependency>
 						<Include-Resource>
 							{maven-resources}
                         </Include-Resource>
@@ -140,6 +133,11 @@
 		<dependency>
 			<groupId>org.liveSense</groupId>
 			<artifactId>org.liveSense.core</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.apache.sling</groupId>
+			<artifactId>org.apache.sling.commons.classloader</artifactId>
 		</dependency>
 
 		<!--  JDBC Drivers for TEST -->
