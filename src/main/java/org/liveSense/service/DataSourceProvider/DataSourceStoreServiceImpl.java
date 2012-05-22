@@ -1,11 +1,15 @@
 package org.liveSense.service.DataSourceProvider;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import javax.sql.DataSource;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
@@ -31,28 +35,36 @@ import org.slf4j.LoggerFactory;
 public class DataSourceStoreServiceImpl implements DataSourceStoreService {
 
 	Logger log = LoggerFactory.getLogger(DataSourceStoreServiceImpl.class);
-	private Map<String,DataSourceProvider> dataSourceProviders = Collections.synchronizedMap(new HashMap<String, DataSourceProvider>());
+	List<DataSourceProvider> dataSourceProviders = new CopyOnWriteArrayList<DataSourceProvider>();
 	
 	public DataSource getDataSource(String name) {
-		DataSource ret = null;
-		synchronized (dataSourceProviders) {ret = dataSourceProviders.get(name).getDataSource();};
-		return ret;
+		DataSourceProvider prov = getDataSourceProvider(name);
+		if (prov != null) return prov.getDataSource();
+		return null;
 	}
 
 	public DataSourceProvider getDataSourceProvider(String name) {
 		DataSourceProvider ret = null;
-		synchronized (dataSourceProviders) {ret = dataSourceProviders.get(name);};
-		return ret;
+		for (DataSourceProvider ds : dataSourceProviders) {
+			if (StringUtils.isNotEmpty(name) && name.equals(ds.getName())) {
+				return ds;
+			}
+		}
+		return null;
 	}
 
 	public void bind(DataSourceProvider dataSourceProvider) {
 		log.info("Binding dataSource - "+dataSourceProvider.getName());
-		dataSourceProviders.put(dataSourceProvider.getName(), dataSourceProvider);
+		dataSourceProviders.add(dataSourceProvider);
 	}
 
 	public void unbind(DataSourceProvider dataSourceProvider) {
 		log.info("Unbinding dataSource - "+dataSourceProvider.getName());
-		dataSourceProviders.remove(dataSourceProvider.getName());
+		dataSourceProviders.remove(dataSourceProvider);
+	}
+
+	public List<DataSourceProvider> getAllDataSourceProvider() {
+		return new ArrayList<DataSourceProvider>(dataSourceProviders);
 	}
 
 }

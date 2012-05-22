@@ -1,5 +1,7 @@
 package org.liveSense.service.DataSourceProvider;
 
+import java.util.List;
+
 import javax.sql.DataSource;
 
 /**
@@ -12,4 +14,7 @@ public interface DataSourceStoreService {
 	
 	public DataSource getDataSource(String name);
 	public DataSourceProvider getDataSourceProvider(String name);
+
+	public List<DataSourceProvider> getAllDataSourceProvider();
+
 }
