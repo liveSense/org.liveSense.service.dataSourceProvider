@@ -5,7 +5,11 @@ package org.liveSense.service.DataSourceProvider;
  * @author Robert Csakany (robson@semmi.se)
  * @created Jan 25, 2011
  */
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.Writer;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Map;
 
@@ -22,6 +26,7 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
 import org.liveSense.api.sql.exceptions.NoDataSourceFound;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
@@ -114,6 +119,9 @@ public class DataSourceProviderImpl implements DataSourceProvider {
 	private BasicDataSource ds;
 	private String dataSourceName = null;
 
+	@Reference
+	DynamicClassLoaderManager dynamicClassLoaderManager;
+	
 	@Activate
 	protected void activate(BundleContext bundleContext, Map<?, ?> props) {
 		String driverClassName = (String) props.get("driverClassName");
@@ -132,7 +140,11 @@ public class DataSourceProviderImpl implements DataSourceProvider {
 		dataSourceName = (String) props.get("dataSourceName");
 		if (dataSourceName != null && !"".equalsIgnoreCase(dataSourceName)) {
 			ds = new BasicDataSource();
+//			ds.setDriverClassLoader(dynamicClassLoaderManager.getDynamicClassLoader());
+			
 			log.info("Registering DataSource Name: " + dataSourceName + " PID: " + (String) props.get("service.pid"));
+
+			Thread.currentThread().setContextClassLoader(dynamicClassLoaderManager.getDynamicClassLoader());
 			ds.setDriverClassName(driverClassName);
 			ds.setUrl(url);
 			ds.setUsername(username);
@@ -146,6 +158,32 @@ public class DataSourceProviderImpl implements DataSourceProvider {
 			ds.setMaxIdle(maxIdle);
 			ds.setMaxWait(maxWait);
 			ds.setValidationQuery(validationQuery);
+			try {
+				ds.setLogWriter(
+						new PrintWriter(
+								new Writer() {
+					
+									@Override
+									public void write(char[] cbuf, int off, int len) throws IOException {
+										log.info(new String(cbuf));
+									}
+									
+									@Override
+									public void flush() throws IOException {
+									}
+									
+									@Override
+									public void close() throws IOException {
+									}
+								}
+						) { 
+							
+						}
+						);
+			} catch (SQLException e) {
+				log.error("activate", e);
+			}
+
 		} else {
 			log.warn("No data source name is defined PID: " + (String) props.get("service.pid"));
 		}
