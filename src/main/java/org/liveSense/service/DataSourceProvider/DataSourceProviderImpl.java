@@ -72,6 +72,7 @@ import org.slf4j.LoggerFactory;
 @Service(value = DataSourceProvider.class, serviceFactory = true)
 @Properties(value = {
 		@Property(name = "dataSourceName", value = "default", description = "%dataSourceName"),
+		@Property(name = "caption", value = "Default", description = "%caption"),
 		@Property(name = "driverClassName", value = "com.mysql.jdbc.Driver", description = "%driverClassName"),
 		@Property(name = "url", value = "jdbc:mysql://localhost:3306/database?characterSetResults=UTF-8&characterEncoding=UTF-8&useUnicode=yes", description = "%dataSource.jdbc.connectString.description"),
 		@Property(name = "username", value = "user", description = "%username"),
@@ -113,22 +114,39 @@ public class DataSourceProviderImpl implements DataSourceProvider {
 	//private static HashMap<String, BasicDataSource> dataSources = new HashMap(); 
 	private BasicDataSource ds;
 	private String dataSourceName = null;
+	
+	private String driverClassName = null;
+	private String url = null;
+	private String caption = null;
+	private String username = null;
+	private String password = null;
+	private String connectionProperties = null;
+	private Boolean defaultAutoCommit = null;
+	private Boolean defaultReadOnly = null;
+	private Integer defaultTransactionIsolation = null;
+	private Integer initialSize = null;
+	private Integer maxActive = null;
+	private Integer maxIdle = null;
+	private Integer maxWait = null;
+	private String validationQuery = null;
+
 
 	@Activate
 	protected void activate(BundleContext bundleContext, Map<?, ?> props) {
-		String driverClassName = (String) props.get("driverClassName");
-		String url = (String) props.get("url");
-		String username = (String) props.get("username");
-		String password = (String) props.get("password");
-		String connectionProperties = (String) props.get("connectionProperties");
-		Boolean defaultAutoCommit = (Boolean) props.get("defaultAutoCommit");
-		Boolean defaultReadOnly = (Boolean) props.get("defaultReadOnly");
-		Integer defaultTransactionIsolation = IsolationLevel.valueOf((String) props.get("defaultTransactionIsolation")).getLevel();
-		Integer initialSize = (Integer) props.get("initialSize");
-		Integer maxActive = (Integer) props.get("maxActive");
-		Integer maxIdle = (Integer) props.get("maxIdle");
-		Integer maxWait = (Integer) props.get("maxWait");
-		String validationQuery = (String) props.get("validationQuery");
+		driverClassName = (String) props.get("driverClassName");
+		url = (String) props.get("url");
+		caption = (String) props.get("caption");
+		username = (String) props.get("username");
+		password = (String) props.get("password");
+		connectionProperties = (String) props.get("connectionProperties");
+		defaultAutoCommit = (Boolean) props.get("defaultAutoCommit");
+		defaultReadOnly = (Boolean) props.get("defaultReadOnly");
+		defaultTransactionIsolation = IsolationLevel.valueOf((String) props.get("defaultTransactionIsolation")).getLevel();
+		initialSize = (Integer) props.get("initialSize");
+		maxActive = (Integer) props.get("maxActive");
+		maxIdle = (Integer) props.get("maxIdle");
+		maxWait = (Integer) props.get("maxWait");
+		validationQuery = (String) props.get("validationQuery");
 		dataSourceName = (String) props.get("dataSourceName");
 		if (dataSourceName != null && !"".equalsIgnoreCase(dataSourceName)) {
 			ds = new BasicDataSource();
@@ -180,5 +198,69 @@ public class DataSourceProviderImpl implements DataSourceProvider {
 
 	public String getName() {
 		return dataSourceName;
+	}
+
+	public BasicDataSource getDs() {
+		return ds;
+	}
+
+	public String getDataSourceName() {
+		return dataSourceName;
+	}
+
+	public String getDriverClassName() {
+		return driverClassName;
+	}
+
+	public String getUrl() {
+		return url;
+	}
+
+	public String getCaption() {
+		return caption;
+	}
+
+	public String getUsername() {
+		return username;
+	}
+
+	public String getPassword() {
+		return password;
+	}
+
+	public String getConnectionProperties() {
+		return connectionProperties;
+	}
+
+	public Boolean getDefaultAutoCommit() {
+		return defaultAutoCommit;
+	}
+
+	public Boolean getDefaultReadOnly() {
+		return defaultReadOnly;
+	}
+
+	public Integer getDefaultTransactionIsolation() {
+		return defaultTransactionIsolation;
+	}
+
+	public Integer getInitialSize() {
+		return initialSize;
+	}
+
+	public Integer getMaxActive() {
+		return maxActive;
+	}
+
+	public Integer getMaxIdle() {
+		return maxIdle;
+	}
+
+	public Integer getMaxWait() {
+		return maxWait;
+	}
+
+	public String getValidationQuery() {
+		return validationQuery;
 	}
 }
