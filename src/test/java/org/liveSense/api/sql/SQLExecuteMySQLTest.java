@@ -4,10 +4,16 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 
+import junit.framework.Assert;
+
 import org.apache.commons.dbcp.BasicDataSource;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
+import org.junit.Test;
+import org.liveSense.api.sql.SQLExecuteBaseTest.DatabaseIsConnected;
+
+import com.googlecode.junit.ext.RunIf;
 
 public class SQLExecuteMySQLTest
 	extends SQLExecuteBaseTest {
@@ -60,5 +66,136 @@ public class SQLExecuteMySQLTest
 		connection2.setAutoCommit(false);
 	}
 		
+	@Override
+	@Test
+	@RunIf(DatabaseIsConnected.class)
+	public void testPrepareUpdateMulti() throws Exception {
+	}
+
+	@Override
+	@Test
+	@RunIf(DatabaseIsConnected.class)
+	public void testPrepareQueryMulti() throws Exception {
+	}
+
+	@Override
+	@Test
+	@RunIf(DatabaseIsConnected.class)
+	public void testRunPreparedQueryMulti() throws Exception {
+	}
+	
+	@Override
+	@Test
+	@RunIf(DatabaseIsConnected.class)
+	public void testRunQueryMulti() throws Exception {
+	}
+	
+	@Override
+	@Test
+	@RunIf(DatabaseIsConnected.class)
+	public void testPrepareQuerySingle() throws Exception {
+	}
+	
+	@Override
+	@Test
+	@RunIf(DatabaseIsConnected.class)
+	public void testRunPreparedQuerySingle() throws Exception {
+	}
+	
+	@Override
+	@Test
+	@RunIf(DatabaseIsConnected.class)
+	public void testRunQuerySingle() throws Exception {
+	}
+
+	@Override
+	@Test
+	@RunIf(DatabaseIsConnected.class)
+	public void testPrepareLockMulti() throws Exception {
+	}
+	
+	@Override
+	@Test
+	@RunIf(DatabaseIsConnected.class)
+	public void testRunPreparedLockMulti() throws Exception {
+	}
+
+	@Override
+	@Test
+	@RunIf(DatabaseIsConnected.class)
+	public void testRunLockMulti() throws Exception {
+	}
+
+	@Override
+	@Test
+	@RunIf(DatabaseIsConnected.class)
+	public void testPrepareLockSingle() throws Exception {
+	}
+	
+	@Override
+	@Test
+	@RunIf(DatabaseIsConnected.class)
+	public void testRunPreparedLockSingle() throws Exception {
+	}
+
+	@Override
+	@Test
+	@RunIf(DatabaseIsConnected.class)
+	public void testRunLockSingle() throws Exception {
+	}
+	
+	@Override
+	@Test
+	@RunIf(DatabaseIsConnected.class)
+	public void testPrepareInsertSelect() throws Exception {
+	}
+
+	@Override
+	@Test
+	@RunIf(DatabaseIsConnected.class)
+	public void testPrepareInsertSelect2() throws Exception {
+	}
+
+	@Override
+	@Test
+	@RunIf(DatabaseIsConnected.class)
+	public void testRunPreparedInsertSelect() throws Exception {
+	}
+	
+	@Override
+	@Test
+	@RunIf(DatabaseIsConnected.class)
+	public void testRunInsertSelect() throws Exception {
+	}
+	
+	@Override
+	@Test
+	@RunIf(DatabaseIsConnected.class)
+	public void testRunPreparedDeleteMulti() throws Exception {
+	}
+
+	@Override
+	@Test
+	@RunIf(DatabaseIsConnected.class)
+	public void testRunDeleteMulti() throws Exception {
+	}
+	
+	@Override
+	@Test
+	@RunIf(DatabaseIsConnected.class)
+	public void testPrepareExecuteProcedure() throws Exception {
+	}
+	
+	@Override
+	@Test
+	@RunIf(DatabaseIsConnected.class)
+	public void testRunPreparedExecuteProcedure() throws Exception {
+	}
+	
+	@Override
+	@Test
+	@RunIf(DatabaseIsConnected.class)
+	public void testRunExecuteProcedure() throws Exception {
+	}
 	
 }
