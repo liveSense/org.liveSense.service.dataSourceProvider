@@ -17,7 +17,7 @@
 	<artifactId>org.liveSense.service.dataSourceProvider</artifactId>
 	<version>1.0.0-SNAPSHOT</version>
 	<packaging>bundle</packaging>
-	<name>liveSense DataSource pooler</name>
+	<name>liveSense :: Service :: JDBC DataSource pooler</name>
 	<description>Simple DBCP pooled datasource provider.</description>
 
 	<properties>
