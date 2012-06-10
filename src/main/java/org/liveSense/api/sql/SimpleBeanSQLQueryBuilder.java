@@ -31,9 +31,11 @@ public class SimpleBeanSQLQueryBuilder  extends QueryBuilder {
 		
 	public SimpleBeanSQLQueryBuilder(Class<?> clazz, Operator parameters, LimitClause limit, List<OrderByClause> orderBy) throws SQLException {
 		// Search for entity annotation
+		this.setClazz(clazz);
 		String tableName = AnnotationHelper.getTableName(clazz);
 		if (tableName == null || "".equals(tableName)) throw new SQLException("Entity annotation does not found");
 		this.statement = "SELECT * FROM "+tableName;
+				
 		setLimit(limit);
 		setOrderBy(orderBy);
 		setWhere(parameters);

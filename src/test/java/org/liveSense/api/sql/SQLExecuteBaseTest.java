@@ -272,7 +272,34 @@ public abstract class SQLExecuteBaseTest {
 			null,
 			null);
 	}
+
+	@Test
+	@RunIf(DatabaseIsConnected.class)
+	@SuppressWarnings({ "unchecked", "serial" })
+	public void testPrepareQueryMultiWithOrderBy()
+		throws Exception {
 	
+		//prepare
+		SQLExecute<TestBean> exec = (SQLExecute<TestBean>) SQLExecute.getExecuterByConnection(connection, TestBean.class);
+		SimpleSQLQueryBuilder builder = new SimpleSQLQueryBuilder("SELECT * FROM BeanTest1");
+		builder.setWhere(new AndOperator(new EqualCriteria("id", new DefaultOperand("", ":id", false))));
+		builder.setClazz(TestBean.class);
+		builder.setOrderBy(new DefaultOrderByClause("idCustomer", true));
+		
+		//tested method
+		exec.prepareQueryStatement(connection, builder);
+		//tests
+		assertExec(
+			exec,
+			StatementType.SELECT,
+			new ArrayList<String>() {{ add("id");}},
+			1,
+			null,
+			"SELECT * FROM (SELECT * FROM BeanTest1 )  WHERE (ID=?) ORDER BY ID_CUSTOMER DESC",
+			null,
+			null);
+	}
+
 	@Test
 	@RunIf(DatabaseIsConnected.class)	
 	@SuppressWarnings({ "unchecked", "serial" })
