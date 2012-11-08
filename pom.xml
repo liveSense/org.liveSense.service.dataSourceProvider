@@ -1,12 +1,11 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0"
-	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd"
-	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
 
 	<modelVersion>4.0.0</modelVersion>
 	<parent>
 		<groupId>com.github.livesense</groupId>
 		<artifactId>org.liveSense.parent</artifactId>
-		<version>1-SNAPSHOT</version>
+		<version>2-SNAPSHOT</version>
+		<relativePath>../org.liveSense.parent</relativePath>
 	</parent>
 	<scm>
 		<connection>scm:git:git://github.com/liveSense/org.liveSense.service.dataSourceProvider.git</connection>
@@ -25,11 +24,11 @@
 	</properties>
 
 	<build>
-       <testResources>
-          <testResource>
-               <directory>src/test/resources</directory>
-           </testResource>
-        </testResources>
+		<testResources>
+			<testResource>
+				<directory>src/test/resources</directory>
+			</testResource>
+		</testResources>
 		<plugins>
 			<plugin>
 				<groupId>org.apache.felix</groupId>
@@ -39,14 +38,17 @@
 					<instructions>
 						<Import-Package>
 							!org.jboss.resource.adapter.jdbc,!com.mchange.v2.c3p0,!org.jboss.resource.adapter.jdbc.vendor,*
-                        </Import-Package>
+						</Import-Package>
 						<Export-Package>
 							org.liveSense.service.DataSourceProvider.*;version=${project.version},
 							org.liveSense.api.*;version=${project.version}
-                        </Export-Package>
+						</Export-Package>
+						<DynamicImport-Package>
+							*
+						</DynamicImport-Package>
 						<Include-Resource>
 							{maven-resources}
-                        </Include-Resource>
+						</Include-Resource>
 					</instructions>
 				</configuration>
 			</plugin>
@@ -105,13 +107,13 @@
 		</dependency>
 
 		<dependency>
-    		<groupId>commons-beanutils</groupId>
-    		<artifactId>commons-beanutils</artifactId>
+			<groupId>commons-beanutils</groupId>
+			<artifactId>commons-beanutils</artifactId>
 		</dependency>
 		<dependency>
-    		<groupId>commons-lang</groupId>
-    		<artifactId>commons-lang</artifactId>
-		</dependency>			
+			<groupId>commons-lang</groupId>
+			<artifactId>commons-lang</artifactId>
+		</dependency>
 
 		<dependency>
 			<groupId>com.github.livesense</groupId>
@@ -125,9 +127,9 @@
 		</dependency>
 
 		<dependency>
-		    <groupId>javax.jdo</groupId>
-		    <artifactId>jdo2-api</artifactId>
-		    <version>2.3-eb</version>
+			<groupId>javax.jdo</groupId>
+			<artifactId>jdo2-api</artifactId>
+			<version>2.3-eb</version>
 		</dependency>
 
 		<dependency>
@@ -135,13 +137,8 @@
 			<artifactId>org.liveSense.core</artifactId>
 		</dependency>
 
-		<dependency>
-			<groupId>org.apache.sling</groupId>
-			<artifactId>org.apache.sling.commons.classloader</artifactId>
-		</dependency>
+		<!-- JDBC Drivers for TEST -->
 
-		<!--  JDBC Drivers for TEST -->
-		
 		<dependency>
 			<groupId>hsqldb</groupId>
 			<artifactId>hsqldb</artifactId>
@@ -157,39 +154,50 @@
 			<exclusions>
 				<exclusion>
 					<artifactId>jms</artifactId>
-					<groupId>javax.jms</groupId>				
+					<groupId>javax.jms</groupId>
 				</exclusion>
-				
+
 				<exclusion>
 					<artifactId>log4j</artifactId>
-					<groupId>log4j</groupId>				
+					<groupId>log4j</groupId>
 				</exclusion>
-			
+
 			</exclusions>
 		</dependency>
-		
+
 		<dependency>
-    		<groupId>mysql</groupId>
-    		<artifactId>mysql-connector-java</artifactId>
-    		<version>5.1.16</version>
+			<groupId>mysql</groupId>
+			<artifactId>mysql-connector-java</artifactId>
+			<version>5.1.16</version>
 			<scope>test</scope>
 		</dependency>
+
+		<!-- Oracle JDBC driver is not published in public repositories due the license restrictions. Please replace with yours -->
+		<!-- 
+		Step 1- Download the Oracle JDBC driver http://www.oracle.com/technetwork/database/features/jdbc/index-091264.html
+		Step 2- install your Oracle JDBC driver in your local Maven repository
+		In this example, we assume that your Oracle JDBC driver is in a file called classes12_g.jar
+		c:\oracle\jdbc>dir 23/06/2008  13:02        2 044 594 classes12_g.jar
+		Let's assume you want to register your driver under the group id 'com.oracle', use 'oracle' as the name of the artifact id and that you want the version to be '10.2.0.4'.
+		You can now run the following command:
+		c:\oracle\jdbc>mvn install:install-file -Dfile=classes12_g.jar -DgroupId=com.oracle -DartifactId=ojdbc -Dversion=10.2.0.4 -Dpackaging=jar -DgeneratePom=true
+		 -->
+		<!-- 		
+		<dependency>
+			<groupId>com.oracle</groupId>
+			<artifactId>ojdbc</artifactId>
+			<version>10.2.0.4</version>
+			<scope>test</scope>
+			<optional>true</optional>
+		</dependency>
+		-->
 		
 		<dependency>
-		  	<groupId>com.oracle</groupId>
-  		  	<artifactId>ojdbc</artifactId>
-  		  	<version>10.2.0.4</version>
-		  	<scope>test</scope>
-            <optional>true</optional>
-		</dependency>
-
-
-		<dependency>
-		  	<groupId>junit-ext</groupId>
-  		  	<artifactId>junit-ext</artifactId>
-  		  	<version>1.0</version>
-  		  	<systemPath>${basedir}/lib/junit-ext-1.0-junit-4.4-RC-3.jar</systemPath>
-		  	<scope>system</scope>
+			<groupId>junit-ext</groupId>
+			<artifactId>junit-ext</artifactId>
+			<version>1.0</version>
+			<systemPath>${basedir}/lib/junit-ext-1.0-junit-4.4-RC-3.jar</systemPath>
+			<scope>system</scope>
 		</dependency>
 
 	</dependencies>
