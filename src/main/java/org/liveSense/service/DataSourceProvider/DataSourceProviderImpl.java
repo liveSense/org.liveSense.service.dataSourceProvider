@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.Writer;
 import java.sql.Connection;
-import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.Map;
 
@@ -26,8 +25,7 @@ import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.apache.sling.commons.classloader.DynamicClassLoaderManager;
-import org.liveSense.api.sql.exceptions.NoDataSourceFound;
+import org.liveSense.core.service.OSGIClassLoaderManager;
 import org.osgi.framework.BundleContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -137,7 +135,7 @@ public class DataSourceProviderImpl implements DataSourceProvider {
 
 
 	@Reference
-	DynamicClassLoaderManager dynamicClassLoaderManager;
+	OSGIClassLoaderManager dynamicClassLoaderManager;
 	
 	@Activate
 	protected void activate(BundleContext bundleContext, Map<?, ?> props) {
@@ -157,12 +155,13 @@ public class DataSourceProviderImpl implements DataSourceProvider {
 		validationQuery = (String) props.get("validationQuery");
 		dataSourceName = (String) props.get("dataSourceName");
 		if (dataSourceName != null && !"".equalsIgnoreCase(dataSourceName)) {
+			ClassLoader dynamicClassLoader = dynamicClassLoaderManager.getPackageAdminClassLoader(bundleContext);
 			ds = new BasicDataSource();
-//			ds.setDriverClassLoader(dynamicClassLoaderManager.getDynamicClassLoader());
+			//ds.setDriverClassLoader(dynamicClassLoader);
+			Thread.currentThread().setContextClassLoader(dynamicClassLoader);
 			
 			log.info("Registering DataSource Name: " + dataSourceName + " PID: " + (String) props.get("service.pid"));
 
-			Thread.currentThread().setContextClassLoader(dynamicClassLoaderManager.getDynamicClassLoader());
 			ds.setDriverClassName(driverClassName);
 			ds.setUrl(url);
 			ds.setUsername(username);
