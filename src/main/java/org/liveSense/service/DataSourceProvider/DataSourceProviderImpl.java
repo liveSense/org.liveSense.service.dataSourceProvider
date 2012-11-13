@@ -217,86 +217,107 @@ public class DataSourceProviderImpl implements DataSourceProvider {
 		}
 	}
 
+	@Override
 	public Connection getConnection() throws SQLException {
 		return ds.getConnection();
 	}
 
+	@Override
 	public Connection getConnection(String userName, String password) throws SQLException {
 		return ds.getConnection(userName, password);
 	}
 
+	@Override
 	public QueryRunner getQueryRunner() {
 		return new QueryRunner(ds, false);
 	}
 
+	@Override
 	public DataSource getDataSource() {
 		return ds;
 	}
 
+	@Override
 	public String getName() {
 		return dataSourceName;
 	}
 
+	@Override
 	public BasicDataSource getDs() {
 		return ds;
 	}
 
+	@Override
 	public String getDataSourceName() {
 		return dataSourceName;
 	}
 
+	@Override
 	public String getDriverClassName() {
 		return driverClassName;
 	}
 
+	@Override
 	public String getUrl() {
 		return url;
 	}
 
+	@Override
 	public String getCaption() {
 		return caption;
 	}
 
+	@Override
 	public String getUsername() {
 		return username;
 	}
 
+	@Override
 	public String getPassword() {
 		return password;
 	}
 
+	@Override
 	public String getConnectionProperties() {
 		return connectionProperties;
 	}
 
+	@Override
 	public Boolean getDefaultAutoCommit() {
 		return defaultAutoCommit;
 	}
 
+	@Override
 	public Boolean getDefaultReadOnly() {
 		return defaultReadOnly;
 	}
 
+	@Override
 	public Integer getDefaultTransactionIsolation() {
 		return defaultTransactionIsolation;
 	}
 
+	@Override
 	public Integer getInitialSize() {
 		return initialSize;
 	}
 
+	@Override
 	public Integer getMaxActive() {
 		return maxActive;
 	}
 
+	@Override
 	public Integer getMaxIdle() {
 		return maxIdle;
 	}
 
+	@Override
 	public Integer getMaxWait() {
 		return maxWait;
 	}
 
+	@Override
 	public String getValidationQuery() {
 		return validationQuery;
 	}
