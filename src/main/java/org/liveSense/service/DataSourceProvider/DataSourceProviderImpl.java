@@ -24,6 +24,8 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.PropertyOption;
 import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.ReferenceCardinality;
+import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.Service;
 import org.liveSense.core.service.OSGIClassLoaderManager;
 import org.osgi.framework.BundleContext;
@@ -134,7 +136,7 @@ public class DataSourceProviderImpl implements DataSourceProvider {
 	private String validationQuery = null;
 
 
-	@Reference
+	@Reference(cardinality=ReferenceCardinality.MANDATORY_UNARY, policy=ReferencePolicy.STATIC)
 	OSGIClassLoaderManager dynamicClassLoaderManager;
 	
 	@Activate
