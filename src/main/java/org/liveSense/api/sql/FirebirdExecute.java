@@ -3,6 +3,7 @@ package org.liveSense.api.sql;
 import java.util.List;
 
 import org.liveSense.api.sql.exceptions.SQLException;
+import org.liveSense.misc.queryBuilder.ToSQLStringEvent;
 import org.liveSense.misc.queryBuilder.clauses.DefaultLimitClause;
 import org.liveSense.misc.queryBuilder.domains.LimitClause;
 import org.liveSense.misc.queryBuilder.domains.OrderByClause;
@@ -12,21 +13,48 @@ import org.slf4j.LoggerFactory;
 
 public class FirebirdExecute<T> extends SQLExecute<T> {
 
-	@SuppressWarnings("unused")
-	private static final Logger log = LoggerFactory.getLogger(FirebirdExecute.class);
-	private int maxSize = -1;
 	
-	public FirebirdExecute(int maxSize) {
-		this.maxSize = maxSize;
+	//SUBCLASSES
+	class BooleanConverter implements ToSQLStringEvent {
+		
+		public boolean toSQLString(Object obj, StringBuilder sb) throws Exception {
+			
+			if (obj instanceof Boolean) {
+				sb.append((Boolean) obj ? "1" : "0");
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
 	}
 	
 	
+	//CONSTS
+	@SuppressWarnings("unused")
+	private static final Logger log = LoggerFactory.getLogger(FirebirdExecute.class);
+	
+	
+	//FIELDS
+	private int maxSize = -1;
+	
+	
+	//CONSTUCTORS
+	public FirebirdExecute(int maxSize) {
+		this.maxSize = maxSize;
+		this.toSQLStringEvent = new BooleanConverter();
+	}
+	
+	
+	//METHODS - private
 	private ClauseHelper makeSubSelective(ClauseHelper helper, String tableAlias) {
 		helper.setQuery("SELECT * FROM ("+helper.getQuery()+") "+tableAlias);
 		helper.setSubSelect(true);
 		return helper;
 	}
 	
+	
+	//METHODS - public
 	/**
 	 * {@inheritDoc}
 	 * @throws QueryBuilderException 
@@ -43,7 +71,7 @@ public class FirebirdExecute<T> extends SQLExecute<T> {
 	 * @see {@link SQLExecute#addWhereClause(SQLExecute.ClauseHelper)}
 	 */
 	public ClauseHelper addWhereClause(ClauseHelper helper, String tableAlias) throws SQLException, QueryBuilderException {
-		String whereClause = builder.buildWhere(helper.getClazz(), builder.getWhere());
+		String whereClause = builder.buildWhere(helper.getClazz(), builder.getWhere(), toSQLStringEvent);
 		if (!"".equals(whereClause)) {			
 			if (!helper.getSubSelect()) {
 				 makeSubSelective(helper, tableAlias);

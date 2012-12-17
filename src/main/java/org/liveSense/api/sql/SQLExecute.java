@@ -34,6 +34,7 @@ import org.liveSense.api.beanprocessors.DbStandardBeanProcessor;
 import org.liveSense.api.sql.exceptions.SQLException;
 import org.liveSense.misc.queryBuilder.QueryBuilder;
 import org.liveSense.misc.queryBuilder.SimpleSQLQueryBuilder;
+import org.liveSense.misc.queryBuilder.ToSQLStringEvent;
 import org.liveSense.misc.queryBuilder.criterias.EqualCriteria;
 import org.liveSense.misc.queryBuilder.domains.Criteria;
 import org.liveSense.misc.queryBuilder.domains.Operand;
@@ -50,14 +51,12 @@ import org.liveSense.misc.queryBuilder.operators.AndOperator;
  * @param <T> - The Bean class is used for
  */
 public abstract class SQLExecute<T> {
-
 	
 	
 	//SUBCLASSES
 	public enum StatementType {
 		SELECT, LOCK, INSERT, UPDATE, DELETE, INSERT_SELECT, PROCEDURE
 	}
-	
 	
 	
 	//CONSTS
@@ -72,8 +71,7 @@ public abstract class SQLExecute<T> {
 	private static final String WRONG_PREPARED_STATEMENT = "Wrong prepared statement.";
 	private static final String THE_STATEMENT_IS_NOT_PREPARED = "The statement is not prepared";
 	
-	
-	
+		
 	//FIELDS
 	//create parameters
 	@SuppressWarnings("rawtypes")
@@ -89,13 +87,13 @@ public abstract class SQLExecute<T> {
 	private ArrayList<String> preparedFields = new ArrayList<String>();
 	private String preparedSQL = "";
 	private PreparedStatement preparedStatement = null;
-	private Map<String, Integer> preparedProcedureOutputParams = new HashMap<String, Integer>();
+	private Map<String, Integer> preparedProcedureOutputParams = new HashMap<String, Integer>(); 
 	//log
 	private Map<String, Object> lastNamedParameters = new HashMap<String, Object>();
 	private ArrayList<Object> lastSQLParameters = new ArrayList<Object>();
 	//builder
 	protected QueryBuilder builder;
-
+	protected ToSQLStringEvent toSQLStringEvent = null;
 	
 	
 	//GETTERS (NO SETTERS)
