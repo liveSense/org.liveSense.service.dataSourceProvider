@@ -5,7 +5,7 @@
 		<groupId>com.github.livesense</groupId>
 		<artifactId>org.liveSense.parent</artifactId>
 		<version>2-SNAPSHOT</version>
-		<relativePath>../org.liveSense.parent</relativePath>
+		<relativePath>..</relativePath>
 	</parent>
 	<scm>
 		<connection>scm:git:git://github.com/liveSense/org.liveSense.service.dataSourceProvider.git</connection>
@@ -191,7 +191,7 @@
 			<optional>true</optional>
 		</dependency>
 		-->
-		
+		<!--
 		<dependency>
 			<groupId>junit-ext</groupId>
 			<artifactId>junit-ext</artifactId>
@@ -199,6 +199,18 @@
 			<systemPath>${basedir}/lib/junit-ext-1.0-junit-4.4-RC-3.jar</systemPath>
 			<scope>system</scope>
 		</dependency>
-
+        -->
+        <dependency>
+            <groupId>com.googlecode.junit-ext</groupId>
+            <artifactId>junit-ext</artifactId>
+            <version>1.0-RC3</version>
+            <classifier>junit45</classifier>
+        </dependency>
 	</dependencies>
+    <repositories>
+        <repository>
+            <id>sonatype-forge</id>
+            <url>https://repository.sonatype.org/content/groups/forge/</url>
+        </repository>
+    </repositories>
 </project>
