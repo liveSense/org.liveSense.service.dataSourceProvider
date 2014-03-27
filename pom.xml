@@ -8,8 +8,8 @@
 		<relativePath>..</relativePath>
 	</parent>
 	<scm>
-		<connection>scm:git:git://github.com/liveSense/org.liveSense.service.dataSourceProvider.git</connection>
-		<developerConnection>scm:git:git://github.com/liveSense/org.liveSense.service.dataSourceProvider.git</developerConnection>
+		<connection>scm:git:https://github.com/liveSense/org.liveSense.service.dataSourceProvider.git</connection>
+		<developerConnection>scm:git:https://github.com/liveSense/org.liveSense.service.dataSourceProvider.git</developerConnection>
 		<url>https://github.com/liveSense/org.liveSense.service.dataSourceProvider</url>
 	</scm>
 
