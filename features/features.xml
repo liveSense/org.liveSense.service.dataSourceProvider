@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?><features name="liveSense-${liveSense.version}-service-dataSourceProvider" xmlns="http://karaf.apache.org/xmlns/features/v1.0.0">
 	<feature name="liveSense-service-dataSourceProvider" version="${liveSense.service.dataSourceProvider.version}" description="liveSense service dataSourceProvider">
-        <feature>liveSense-core-apache-commons</feature>
+        <feature>apache-commons</feature>
         <feature>liveSense-misc-queryBuilder</feature>
 		<bundle>mvn:com.github.livesense/org.liveSense.service.dataSourceProvider/${liveSense.service.dataSourceProvider.version}</bundle>
 	</feature>
